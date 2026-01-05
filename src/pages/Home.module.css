@@ -1,0 +1,638 @@
+/* Page Container */
+.homePage {
+  min-height: 100vh;
+  background-color: #ffffff;
+}
+
+/* Navigation */
+.navbar {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 16px 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.brand {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.brandIcon {
+  font-size: 1.75rem;
+}
+
+.navLink {
+  color: #6b7280;
+  font-weight: 500;
+  padding: 8px 16px;
+  transition: color 0.2s;
+  cursor: pointer;
+}
+
+.navLink:hover {
+  color: #6366f1;
+}
+
+.btnLogin {
+  padding: 8px 24px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 2px solid #6366f1;
+  color: #6366f1;
+}
+
+.btnLogin:hover {
+  background-color: #6366f1;
+  color: white;
+}
+
+.btnRegister {
+  padding: 8px 24px;
+  font-weight: 600;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border: none;
+}
+
+.btnRegister:hover {
+  background: linear-gradient(135deg, #5558e3 0%, #7c4ee8 100%);
+}
+
+/* Main Content */
+.mainContent {
+  padding: 0 20px;
+}
+
+/* Hero Section */
+.heroSection {
+  padding: 80px 0 60px;
+  margin-bottom: 60px;
+}
+
+.heroTitle {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 24px;
+  line-height: 1.2;
+}
+
+.highlight {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroSubtitle {
+  font-size: 1.25rem;
+  color: #6b7280;
+  margin-bottom: 32px;
+  line-height: 1.6;
+  max-width: 600px;
+}
+
+.heroActions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.btnPrimary {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border: none;
+  padding: 12px 32px;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btnPrimary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+  background: linear-gradient(135deg, #5558e3 0%, #7c4ee8 100%);
+}
+
+.btnSecondary {
+  padding: 12px 32px;
+  font-weight: 600;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.btnSecondary:hover {
+  border-color: #6366f1;
+  color: #6366f1;
+  background-color: #f3f4f6;
+}
+
+.heroIllustration {
+  position: relative;
+  height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.floatingCard {
+  position: absolute;
+  font-size: 4rem;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.1));
+}
+
+.floatingCard:nth-child(1) {
+  top: 20%;
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.floatingCard:nth-child(2) {
+  top: 50%;
+  right: 20%;
+  animation-delay: 0.5s;
+}
+
+.floatingCard:nth-child(3) {
+  bottom: 20%;
+  left: 40%;
+  animation-delay: 1s;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* Stats Section */
+.statsSection {
+  padding: 48px 32px;
+  margin-bottom: 80px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 20px;
+}
+
+.statCard {
+  text-align: center;
+  color: white;
+}
+
+.statValue {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.statLabel {
+  font-size: 0.95rem;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+/* Features Section */
+.featuresSection {
+  margin-bottom: 80px;
+  scroll-margin-top: 80px;
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.sectionTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.sectionSubtitle {
+  font-size: 1.125rem;
+  color: #6b7280;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.featureCard {
+  height: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.featureCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+  border-color: #6366f1;
+}
+
+.featureIcon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.featureTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+.featureDescription {
+  font-size: 0.95rem;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Pricing Section */
+.pricingSection {
+  margin-bottom: 80px;
+  scroll-margin-top: 80px;
+}
+
+.pricingCard {
+  height: 100%;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.pricingCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+  border-color: #6366f1;
+}
+
+.pricingCardFeatured {
+  border-color: #6366f1;
+  box-shadow: 0 12px 40px rgba(99, 102, 241, 0.2);
+  transform: scale(1.05);
+}
+
+.pricingCardFeatured:hover {
+  transform: scale(1.05) translateY(-8px);
+}
+
+.pricingBadge {
+  display: inline-block;
+  padding: 8px 20px;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: 20px;
+}
+
+.pricingBadgePopular {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+  padding: 6px 20px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pricingPrice {
+  margin: 24px 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+}
+
+.currency {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-top: 8px;
+}
+
+.amount {
+  font-size: 4rem;
+  font-weight: 800;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.period {
+  font-size: 1rem;
+  color: #6b7280;
+  margin-top: 24px;
+}
+
+.pricingDescription {
+  color: #6b7280;
+  margin-bottom: 24px;
+  font-size: 1rem;
+}
+
+.pricingFeatures {
+  list-style: none;
+  padding: 0;
+  margin: 32px 0;
+  text-align: left;
+}
+
+.pricingFeatures li {
+  padding: 12px 0;
+  color: #4b5563;
+  font-size: 0.95rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.pricingFeatures li:last-child {
+  border-bottom: none;
+}
+
+.pricingButton {
+  width: 100%;
+  padding: 12px;
+  font-weight: 600;
+  border-radius: 10px;
+  border: 2px solid #6366f1;
+  transition: all 0.2s;
+}
+
+.pricingButton:hover {
+  background-color: #6366f1;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.pricingButtonFeatured {
+  width: 100%;
+  padding: 12px;
+  font-weight: 600;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border: none;
+  transition: all 0.2s;
+}
+
+.pricingButtonFeatured:hover {
+  background: linear-gradient(135deg, #5558e3 0%, #7c4ee8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+}
+
+/* Contact Section */
+.contactSection {
+  margin-bottom: 80px;
+  scroll-margin-top: 80px;
+}
+
+.contactCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.contactInfo {
+  text-align: center;
+  padding: 20px;
+}
+
+.contactIcon {
+  font-size: 2.5rem;
+  margin-bottom: 12px;
+}
+
+.contactInfo h5 {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+  font-size: 1.125rem;
+}
+
+.contactInfo p {
+  color: #6b7280;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.contactFormSection {
+  margin-top: 40px;
+  padding-top: 40px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* CTA Section */
+.ctaSection {
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  border-radius: 20px;
+  padding: 64px 32px;
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.ctaTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 16px;
+}
+
+.ctaSubtitle {
+  font-size: 1.125rem;
+  color: #d1d5db;
+  margin-bottom: 32px;
+}
+
+.ctaActions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.ctaButton {
+  background-color: white;
+  color: #1f2937;
+  border: none;
+  padding: 14px 40px;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.ctaButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.3);
+  background-color: #f9fafb;
+  color: #1f2937;
+}
+
+.ctaButtonSecondary {
+  background-color: transparent;
+  color: white;
+  border: 2px solid white;
+  padding: 14px 40px;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.ctaButtonSecondary:hover {
+  background-color: white;
+  color: #1f2937;
+}
+
+/* Footer */
+.footer {
+  background-color: #1f2937;
+  color: #d1d5db;
+  padding: 60px 0 30px;
+}
+
+.footerBrand {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.footerText {
+  color: #9ca3af;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.footerTitle {
+  color: white;
+  font-weight: 600;
+  margin-bottom: 16px;
+  font-size: 1rem;
+}
+
+.footerLinks {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footerLinks li {
+  margin-bottom: 12px;
+}
+
+.footerLinks a {
+  color: #9ca3af;
+  text-decoration: none;
+  transition: color 0.2s;
+  font-size: 0.95rem;
+}
+
+.footerLinks a:hover {
+  color: #6366f1;
+}
+
+.footerDivider {
+  border-color: #374151;
+  margin: 32px 0;
+}
+
+.footerBottom {
+  text-align: center;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.footerBottom p {
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .heroTitle {
+    font-size: 2.25rem;
+  }
+
+  .heroSubtitle {
+    font-size: 1.125rem;
+  }
+
+  .sectionTitle {
+    font-size: 2rem;
+  }
+
+  .ctaTitle {
+    font-size: 2rem;
+  }
+
+  .pricingCardFeatured {
+    transform: scale(1);
+  }
+
+  .pricingCardFeatured:hover {
+    transform: translateY(-8px);
+  }
+}
+
+@media (max-width: 768px) {
+  .heroSection {
+    padding: 40px 0;
+  }
+
+  .heroTitle {
+    font-size: 1.875rem;
+  }
+
+  .statsSection {
+    padding: 32px 20px;
+  }
+
+  .statValue {
+    font-size: 2rem;
+  }
+
+  .heroActions,
+  .ctaActions {
+    flex-direction: column;
+  }
+
+  .btnPrimary,
+  .btnSecondary,
+  .ctaButton,
+  .ctaButtonSecondary {
+    width: 100%;
+  }
+
+  .navbar {
+    padding: 12px 0;
+  }
+
+  .footer {
+    padding: 40px 0 20px;
+  }
+
+  .amount {
+    font-size: 3rem;
+  }
+}

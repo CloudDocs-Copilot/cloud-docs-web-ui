@@ -1,0 +1,99 @@
+/* Page Layout */
+.pageContainer {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.topHeader {
+  background-color: #ffffff;
+  border-bottom: 1px solid #dee2e6;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.backButton {
+  border: 0 !important;
+  padding: 0.5rem !important;
+  background-color: transparent;
+  color: #212529;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.backButton:hover {
+  background-color: #e9ecef;
+}
+
+.headerTitleWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.pageTitle {
+  font-size: 1.25rem;
+  margin-bottom: 0;
+  font-weight: 600;
+  color: #212529;
+}
+
+.pageSubtitle {
+  color: #6c757d;
+  margin-bottom: 0;
+  font-size: 0.875em;
+}
+
+.mainContentContainer {
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+.profileCard {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  border: 0 !important;
+  border-radius: 1rem !important;
+  overflow: hidden;
+  background-color: #fff;
+}
+
+
+
+/* Form Sections */
+.formBody {
+  padding: 2.5rem;
+}
+
+
+/* Buttons */
+.buttonContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+.primaryButton {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.secondaryButton {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* Divider */
+.divider {
+  margin: 1.5rem 0;
+  border-top: 1px solid #dee2e6;
+}

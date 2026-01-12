@@ -1,0 +1,19 @@
+.title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: #f8f9fa;
+  border-radius: 0.5rem;
+}
+
+.text {
+  font-size: 1rem;
+  color: #212529;
+}

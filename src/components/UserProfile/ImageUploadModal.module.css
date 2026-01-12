@@ -1,0 +1,43 @@
+.modalHeader {
+  background: linear-gradient(90deg, #4f7cff 0%, #9b5fff 100%);
+  color: white;
+}
+
+.previewWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.previewContainer {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #f8f9fa;
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+}
+
+.previewImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholderContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholderIcon {
+  font-size: 4rem;
+}
+
+.saveButton {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+}

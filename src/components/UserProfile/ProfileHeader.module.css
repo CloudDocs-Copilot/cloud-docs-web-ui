@@ -1,0 +1,69 @@
+.container {
+  background: linear-gradient(135deg, #3B66F5 0%, #8B5CF6 100%);
+  border-radius: 1rem 1rem 0 0;
+  text-align: center;
+  padding: 4rem 0;
+  color: white;
+}
+
+.avatarContainer {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 1.5rem;
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  background: white;
+  border-radius: 50%;
+  padding: 1rem;
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatarIcon {
+  font-size: 4rem;
+  color: #3B66F5;
+}
+
+.cameraButton {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  background: #3B66F5;
+  border: 3px solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.cameraButton:hover {
+  background: #2563EB;
+  transform: scale(1.05);
+}
+
+.cameraIcon {
+  font-size: 1.1rem;
+  color: white;
+}
+
+.name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.email {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin-bottom: 0;
+}

@@ -1,0 +1,49 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0;
+}
+
+.changePasswordLink {
+  font-size: 0.9rem;
+  text-decoration: none;
+  padding: 0;
+}
+
+.passwordContainer {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 0.75rem;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.input {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.95rem;
+  border-radius: 0.75rem;
+  border: 1px solid #dee2e6;
+}
+
+.input:focus {
+  border-color: #4f7cff;
+  box-shadow: 0 0 0 0.2rem rgba(79, 124, 255, 0.25);
+}
+
+.message {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 0;
+}

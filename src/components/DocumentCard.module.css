@@ -1,0 +1,106 @@
+.documentCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  transition: all 0.2s;
+  cursor: pointer;
+  height: 100%;
+  position: relative;
+}
+
+.documentCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.documentCard:hover .cardOptions {
+  opacity: 1;
+}
+
+.cardBody {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cardOptions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.optionBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background-color: #f3f4f6;
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.optionBtn:hover {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.documentIconWrapper {
+  margin-bottom: 8px;
+}
+
+.fileIcon {
+  width: 48px;
+  height: 48px;
+}
+
+.fileIconPdf {
+  color: #ef4444;
+}
+
+.fileIconExcel {
+  color: #10b981;
+}
+
+.fileIconWord {
+  color: #3b82f6;
+}
+
+.documentName {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1f2937;
+  margin: 0;
+  word-break: break-word;
+}
+
+.documentBadge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  width: fit-content;
+  color: #fff;
+}
+
+.documentMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: auto;
+}
+
+.documentDate,
+.documentSize {
+  color: #9ca3af;
+}

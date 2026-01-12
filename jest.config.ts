@@ -10,9 +10,8 @@ const config: Config = {
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: {
-        jsx: 'react-jsx',
-      },
+      tsconfig: 'tsconfig.app.json',
+      isolatedModules: true,
     }],
   },
   collectCoverageFrom: [

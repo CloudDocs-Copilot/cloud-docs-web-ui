@@ -19,7 +19,7 @@ export function PersonalInfoSection({
     <div className="mb-4">
       <h3 className={styles.title}>Información Personal</h3>
       
-      <Form.Group className="mb-4">
+      <Form.Group className="mb-4" controlId="name">
         <Form.Label className={styles.label}>
           <i className="bi bi-person me-2"></i>
           Nombre completo
@@ -33,7 +33,7 @@ export function PersonalInfoSection({
         />
       </Form.Group>
 
-      <Form.Group className="mb-4">
+      <Form.Group className="mb-4" controlId="email">
         <Form.Label className={styles.label}>
           <i className="bi bi-envelope me-2"></i>
           Correo electrónico

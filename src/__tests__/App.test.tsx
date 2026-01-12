@@ -1,27 +1,40 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import App from '../App';
 
+// Mock child components to isolate App test from page complexity
+jest.mock('../pages/Home', () => () => <div>Home Page</div>);
+jest.mock('../pages/Dashboard', () => () => <div>Dashboard Page</div>);
+jest.mock('../components/UserProfile', () => ({
+  UserProfile: () => <div>UserProfile Component</div>
+}));
+
 describe('App Component', () => {
-  it('renders the app with initial count', () => {
-    render(<App />);
-    expect(screen.getByText(/count is 0/i)).toBeInTheDocument();
+  it('renders Home component on default route', () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(screen.getByText('Home Page')).toBeInTheDocument();
   });
 
-  it('increments count when button is clicked', () => {
-    render(<App />);
-    const button = screen.getByRole('button', { name: /count is 0/i });
-    
-    fireEvent.click(button);
-    
-    expect(screen.getByText(/count is 1/i)).toBeInTheDocument();
+  it('renders Dashboard component on /dashboard route', () => {
+    render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(screen.getByText('Dashboard Page')).toBeInTheDocument();
   });
 
-  it('renders Vite and React logos', () => {
-    render(<App />);
-    const logos = screen.getAllByRole('img');
-    
-    expect(logos).toHaveLength(2);
-    expect(logos[0]).toHaveAttribute('alt', 'Vite logo');
-    expect(logos[1]).toHaveAttribute('alt', 'React logo');
+   it('renders UserProfile component on /profile route', () => {
+    render(
+      <MemoryRouter initialEntries={['/profile']}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(screen.getByText('UserProfile Component')).toBeInTheDocument();
   });
 });
+

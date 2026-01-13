@@ -13,10 +13,12 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitchToLogin
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     if (!name || !email || !password || !confirm) {
       setError('Completa todos los campos.');
       return;
@@ -25,7 +27,22 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitchToLogin
       setError('Las contraseñas no coinciden.');
       return;
     }
-    onRegister?.({ name, email, password });
+    try {
+      const res = await fetch('http://localhost:4000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, confirmPassword: confirm })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Error al registrar usuario.');
+      } else {
+        setSuccess(data.message || 'Registro exitoso. Revisa tu email para confirmar tu cuenta.');
+        setName(''); setEmail(''); setPassword(''); setConfirm('');
+      }
+    } catch (err) {
+      setError('Error de conexión con el servidor.');
+    }
   };
 
   return (
@@ -65,6 +82,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitchToLogin
               <input className={styles.input} type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="••••••••" required />
             </div>
             {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
+            {success && <div style={{ color: 'green', marginBottom: 8 }}>{success}</div>}
             <button type="submit" className={styles.submitButton}>
               <User className={styles.labelIcon} /> Crear cuenta
             </button>

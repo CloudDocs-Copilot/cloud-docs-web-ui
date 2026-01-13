@@ -12,6 +12,10 @@ const config: Config = {
     '^.+\\.tsx?$': ['ts-jest', {
       tsconfig: {
         jsx: 'react-jsx',
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        module: 'commonjs',
+        moduleResolution: 'node',
       },
     }],
   },

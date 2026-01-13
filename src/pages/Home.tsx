@@ -1,6 +1,7 @@
 
 import React from 'react';
-import { Container, Row, Col, Button, Card, Navbar, Nav } from 'react-bootstrap';
+import { Container, Row, Col, Button, Card } from 'react-bootstrap';
+import Header from '../components/Header';
 import { useNavigate } from 'react-router-dom';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
 import { HOME_FEATURES } from '../constants/homeFeatures';
@@ -31,54 +32,11 @@ const Home: React.FC = () => {
     alert(`Gracias por tu mensaje, ${data.name}. Te contactaremos pronto.`);
   };
 
+
   return (
     <div className={styles.homePage}>
       {/* Navigation Header */}
-      <Navbar className={styles.navbar} expand="lg">
-        <Container fluid className="px-4">
-          <Navbar.Brand className={styles.brand}>
-            <span className={styles.brandIcon}>📄</span>
-            CloudDocs Copilot
-          </Navbar.Brand>
-          <Navbar.Toggle aria-controls="navbar-nav" />
-          <Navbar.Collapse id="navbar-nav">
-            <Nav className="ms-auto align-items-center gap-3">
-              <Nav.Link 
-                className={styles.navLink}
-                onClick={() => scrollToSection('features')}
-              >
-                Características
-              </Nav.Link>
-              <Nav.Link 
-                className={styles.navLink}
-                onClick={() => scrollToSection('pricing')}
-              >
-                Precios
-              </Nav.Link>
-              <Nav.Link 
-                className={styles.navLink}
-                onClick={() => scrollToSection('contact')}
-              >
-                Contacto
-              </Nav.Link>
-              <Button 
-                variant="outline-primary" 
-                className={styles.btnLogin}
-                onClick={() => navigate('/login')}
-              >
-                Iniciar Sesión
-              </Button>
-              <Button 
-                variant="primary" 
-                className={styles.btnRegister}
-                onClick={() => navigate('/register')}
-              >
-                Crear Cuenta
-              </Button>
-            </Nav>
-          </Navbar.Collapse>
-        </Container>
-      </Navbar>
+      <Header />
 
       <Container fluid className={styles.mainContent}>
         {/* Hero Section */}

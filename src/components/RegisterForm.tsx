@@ -1,81 +1,83 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { Sparkles, User, Mail, Lock } from 'lucide-react';
 import styles from './RegisterForm.module.css';
-import { useRegisterValidation } from '../hooks/useRegisterValidation';
-import { registerUser } from '../services/authService';
 
-const RegisterForm: React.FC = () => {
+interface RegisterFormProps {
+  onRegister?: (data: { name: string; email: string; password: string }) => void;
+  onSwitchToLogin?: () => void;
+}
+
+const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitchToLogin }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [success, setSuccess] = useState('');
-  const [serverError, setServerError] = useState('');
-  const { errors, validate } = useRegisterValidation();
-  const [loading, setLoading] = useState(false);
+  const [confirm, setConfirm] = useState('');
+  const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setServerError('');
-    setSuccess('');
-    if (!validate(email, password)) return;
-    setLoading(true);
-    try {
-      await registerUser({ name, email, password });
-      setSuccess('¡Registro exitoso! Revisa tu correo para confirmar tu cuenta.');
-      setName('');
-      setEmail('');
-      setPassword('');
-    } catch (err: any) {
-      if (err.response?.status === 409) {
-        setServerError('El email ya está registrado.');
-      } else {
-        setServerError('Error al registrar. Intenta de nuevo.');
-      }
-    } finally {
-      setLoading(false);
+    setError('');
+    if (!name || !email || !password || !confirm) {
+      setError('Completa todos los campos.');
+      return;
     }
+    if (password !== confirm) {
+      setError('Las contraseñas no coinciden.');
+      return;
+    }
+    onRegister?.({ name, email, password });
   };
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
-      <h2>Crear Cuenta</h2>
-      <div>
-        <label htmlFor="name">Nombre</label>
-        <input
-          type="text"
-          id="name"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          required
-        />
+    <div className={styles.container}>
+      <div className={styles.wrapper}>
+        <div className={styles.headerSection}>
+          <div className={styles.logoIcon}>
+            <Sparkles className={styles.logoIconSvg} />
+          </div>
+          <h1 className={styles.appTitle}>CloudDocs Copilot</h1>
+          <p className={styles.appSubtitle}>Crea tu cuenta y comienza a organizar</p>
+        </div>
+        <div className={styles.card}>
+          <form onSubmit={handleSubmit} className={styles.form} autoComplete="off">
+            <div className={styles.field}>
+              <label className={styles.label}>
+                <User className={styles.labelIcon} /> Nombre completo
+              </label>
+              <input className={styles.input} value={name} onChange={e => setName(e.target.value)} placeholder="Juan Pérez" required />
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>
+                <Mail className={styles.labelIcon} /> Correo electrónico
+              </label>
+              <input className={styles.input} type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" required />
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>
+                <Lock className={styles.labelIcon} /> Contraseña
+              </label>
+              <input className={styles.input} type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>
+                <Lock className={styles.labelIcon} /> Confirmar contraseña
+              </label>
+              <input className={styles.input} type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="••••••••" required />
+            </div>
+            {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
+            <button type="submit" className={styles.submitButton}>
+              <User className={styles.labelIcon} /> Crear cuenta
+            </button>
+          </form>
+          <div className={styles.registerPrompt}>
+            ¿Ya tienes una cuenta?{' '}
+            <button type="button" onClick={onSwitchToLogin} className={styles.registerLink}>
+              Inicia sesión aquí
+            </button>
+          </div>
+        </div>
       </div>
-      <div>
-        <label htmlFor="email">Email</label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          required
-        />
-        {errors.email && <span className={styles.error}>{errors.email}</span>}
-      </div>
-      <div>
-        <label htmlFor="password">Contraseña</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-        />
-        {errors.password && <span className={styles.error}>{errors.password}</span>}
-      </div>
-      <button type="submit" disabled={loading}>{loading ? 'Registrando...' : 'Registrarse'}</button>
-      {serverError && <div className={styles.error}>{serverError}</div>}
-      {success && <div className={styles.success}>{success}</div>}
-    </form>
+    </div>
   );
 };
 

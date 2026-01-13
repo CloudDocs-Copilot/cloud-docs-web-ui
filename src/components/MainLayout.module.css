@@ -1,7 +1,12 @@
+body, .mainContent, .layoutWrapper {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
 .layoutWrapper {
   display: flex;
   min-height: 100vh;
-  background-color: #f9fafb;
+  /* background-color: #f9fafb; */
 }
 
 .mainContent {
@@ -9,6 +14,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  background: transparent;
 }
 
 .contentArea {

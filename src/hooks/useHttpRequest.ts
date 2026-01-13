@@ -3,11 +3,11 @@ import type { AxiosResponse } from 'axios';
 import { apiClient, sanitizeData, ApiStatus } from '../api';
 import type {
   ApiState,
-  UseApiOptions,
   ExecuteParams,
   ApiErrorResponse,
   ApiAxiosError,
   ValidationConfig,
+  UseHttpRequestOptions,
 } from '../api';
 
 /**
@@ -19,7 +19,7 @@ import type {
  * 
  * @example
  * ```tsx
- * const { execute, data, isLoading, error } = useApi<User>();
+ * const { execute, data, isLoading, error } = useHttpRequest<User>();
  * 
  * const fetchUser = async () => {
  *   await execute({
@@ -29,8 +29,8 @@ import type {
  * };
  * ```
  */
-export const useApi = <TResponse = unknown, TRequest = unknown>(
-  options: UseApiOptions<TResponse> = {}
+export const useHttpRequest = <TResponse = unknown, TRequest = unknown>(
+  options: UseHttpRequestOptions<TResponse> = {}
 ) => {
   const {
     onSuccess,
@@ -330,4 +330,4 @@ export const useApi = <TResponse = unknown, TRequest = unknown>(
   };
 };
 
-export default useApi;
+export default useHttpRequest;

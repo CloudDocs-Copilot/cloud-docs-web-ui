@@ -1,6 +1,6 @@
-import { sanitizeData } from '../sanitizer';
+import { sanitizeData } from '../dataSanitizer';
 
-describe('API Utils - sanitizeData', () => {
+describe('Data Sanitizer - sanitizeData', () => {
   describe('Sanitización de strings', () => {
     it('debe remover caracteres peligrosos < y >', () => {
       const input = '<script>alert("XSS")</script>';

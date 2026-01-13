@@ -3,40 +3,40 @@ import axios, { type AxiosInstance, type AxiosRequestConfig, type InternalAxiosR
 /**
  * Configuración base de la instancia de axios
  */
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
-const TIMEOUT = 30000; // 30 segundos
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const REQUEST_TIMEOUT_MS = 30000; // 30 segundos
 
 /**
  * Crea y configura una instancia de axios con interceptors de seguridad
  */
 const createAxiosInstance = (): AxiosInstance => {
-  const instance = axios.create({
-    baseURL: BASE_URL,
-    timeout: TIMEOUT,
+  const axiosInstance = axios.create({
+    baseURL: API_BASE_URL,
+    timeout: REQUEST_TIMEOUT_MS,
     headers: {
       'Content-Type': 'application/json',
     },
   });
 
   // Interceptor de solicitud - añade token de autenticación si existe
-  instance.interceptors.request.use(
-    (config: InternalAxiosRequestConfig) => {
+  axiosInstance.interceptors.request.use(
+    (requestConfig: InternalAxiosRequestConfig) => {
       // Obtener token del localStorage
-      const token = localStorage.getItem('authToken');
+      const authToken = localStorage.getItem('authToken');
       
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
+      if (authToken && requestConfig.headers) {
+        requestConfig.headers.Authorization = `Bearer ${authToken}`;
       }
 
       // Añadir timestamp para evitar caché
-      if (config.method === 'get') {
-        config.params = {
-          ...config.params,
+      if (requestConfig.method === 'get') {
+        requestConfig.params = {
+          ...requestConfig.params,
           _t: Date.now(),
         };
       }
 
-      return config;
+      return requestConfig;
     },
     (error) => {
       return Promise.reject(error);
@@ -44,7 +44,7 @@ const createAxiosInstance = (): AxiosInstance => {
   );
 
   // Interceptor de respuesta - maneja errores globalmente
-  instance.interceptors.response.use(
+  axiosInstance.interceptors.response.use(
     (response) => {
       return response;
     },
@@ -87,7 +87,7 @@ const createAxiosInstance = (): AxiosInstance => {
     }
   );
 
-  return instance;
+  return axiosInstance;
 };
 
 /**
@@ -111,6 +111,6 @@ export const createConfig = (config?: AxiosRequestConfig): AxiosRequestConfig =>
 /**
  * Sanitiza los datos de entrada para prevenir inyección de código
  */
-export { sanitizeData } from './sanitizer';
+export { sanitizeData } from './dataSanitizer';
 
 export default apiClient;

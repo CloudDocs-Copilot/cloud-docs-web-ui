@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, Badge } from 'react-bootstrap';
 import type { Document } from '../types/document.types';
+import { getFileTypeFromMime, formatFileSize } from '../types/document.types';
 import styles from './DocumentCard.module.css';
 
 interface DocumentCardProps {
@@ -8,13 +9,26 @@ interface DocumentCardProps {
 }
 
 const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
+  // Mapeo de folder IDs a nombres de categorías
+  const getFolderName = (folderId: string): string => {
+    const folderMap: { [key: string]: string } = {
+      'folder_legal': 'Legal',
+      'folder_finanzas': 'Finanzas',
+      'folder_proyectos': 'Proyectos',
+      'folder_tecnico': 'Técnico',
+      'folder_marketing': 'Marketing'
+    };
+    return folderMap[folderId] || 'General';
+  };
+
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
       'Legal': '#fbbf24',
       'Finanzas': '#10b981',
       'Proyectos': '#a855f7',
       'Técnico': '#f97316',
-      'Marketing': '#a855f7'
+      'Marketing': '#a855f7',
+      'General': '#6b7280'
     };
     return colors[category] || '#6b7280';
   };
@@ -32,6 +46,17 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
       </svg>
     );
   };
+
+  // Formatear fecha a formato legible
+  const formatDate = (date: Date | string): string => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+    return dateObj.toLocaleDateString('es-ES', options);
+  };
+
+  // Obtener tipo de archivo desde MIME type
+  const fileType = getFileTypeFromMime(document.mimeType);
+  const folderName = getFolderName(document.folder);
 
   return (
     <Card className={styles.documentCard}>
@@ -61,18 +86,18 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
       
       <Card.Body className={styles.cardBody}>
         <div className={styles.documentIconWrapper}>
-          {getFileIcon(document.type)}
+          {getFileIcon(fileType)}
         </div>
-        <h6 className={styles.documentName}>{document.name}</h6>
+        <h6 className={styles.documentName}>{document.originalname || document.filename}</h6>
         <Badge 
           className={styles.documentBadge} 
-          style={{ backgroundColor: getCategoryColor(document.category) }}
+          style={{ backgroundColor: getCategoryColor(folderName) }}
         >
-          ⭐ {document.category}
+          ⭐ {folderName}
         </Badge>
         <div className={styles.documentMeta}>
-          <span className={styles.documentDate}>{document.date}</span>
-          <span className={styles.documentSize}>{document.size}</span>
+          <span className={styles.documentDate}>{formatDate(document.uploadedAt)}</span>
+          <span className={styles.documentSize}>{formatFileSize(document.size)}</span>
         </div>
       </Card.Body>
     </Card>

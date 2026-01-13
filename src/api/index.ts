@@ -3,21 +3,21 @@
  */
 
 // Configuración de axios
-export { apiClient, createConfig } from './axiosConfig';
+export { apiClient, createConfig } from './httpClient.config';
 
 // Utilidades
-export { sanitizeData } from './sanitizer';
+export { sanitizeData } from './dataSanitizer';
 
 // Tipos
 export type {
   ApiResponse,
   ApiErrorResponse,
   ApiState,
-  UseApiOptions,
+  UseHttpRequestOptions,
   ExecuteParams,
   ApiAxiosError,
   ValidationConfig,
   HttpMethod,
-} from './apiTypes';
+} from '../types/api.types';
 
-export { ApiStatus } from './apiTypes';
+export { ApiStatus } from '../types/api.types';

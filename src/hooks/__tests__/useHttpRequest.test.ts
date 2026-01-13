@@ -1,18 +1,18 @@
 import { renderHook, waitFor } from '@testing-library/react';
 import { act } from 'react';
-import { useApi } from '../useApi';
-import { apiClient } from '../../api/axiosConfig';
-import { ApiStatus } from '../../api/apiTypes';
+import { useHttpRequest } from '../useHttpRequest';
+import { apiClient } from '../../api/httpClient.config';
+import { ApiStatus } from '../../types/api.types';
 
 // Mock de axios
-jest.mock('../../api/axiosConfig', () => ({
+jest.mock('../../api/httpClient.config', () => ({
   apiClient: {
     request: jest.fn(),
   },
   sanitizeData: jest.fn((data) => data),
 }));
 
-describe('useApi Hook', () => {
+describe('useHttpRequest Hook', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -23,7 +23,7 @@ describe('useApi Hook', () => {
 
   describe('Estado inicial', () => {
     it('debe inicializar con estado IDLE', () => {
-      const { result } = renderHook(() => useApi());
+      const { result } = renderHook(() => useHttpRequest());
 
       expect(result.current.status).toBe(ApiStatus.IDLE);
       expect(result.current.data).toBeNull();
@@ -40,7 +40,7 @@ describe('useApi Hook', () => {
       const mockData = { id: 1, name: 'Test User' };
       (apiClient.request as jest.Mock).mockResolvedValueOnce({ data: mockData });
 
-      const { result } = renderHook(() => useApi<typeof mockData>());
+      const { result } = renderHook(() => useHttpRequest<typeof mockData>());
 
       expect(result.current.isIdle).toBe(true);
 
@@ -74,7 +74,7 @@ describe('useApi Hook', () => {
       const mockResponse = { id: 2, ...requestData };
       (apiClient.request as jest.Mock).mockResolvedValueOnce({ data: mockResponse });
 
-      const { result } = renderHook(() => useApi<typeof mockResponse>());
+      const { result } = renderHook(() => useHttpRequest<typeof mockResponse>());
 
       await act(async () => {
         await result.current.execute({
@@ -111,7 +111,7 @@ describe('useApi Hook', () => {
       };
       (apiClient.request as jest.Mock).mockRejectedValueOnce(errorResponse);
 
-      const { result } = renderHook(() => useApi());
+      const { result } = renderHook(() => useHttpRequest());
 
       await act(async () => {
         await result.current.execute({
@@ -140,7 +140,7 @@ describe('useApi Hook', () => {
       };
       (apiClient.request as jest.Mock).mockRejectedValueOnce(networkError);
 
-      const { result } = renderHook(() => useApi());
+      const { result } = renderHook(() => useHttpRequest());
 
       await act(async () => {
         await result.current.execute({
@@ -167,7 +167,7 @@ describe('useApi Hook', () => {
       };
       (apiClient.request as jest.Mock).mockRejectedValueOnce(serverError);
 
-      const { result } = renderHook(() => useApi());
+      const { result } = renderHook(() => useHttpRequest());
 
       await act(async () => {
         await result.current.execute({
@@ -192,7 +192,7 @@ describe('useApi Hook', () => {
       const onSuccess = jest.fn();
       (apiClient.request as jest.Mock).mockResolvedValueOnce({ data: mockData });
 
-      const { result } = renderHook(() => useApi({ onSuccess }));
+      const { result } = renderHook(() => useHttpRequest({ onSuccess }));
 
       await act(async () => {
         await result.current.execute({
@@ -216,7 +216,7 @@ describe('useApi Hook', () => {
       };
       (apiClient.request as jest.Mock).mockRejectedValueOnce(errorResponse);
 
-      const { result } = renderHook(() => useApi({ onError }));
+      const { result } = renderHook(() => useHttpRequest({ onError }));
 
       await act(async () => {
         await result.current.execute({
@@ -240,7 +240,7 @@ describe('useApi Hook', () => {
       const onSettled = jest.fn();
       (apiClient.request as jest.Mock).mockResolvedValueOnce({ data: {} });
 
-      const { result } = renderHook(() => useApi({ onSettled }));
+      const { result } = renderHook(() => useHttpRequest({ onSettled }));
 
       await act(async () => {
         await result.current.execute({
@@ -288,7 +288,7 @@ describe('useApi Hook', () => {
         .mockResolvedValueOnce({ data: mockData });
 
       const { result } = renderHook(() =>
-        useApi({
+        useHttpRequest({
           retry: 2, // 2 reintentos después de la llamada inicial
           retryDelay: 100,
         })
@@ -324,7 +324,7 @@ describe('useApi Hook', () => {
       (apiClient.request as jest.Mock).mockRejectedValueOnce(clientError);
 
       const { result } = renderHook(() =>
-        useApi({
+        useHttpRequest({
           retry: 3,
           retryDelay: 100,
         })
@@ -350,7 +350,7 @@ describe('useApi Hook', () => {
       const mockData = { id: 1 };
       (apiClient.request as jest.Mock).mockResolvedValueOnce({ data: mockData });
 
-      const { result } = renderHook(() => useApi());
+      const { result } = renderHook(() => useHttpRequest());
 
       await act(async () => {
         await result.current.execute({
@@ -388,7 +388,7 @@ describe('useApi Hook', () => {
         }
       );
 
-      const { result } = renderHook(() => useApi());
+      const { result } = renderHook(() => useHttpRequest());
 
       await act(async () => {
         result.current.execute({
@@ -412,7 +412,7 @@ describe('useApi Hook', () => {
   describe('Validaciones', () => {
     it('debe validar datos antes de enviar la petición', async () => {
       const onError = jest.fn();
-      const { result } = renderHook(() => useApi({ onError }));
+      const { result } = renderHook(() => useHttpRequest({ onError }));
 
       await act(async () => {
         await result.current.execute(
@@ -437,7 +437,7 @@ describe('useApi Hook', () => {
     });
 
     it('debe rechazar objetos vacíos en peticiones POST', async () => {
-      const { result } = renderHook(() => useApi());
+      const { result } = renderHook(() => useHttpRequest());
 
       await act(async () => {
         await result.current.execute(
@@ -462,7 +462,7 @@ describe('useApi Hook', () => {
 
   describe('Opción enabled', () => {
     it('no debe ejecutar peticiones cuando enabled es false', async () => {
-      const { result } = renderHook(() => useApi({ enabled: false }));
+      const { result } = renderHook(() => useHttpRequest({ enabled: false }));
 
       const response = await act(async () => {
         return await result.current.execute({
@@ -477,3 +477,4 @@ describe('useApi Hook', () => {
     });
   });
 });
+

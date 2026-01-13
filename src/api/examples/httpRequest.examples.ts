@@ -1,7 +1,7 @@
-import { useApi } from '../../hooks/useApi';
+import { useHttpRequest } from '../../hooks/useHttpRequest';
 
 /**
- * Ejemplo de uso del hook useApi
+ * Ejemplo de uso del hook useHttpRequest
  * Este archivo muestra diferentes casos de uso del hook para consumir APIs
  */
 
@@ -32,7 +32,7 @@ interface Document {
  * Hook para obtener un usuario. El userId se usa al llamar execute()
  */
 export const useGetUser = () => {
-  return useApi<User>({
+  return useHttpRequest<User>({
     onSuccess: (data) => {
       console.log('Usuario cargado:', data);
     },
@@ -46,7 +46,7 @@ export const useGetUser = () => {
  * Ejemplo 2: Petición POST con validación
  */
 export const useCreateUser = () => {
-  return useApi<User, CreateUserRequest>({
+  return useHttpRequest<User, CreateUserRequest>({
     onSuccess: (data) => {
       console.log('Usuario creado exitosamente:', data);
     },
@@ -60,7 +60,7 @@ export const useCreateUser = () => {
  * Ejemplo 3: Petición con reintentos automáticos
  */
 export const useGetDocuments = () => {
-  return useApi<Document[]>({
+  return useHttpRequest<Document[]>({
     retry: 3,
     retryDelay: 1000,
     onSuccess: (data) => {
@@ -73,7 +73,7 @@ export const useGetDocuments = () => {
  * Ejemplo 4: Hook con opción enabled
  */
 export const useConditionalFetch = (shouldFetch: boolean) => {
-  return useApi<User[]>({
+  return useHttpRequest<User[]>({
     enabled: shouldFetch,
     refetchOnWindowFocus: true,
   });
@@ -152,3 +152,4 @@ const UserProfile: React.FC<{ userId: number }> = ({ userId }) => {
 
 export default UserProfile;
 */
+

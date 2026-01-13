@@ -32,7 +32,7 @@ export interface ApiErrorResponse {
 }
 
 /**
- * Estado del hook useApi
+ * Estado del hook useHttpRequest
  */
 export interface ApiState<T> {
   data: T | null;
@@ -45,9 +45,9 @@ export interface ApiState<T> {
 }
 
 /**
- * Opciones de configuración para el hook useApi
+ * Opciones de configuración para el hook useHttpRequest
  */
-export interface UseApiOptions<T> {
+export interface UseHttpRequestOptions<T> {
   onSuccess?: (data: T) => void;
   onError?: (error: ApiErrorResponse) => void;
   onSettled?: () => void;

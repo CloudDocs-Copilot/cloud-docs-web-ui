@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "types": ["jest", "@testing-library/jest-dom"],
+    "composite": false,
+    "noEmit": true,
+    "verbatimModuleSyntax": false
+  },
+  "include": [
+    "src",
+    "jest.setup.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.test.ts"
+  ]
+}

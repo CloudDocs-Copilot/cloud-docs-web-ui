@@ -3,8 +3,14 @@ import { MemoryRouter } from 'react-router-dom';
 import App from '../App';
 
 // Mock child components to isolate App test from page complexity
-jest.mock('../pages/Home', () => () => <div>Home Page</div>);
-jest.mock('../pages/Dashboard', () => () => <div>Dashboard Page</div>);
+jest.mock('../pages/Home', () => ({
+  __esModule: true,
+  default: () => <div>Home Page</div>
+}));
+jest.mock('../pages/Dashboard', () => ({
+  __esModule: true,
+  default: () => <div>Dashboard Page</div>
+}));
 jest.mock('../components/UserProfile', () => ({
   UserProfile: () => <div>UserProfile Component</div>
 }));

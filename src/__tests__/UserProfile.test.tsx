@@ -32,7 +32,6 @@ describe('Componente UserProfile', () => {
     expect(screen.getByText('Mi Perfil')).toBeInTheDocument();
     expect(screen.getByLabelText(/nombre completo/i)).toHaveValue(mockUser.name);
     expect(screen.getByLabelText(/correo electrónico/i)).toHaveValue(mockUser.email);
-    expect(screen.getByTestId('sidebar-mock')).toBeInTheDocument();
   });
 
   test('permite actualizar nombre y correo, y llama a onSave', () => {

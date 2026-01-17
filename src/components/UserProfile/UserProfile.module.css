@@ -2,7 +2,8 @@
 .pageContainer {
   background-color: #f8f9fa;
   min-height: 100vh;
-  margin-left: 225px;
+  margin-left: 0;
+  width: 100%;
 }
 
 .topHeader {

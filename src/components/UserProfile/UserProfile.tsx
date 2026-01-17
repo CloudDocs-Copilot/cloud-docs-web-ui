@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
 import { useFormValidation, validateEmail, validateName } from '../../hooks/useFormValidation';
-import Sidebar from '../Sidebar';
 import { ProfileHeader } from './ProfileHeader';
 import { PersonalInfoSection } from './PersonalInfoSection';
 import { SecuritySection } from './SecuritySection';
@@ -95,7 +94,6 @@ export function UserProfile({ user, onSave, onBack }: UserProfileProps) {
 
   return (
     <>
-      <Sidebar activeItem="" />
       <div className={styles.pageContainer}>
         {/* Header */}
         <div className={styles.topHeader}>

@@ -1,3 +1,4 @@
+
 /**
  * Roles de usuario disponibles en el sistema
  */
@@ -8,13 +9,13 @@ export type UserRole = 'user' | 'admin';
  * Basada en el modelo de Mongoose del backend
  * NOTA: El password nunca se expone desde el backend
  */
-export interface User {
+ export interface User {
   /** ID único del usuario */
   id: string;
   /** Nombre completo del usuario */
-  name: string;
+   name: string;
   /** Email único del usuario */
-  email: string;
+   email: string;
   /** Rol del usuario en el sistema */
   role: UserRole;
   /** Estado de activación del usuario */
@@ -30,12 +31,12 @@ export interface User {
   /** Almacenamiento utilizado por el usuario en bytes */
   storageUsed: number;
   /** URL o path del avatar del usuario */
-  avatar?: string;
+   avatar?: string;
   /** Fecha de creación del usuario */
   createdAt: Date | string;
   /** Fecha de última actualización */
   updatedAt: Date | string;
-}
+ }
 
 /**
  * DTO para registro de nuevo usuario

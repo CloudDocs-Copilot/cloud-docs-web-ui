@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import { UserProfile } from './components/UserProfile'
 import './App.css'
 import NotFound from './pages/NotFound';
+import Register from './pages/Register';
 
 function App() {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/profile" element={<UserProfile 
             user={user} 
             onSave={handleSave} 

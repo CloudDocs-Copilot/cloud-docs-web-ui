@@ -15,6 +15,12 @@ jest.mock('../components/UserProfile', () => ({
   UserProfile: () => <div>UserProfile Component</div>
 }));
 
+jest.mock('../pages/NotFound', () => ({
+  __esModule: true,
+  default: () => <div>Página no encontrada</div>
+}));
+
+
 describe('Componente App', () => {
   it('renderiza el componente Home en la ruta por defecto', () => {
     render(
@@ -42,5 +48,19 @@ describe('Componente App', () => {
     );
     expect(screen.getByText('UserProfile Component')).toBeInTheDocument();
   });
+
+it('renderiza la página de error para una ruta desconocida', () => {
+  render(
+    <MemoryRouter initialEntries={['/una-ruta-que-no-existe-xyz']}>
+      <App />
+    </MemoryRouter>
+  );
+
+    expect(screen.getByText('Página no encontrada')).toBeInTheDocument();
+
+  });
+
+
+
 });
 

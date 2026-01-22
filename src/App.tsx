@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard'
 import Home from './pages/Home';
 import { UserProfile } from './components/UserProfile'
 import './App.css'
+import NotFound from './pages/NotFound';
 
 function App() {
   const navigate = useNavigate();
@@ -18,16 +19,12 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/dashboard" element={<Dashboard />} />
-      <Route 
-        path="/profile" 
-        element={
-          <UserProfile 
+      <Route path="/profile" element={<UserProfile 
             user={user} 
             onSave={handleSave} 
-            onBack={() => navigate('/dashboard')} 
-          />
-        } 
-      />
+            onBack={() => navigate('/dashboard')} />} />
+
+      <Route path="*" element = {<NotFound/>} />
     </Routes>
   );
 }

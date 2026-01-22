@@ -42,6 +42,18 @@ export const useHttpRequest = <TResponse = unknown, TRequest = unknown>(
     refetchOnWindowFocus = false,
   } = options;
 
+  // Refs para callbacks (evitar recreación de execute)
+  const onSuccessRef = useRef(onSuccess);
+  const onErrorRef = useRef(onError);
+  const onSettledRef = useRef(onSettled);
+
+  // Actualizar refs cuando cambien los callbacks
+  useEffect(() => {
+    onSuccessRef.current = onSuccess;
+    onErrorRef.current = onError;
+    onSettledRef.current = onSettled;
+  }, [onSuccess, onError, onSettled]);
+
   // Estado del hook
   const [state, setState] = useState<ApiState<TResponse>>({
     data: null,
@@ -121,14 +133,18 @@ export const useHttpRequest = <TResponse = unknown, TRequest = unknown>(
    */
   const updateState = useCallback((newState: Partial<ApiState<TResponse>>) => {
     if (isMountedRef.current) {
-      setState((prev) => ({
-        ...prev,
-        ...newState,
-        isLoading: newState.status === ApiStatus.LOADING,
-        isError: newState.status === ApiStatus.ERROR,
-        isSuccess: newState.status === ApiStatus.SUCCESS,
-        isIdle: newState.status === ApiStatus.IDLE,
-      }));
+      setState((prev) => {
+        const finalStatus = newState.status ?? prev.status;
+        return {
+          ...prev,
+          ...newState,
+          status: finalStatus,
+          isLoading: finalStatus === ApiStatus.LOADING,
+          isError: finalStatus === ApiStatus.ERROR,
+          isSuccess: finalStatus === ApiStatus.SUCCESS,
+          isIdle: finalStatus === ApiStatus.IDLE,
+        };
+      });
     }
   }, []);
 
@@ -146,13 +162,15 @@ export const useHttpRequest = <TResponse = unknown, TRequest = unknown>(
         try {
           const { method, url, data, config } = params;
 
-          // Cancelar petición anterior si existe
-          if (abortControllerRef.current) {
+          // Solo cancelar petición anterior si es un nuevo request (no un retry)
+          if (currentRetry === 0 && abortControllerRef.current) {
             abortControllerRef.current.abort();
           }
 
-          // Crear nuevo AbortController
-          abortControllerRef.current = new AbortController();
+          // Crear nuevo AbortController solo si no existe o es el primer intento
+          if (currentRetry === 0 || !abortControllerRef.current) {
+            abortControllerRef.current = new AbortController();
+          }
 
           // Preparar datos sanitizados si es necesario
           const sanitizedData = data ? sanitizeData(data) : undefined;
@@ -174,9 +192,21 @@ export const useHttpRequest = <TResponse = unknown, TRequest = unknown>(
           const apiError = error as ApiAxiosError;
           lastError = apiError;
 
-          // No reintentar si la petición fue cancelada
-          if (apiError.code === 'ERR_CANCELED') {
-            throw apiError;
+          // No reintentar si la petición fue cancelada - y no lanzar error
+          if (apiError.code === 'ERR_CANCELED' || apiError.message === 'canceled') {
+            // Resetear estado inmediatamente cuando se cancela
+            if (isMountedRef.current) {
+              setState({
+                data: null,
+                error: null,
+                status: ApiStatus.IDLE,
+                isLoading: false,
+                isError: false,
+                isSuccess: false,
+                isIdle: true,
+              });
+            }
+            return null;
           }
 
           // Verificar si debemos reintentar (error 5xx o error de red)
@@ -212,7 +242,6 @@ export const useHttpRequest = <TResponse = unknown, TRequest = unknown>(
       validation?: ValidationConfig<T>
     ): Promise<TResponse | null> => {
       if (!enabled) {
-        console.warn('API hook está deshabilitado');
         return null;
       }
 
@@ -227,8 +256,8 @@ export const useHttpRequest = <TResponse = unknown, TRequest = unknown>(
             error,
             status: ApiStatus.ERROR,
           });
-          onError?.(error);
-          onSettled?.();
+          onErrorRef.current?.(error);
+          onSettledRef.current?.();
           return null;
         }
       }
@@ -248,10 +277,15 @@ export const useHttpRequest = <TResponse = unknown, TRequest = unknown>(
             error: null,
             status: ApiStatus.SUCCESS,
           });
-          onSuccess?.(data);
+          onSuccessRef.current?.(data);
+        } else {
+          // Si data es null (petición cancelada), resetear a IDLE
+          updateState({
+            status: ApiStatus.IDLE,
+          });
         }
 
-        onSettled?.();
+        onSettledRef.current?.();
         return data;
       } catch (error) {
         const apiError = processError(error as ApiAxiosError);
@@ -261,8 +295,8 @@ export const useHttpRequest = <TResponse = unknown, TRequest = unknown>(
           status: ApiStatus.ERROR,
         });
 
-        onError?.(apiError);
-        onSettled?.();
+        onErrorRef.current?.(apiError);
+        onSettledRef.current?.();
         return null;
       }
     },
@@ -272,9 +306,6 @@ export const useHttpRequest = <TResponse = unknown, TRequest = unknown>(
       executeWithRetry,
       updateState,
       processError,
-      onSuccess,
-      onError,
-      onSettled,
     ]
   );
 
@@ -314,7 +345,6 @@ export const useHttpRequest = <TResponse = unknown, TRequest = unknown>(
 
     const handleFocus = () => {
       // Implementar lógica de refetch aquí si es necesario
-      console.log('Window focused - refetch logic here');
     };
 
     window.addEventListener('focus', handleFocus);

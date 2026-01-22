@@ -9,81 +9,6 @@ export interface ValidationRules {
 }
 
 /**
- * Valida formato de email
- */
-export const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
-/**
- * Valida que un nombre contenga solo letras, espacios y acentos (mínimo 2 caracteres)
- */
-export const validateName = (name: string): boolean => {
-  const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,}$/;
-  return nameRegex.test(name.trim());
-};
-
-/**
- * Valida formato de número de teléfono
- */
-export const validatePhone = (phone: string): boolean => {
-  const phoneRegex = /^[\d\s\-()]{8,15}$/;
-  return phoneRegex.test(phone.trim());
-};
-
-/**
- * Valida fortaleza de contraseña
- */
-export const validatePassword = (password: string): boolean => {
-  const minLength = password.length >= 8;
-  const hasUpperCase = /[A-Z]/.test(password);
-  const hasLowerCase = /[a-z]/.test(password);
-  const hasNumber = /\d/.test(password);
-  return minLength && hasUpperCase && hasLowerCase && hasNumber;
-};
-
-/**
- * Valida formato de URL
- */
-export const validateUrl = (url: string): boolean => {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-/**
- * Valida que un string contenga solo números
- */
-export const validateNumeric = (value: string): boolean => {
-  return /^\d+$/.test(value);
-};
-
-/**
- * Valida que un string contenga solo caracteres alfanuméricos
- */
-export const validateAlphanumeric = (value: string): boolean => {
-  return /^[a-zA-Z0-9]+$/.test(value);
-};
-
-/**
- * Valida longitud mínima de un string
- */
-export const validateMinLength = (value: string, minLength: number): boolean => {
-  return value.trim().length >= minLength;
-};
-
-/**
- * Valida longitud máxima de un string
- */
-export const validateMaxLength = (value: string, maxLength: number): boolean => {
-  return value.trim().length <= maxLength;
-};
-
-/**
  * Hook personalizado para manejar validación de formularios
  * @template T - Tipo del objeto de datos del formulario que debe extender Record<string, string>
  * @param validationRules - Objeto con las reglas de validación para cada campo
@@ -93,6 +18,101 @@ export const useFormValidation = <T extends Record<string, string>>(
   validationRules: ValidationRules
 ) => {
   const [errors, setErrors] = useState<Partial<Record<keyof T, string>>>({});
+
+  /**
+   * Valida formato de email
+   * @param email - String con el email a validar
+   * @returns true si el email es válido, false en caso contrario
+   */
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  /**
+   * Valida que un nombre contenga solo letras, espacios y acentos (mínimo 2 caracteres)
+   * @param name - String con el nombre a validar
+   * @returns true si el nombre es válido, false en caso contrario
+   */
+  const validateName = (name: string): boolean => {
+    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]{2,}$/;
+    return nameRegex.test(name.trim());
+  };
+
+  /**
+   * Valida formato de número de teléfono (8-15 dígitos, puede incluir espacios, guiones y paréntesis)
+   * @param phone - String con el teléfono a validar
+   * @returns true si el teléfono es válido, false en caso contrario
+   */
+  const validatePhone = (phone: string): boolean => {
+    const phoneRegex = /^[\d\s\-()]{8,15}$/;
+    return phoneRegex.test(phone.trim());
+  };
+
+  /**
+   * Valida fortaleza de contraseña (mínimo 8 caracteres, debe incluir mayúscula, minúscula y número)
+   * @param password - String con la contraseña a validar
+   * @returns true si la contraseña es válida, false en caso contrario
+   */
+  const validatePassword = (password: string): boolean => {
+    const minLength = password.length >= 8;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    return minLength && hasUpperCase && hasLowerCase && hasNumber;
+  };
+
+  /**
+   * Valida formato de URL
+   * @param url - String con la URL a validar
+   * @returns true si la URL es válida, false en caso contrario
+   */
+  const validateUrl = (url: string): boolean => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  /**
+   * Valida que un string contenga solo números
+   * @param value - String a validar
+   * @returns true si contiene solo números, false en caso contrario
+   */
+  const validateNumeric = (value: string): boolean => {
+    return /^\d+$/.test(value);
+  };
+
+  /**
+   * Valida que un string contenga solo caracteres alfanuméricos
+   * @param value - String a validar
+   * @returns true si contiene solo caracteres alfanuméricos, false en caso contrario
+   */
+  const validateAlphanumeric = (value: string): boolean => {
+    return /^[a-zA-Z0-9]+$/.test(value);
+  };
+
+  /**
+   * Valida longitud mínima de un string
+   * @param value - String a validar
+   * @param minLength - Longitud mínima requerida
+   * @returns true si cumple con la longitud mínima, false en caso contrario
+   */
+  const validateMinLength = (value: string, minLength: number): boolean => {
+    return value.trim().length >= minLength;
+  };
+
+  /**
+   * Valida longitud máxima de un string
+   * @param value - String a validar
+   * @param maxLength - Longitud máxima permitida
+   * @returns true si no excede la longitud máxima, false en caso contrario
+   */
+  const validateMaxLength = (value: string, maxLength: number): boolean => {
+    return value.trim().length <= maxLength;
+  };
 
   /**
    * Valida un campo específico usando las reglas de validación proporcionadas

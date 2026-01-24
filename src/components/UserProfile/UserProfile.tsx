@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
-import { useFormValidation, validateEmail, validateName } from '../../hooks/useFormValidation';
+import { useFormValidation } from '../../hooks/useFormValidation';
 import { ProfileHeader } from './ProfileHeader';
 import { PersonalInfoSection } from './PersonalInfoSection';
 import { SecuritySection } from './SecuritySection';
@@ -28,13 +28,15 @@ export function UserProfile({ user, onSave, onBack }: UserProfileProps) {
   const [toastVariant, setToastVariant] = useState<'success' | 'danger'>('success');
 
   // Validación de formulario
-  const { 
-    errors, 
-    handleBlur, 
-    validateAllFields
+  const {
+    errors,
+    handleBlur,
+    validateAllFields,
+    validateEmail,
+    validateName
   } = useFormValidation<{ name: string; email: string }>({
-    name: (value) => validateName(value) ? '' : 'El nombre debe contener al menos 2 caracteres',
-    email: (value) => validateEmail(value) ? '' : 'Ingresa un correo electrónico válido'
+    name: (value: string): string => validateName(value) ? '' : 'El nombre debe contener al menos 2 caracteres',
+    email: (value: string): string => validateEmail(value) ? '' : 'Ingresa un correo electrónico válido'
   });
   
   // Estados para la imagen de perfil

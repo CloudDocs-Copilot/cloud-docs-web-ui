@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import Dashboard from './pages/Dashboard'
+
+import './App.css'
+/*
+import Dashboard from './pages/Dashboard'
+import { Routes, Route } from 'react-router-dom'
+
 import Home from './pages/Home';
 import { UserProfile } from './components/UserProfile'
 import './App.css'
@@ -32,3 +38,36 @@ function App() {
 }
 
 export default App
+*/ 
+
+// ACTUALIZACIÓN PARA LOGIN
+import { Routes, Route, Navigate } from "react-router-dom";
+import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home";
+import LoginPage from "./pages/LoginPage";
+import PrivateRoute from "./components/PrivateRoute";
+
+function App() {
+  return (
+    <Routes>
+      {/* públicas */}
+      <Route path="/" element={<Home />} />
+      <Route path="/login" element={<LoginPage />} />
+
+      {/* protegidas */}
+      <Route
+        path="/dashboard"
+        element={
+          <PrivateRoute>
+            <Dashboard />
+          </PrivateRoute>
+        }
+      />
+
+      {/* fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
+export default App;

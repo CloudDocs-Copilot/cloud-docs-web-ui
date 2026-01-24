@@ -2,9 +2,26 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Button, InputGroup } from 'react-bootstrap';
 import styles from './Header.module.css';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Header: React.FC = () => {
+
   const navigate = useNavigate();
+
+  const { logout, user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      navigate('/login');
+    }
+  };
+
+  const avatarLetter = (user?.name?.[0] || user?.email?.[0] || 'U').toUpperCase();
+  const displayName = user?.name || user?.email || 'Usuario';
 
   return (
     <header className={styles.header}>
@@ -46,6 +63,11 @@ const Header: React.FC = () => {
         >
           <div className={styles.userAvatarSmall}>D</div>
           <span>deivis9010</span>
+
+        <div className={styles.userBadge}>
+          <div className={styles.userAvatarSmall}>{avatarLetter}</div>
+          <span>{displayName}</span>
+
         </div>
 
         <Button variant="primary" className={styles.btnUpload}>
@@ -57,7 +79,7 @@ const Header: React.FC = () => {
           Subir
         </Button>
 
-        <Button variant="danger" className={styles.btnLogout}>
+        <Button variant="danger" className={styles.btnLogout} onClick={handleLogout}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" style={{marginRight: '6px'}}>
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" strokeWidth="2"/>
             <polyline points="16 17 21 12 16 7" strokeWidth="2"/>

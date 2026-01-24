@@ -7,7 +7,7 @@ interface RegisterFormProps {
   onSwitchToLogin?: () => void;
 }
 
-const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitchToLogin }) => {
+const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,7 +40,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegister, onSwitchToLogin
         setSuccess(data.message || 'Registro exitoso. Revisa tu email para confirmar tu cuenta.');
         setName(''); setEmail(''); setPassword(''); setConfirm('');
       }
-    } catch (err) {
+    } catch {
       setError('Error de conexión con el servidor.');
     }
   };

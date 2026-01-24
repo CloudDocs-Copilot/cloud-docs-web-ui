@@ -2,10 +2,26 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Button, InputGroup } from 'react-bootstrap';
 import styles from './Header.module.css';
+import { apiClient } from '../api';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
+  const Login = async () => {
+     
 
+      try {
+        await apiClient.post('/auth/login', {
+          email: 'admin@admin.com',
+          password: 'Admin123*'
+        });
+
+        
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          console.error('Login error:', err.message);
+        }
+      }
+  }
   return (
     <header className={styles.header}>
       <div className={styles.searchBarWrapper}>
@@ -25,6 +41,9 @@ const Header: React.FC = () => {
       </div>
 
       <div className={styles.headerActions}>
+        <Button onClick={Login} className={styles.iconBtn}>
+          Login
+        </Button>
         <Button variant="link" className={styles.iconBtn}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeWidth="2"/>

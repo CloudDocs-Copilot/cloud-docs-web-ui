@@ -50,7 +50,7 @@ export const useFormValidation = <T extends Record<string, string>>(
   };
 
   /**
-   * Valida fortaleza de contraseña (mínimo 8 caracteres, debe incluir mayúscula, minúscula y número)
+   * Valida fortaleza de contraseña (mínimo 8 caracteres, debe incluir mayúscula, minúscula, número y un carácter especial)
    * @param password - String con la contraseña a validar
    * @returns true si la contraseña es válida, false en caso contrario
    */
@@ -59,7 +59,8 @@ export const useFormValidation = <T extends Record<string, string>>(
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumber = /\d/.test(password);
-    return minLength && hasUpperCase && hasLowerCase && hasNumber;
+    const hasSpecial = /[^A-Za-z0-9]/.test(password);
+    return minLength && hasUpperCase && hasLowerCase && hasNumber && hasSpecial;
   };
 
   /**

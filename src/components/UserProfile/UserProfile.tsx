@@ -10,6 +10,7 @@ import { ImageUploadModal } from './ImageUploadModal';
 import { NotificationToast } from '../NotificationToast';
 import styles from './UserProfile.module.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import { usePageTitle } from '../../hooks/usePageInfoTitle';
 
 interface UserProfileProps {
   user: { name: string; email: string };
@@ -18,6 +19,13 @@ interface UserProfileProps {
 }
 
 export function UserProfile({ user, onSave, onBack }: UserProfileProps) {
+
+  usePageTitle({
+        title: 'Perfil de usuario',
+        subtitle: 'Perfil',
+        documentTitle: 'Perfil de usuario',
+        metaDescription: 'Página de perfil de usuario para CloudDocs Copilot'
+      });
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
   const [isEditingPassword] = useState(false);

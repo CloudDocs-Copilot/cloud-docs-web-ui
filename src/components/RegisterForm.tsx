@@ -1,13 +1,25 @@
 import { useState } from 'react';
 import { Sparkles, User, Mail, Lock } from 'lucide-react';
 import styles from './RegisterForm.module.css';
+import { usePageTitle } from '../hooks/usePageInfoTitle';
+import { useNavigate } from 'react-router-dom';
 
 interface RegisterFormProps {
   onRegister?: (data: { name: string; email: string; password: string }) => void;
   onSwitchToLogin?: () => void;
 }
 
-const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
+const RegisterForm: React.FC<RegisterFormProps> = () => {
+
+  usePageTitle({
+        title: 'Register',
+        subtitle: 'Register',
+        documentTitle: 'Registro de usuario',
+        metaDescription: 'Página de registro para CloudDocs Copilot'
+      });
+    
+  const navigate = useNavigate(); 
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,7 +40,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
       return;
     }
     try {
-      const res = await fetch('http://localhost:4000/api/auth/register', {
+      const res = await fetch('http://localhost:3000/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password, confirmPassword: confirm })
@@ -39,6 +51,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
       } else {
         setSuccess(data.message || 'Registro exitoso. Revisa tu email para confirmar tu cuenta.');
         setName(''); setEmail(''); setPassword(''); setConfirm('');
+        navigate('/login');
       }
     } catch {
       setError('Error de conexión con el servidor.');
@@ -89,7 +102,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
           </form>
           <div className={styles.registerPrompt}>
             ¿Ya tienes una cuenta?{' '}
-            <button type="button" onClick={onSwitchToLogin} className={styles.registerLink}>
+            <button type="button" onClick={() => navigate('/login')} className={styles.registerLink}>
               Inicia sesión aquí
             </button>
           </div>

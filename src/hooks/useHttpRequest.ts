@@ -105,28 +105,34 @@ export const useHttpRequest = <TResponse = unknown, TRequest = unknown>(
   /**
    * Procesa los errores de la API y los convierte a un formato estandarizado
    */
-  const processError = useCallback((error: ApiAxiosError): ApiErrorResponse => {
-    if (error.response) {
-      // Error con respuesta del servidor
-      return {
-        message: error.response.data?.message || 'Error en la petición',
-        errors: error.response.data?.errors,
-        status: error.response.status,
-        code: error.response.data?.code,
-      };
-    } else if (error.request) {
-      // Error sin respuesta del servidor
-      return {
-        message: 'No se pudo conectar con el servidor',
-        status: 0,
-      };
-    } else {
-      // Error en la configuración de la petición
-      return {
-        message: error.message || 'Error desconocido',
-      };
-    }
-  }, []);
+  const processError = useCallback((error: ApiAxiosError): ApiErrorResponse | null => {
+  if (
+    error?.code === 'ERR_CANCELED' ||
+    error?.message === 'canceled' ||
+    error?.name === 'CanceledError' ||
+    error?.name === 'AbortError'
+  ) {
+    // No actualizar estado a error, simplemente ignorar
+    return null;
+  }
+  if (error.response) {
+    return {
+      message: error.response.data?.message || 'Error en la petición',
+      errors: error.response.data?.errors,
+      status: error.response.status,
+      code: error.response.data?.code,
+    };
+  } else if (error.request) {
+    return {
+      message: 'No se pudo conectar con el servidor',
+      status: 0,
+    };
+  } else {
+    return {
+      message: error.message || 'Error desconocido',
+    };
+  }
+}, []);
 
   /**
    * Actualiza el estado de forma segura (solo si el componente está montado)
@@ -289,7 +295,11 @@ export const useHttpRequest = <TResponse = unknown, TRequest = unknown>(
         return data;
       } catch (error) {
         const apiError = processError(error as ApiAxiosError);
-        
+        if (apiError === null) {
+          updateState({ status: ApiStatus.IDLE });
+          onSettledRef.current?.();
+          return null;
+        }
         updateState({
           error: apiError,
           status: ApiStatus.ERROR,
@@ -333,11 +343,17 @@ export const useHttpRequest = <TResponse = unknown, TRequest = unknown>(
 
   // Cleanup on unmount
   useEffect(() => {
+    // Al montar, nos aseguramos de que esté en true
+    isMountedRef.current = true; 
+
     return () => {
-      isMountedRef.current = false;
-      cancel();
+      isMountedRef.current = false; // Al desmontar, marcamos false
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
     };
-  }, [cancel]);
+  }, []);
 
   // Refetch on window focus si está habilitado
   useEffect(() => {

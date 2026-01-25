@@ -15,12 +15,9 @@ declare namespace NodeJS {
     readonly VITE_API_BASE_URL?: string;
   }
 }
-<<<<<<< HEAD
-=======
 
 // Declaraciones para CSS modules
 declare module '*.module.css' {
   const classes: { [key: string]: string };
   export default classes;
 }
->>>>>>> 9590e4f209acff68db4dc49b898d6d75cc29b111

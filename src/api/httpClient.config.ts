@@ -1,8 +1,5 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type InternalAxiosRequestConfig, type AxiosError } from 'axios';
-<<<<<<< HEAD
-=======
 import type { ApiErrorResponse } from '../types/api.types';
->>>>>>> 9590e4f209acff68db4dc49b898d6d75cc29b111
 
 /**
  * Configuración base de la instancia de axios
@@ -11,8 +8,6 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000
 const REQUEST_TIMEOUT_MS = 30000; // 30 segundos
 
 /**
-<<<<<<< HEAD
-=======
  * Variable para almacenar el token CSRF en memoria
  */
 let csrfToken: string | null = null;
@@ -34,7 +29,6 @@ const fetchCsrfToken = async (): Promise<string> => {
 };
 
 /**
->>>>>>> 9590e4f209acff68db4dc49b898d6d75cc29b111
  * Crea y configura una instancia de axios con interceptors de seguridad
  */
 const createAxiosInstance = (): AxiosInstance => {
@@ -44,21 +38,6 @@ const createAxiosInstance = (): AxiosInstance => {
     headers: {
       'Content-Type': 'application/json',
     },
-<<<<<<< HEAD
-  });
-
-  // Interceptor de solicitud - añade token de autenticación si existe
-  axiosInstance.interceptors.request.use(
-    (requestConfig: InternalAxiosRequestConfig) => {
-      // Obtener token del localStorage
-      const authToken = localStorage.getItem('authToken');
-      
-      if (authToken && requestConfig.headers) {
-        requestConfig.headers.Authorization = `Bearer ${authToken}`;
-      }
-
-      // Añadir timestamp para evitar caché
-=======
     withCredentials: true, // Permite enviar cookies en peticiones cross-origin
   });
 
@@ -87,7 +66,6 @@ const createAxiosInstance = (): AxiosInstance => {
       }
 
       // Añadir timestamp para evitar caché en peticiones GET
->>>>>>> 9590e4f209acff68db4dc49b898d6d75cc29b111
       if (requestConfig.method === 'get') {
         requestConfig.params = {
           ...requestConfig.params,
@@ -112,20 +90,6 @@ const createAxiosInstance = (): AxiosInstance => {
         // El servidor respondió con un código de estado fuera del rango 2xx
         switch (error.response.status) {
           case 401:
-<<<<<<< HEAD
-            // Token expirado o no válido - limpiar localStorage y redirigir a login
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userData');
-            window.location.href = '/login';
-            break;
-          case 403:
-            // Acceso prohibido
-            console.error('Acceso prohibido a este recurso');
-            break;
-          case 404:
-            // Recurso no encontrado
-            console.error('Recurso no encontrado');
-=======
             // No autenticado - redirigir a login
             // Las cookies se limpian automáticamente desde el servidor
             window.location.href = '/login';
@@ -145,25 +109,11 @@ const createAxiosInstance = (): AxiosInstance => {
           case 404:
             // Recurso no encontrado
             console.error('Resource not found');
->>>>>>> 9590e4f209acff68db4dc49b898d6d75cc29b111
             break;
           case 500:
           case 502:
           case 503:
             // Error del servidor
-<<<<<<< HEAD
-            console.error('Error del servidor. Por favor, inténtelo más tarde');
-            break;
-          default:
-            console.error('Error en la petición:', error.response.data);
-        }
-      } else if (error.request) {
-        // La solicitud fue hecha pero no se recibió respuesta
-        console.error('No se recibió respuesta del servidor');
-      } else {
-        // Algo sucedió al configurar la solicitud
-        console.error('Error al configurar la petición:', error.message);
-=======
             console.error('Server error. Please try again later');
             break;
           default:
@@ -175,7 +125,6 @@ const createAxiosInstance = (): AxiosInstance => {
       } else {
         // Algo sucedió al configurar la solicitud
         console.error('Error setting up the request:', error.message);
->>>>>>> 9590e4f209acff68db4dc49b898d6d75cc29b111
       }
       
       return Promise.reject(error);
@@ -191,15 +140,12 @@ const createAxiosInstance = (): AxiosInstance => {
 export const apiClient = createAxiosInstance();
 
 /**
-<<<<<<< HEAD
-=======
  * Función para obtener el token CSRF (útil para inicialización)
  * Se llama automáticamente en la primera petición que lo requiera
  */
 export const initializeCsrfToken = fetchCsrfToken;
 
 /**
->>>>>>> 9590e4f209acff68db4dc49b898d6d75cc29b111
  * Función helper para crear configuración personalizada de axios
  */
 export const createConfig = (config?: AxiosRequestConfig): AxiosRequestConfig => {

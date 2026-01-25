@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-export interface User {
-  name: string;
-  email: string;
-  avatar?: string;
-}
-=======
 
 /**
  * Roles de usuario disponibles en el sistema
@@ -138,4 +131,3 @@ export const isAdmin = (user: User): boolean => {
 export const isActiveUser = (user: User): boolean => {
   return user.active === true;
 };
->>>>>>> 9590e4f209acff68db4dc49b898d6d75cc29b111

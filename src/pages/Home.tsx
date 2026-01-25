@@ -26,10 +26,6 @@ const Home: React.FC = () => {
   };
 
   const handleContactSubmit = (data: ContactFormData) => {
-<<<<<<< HEAD
-    console.log('Formulario de contacto enviado:', data);
-=======
->>>>>>> 9590e4f209acff68db4dc49b898d6d75cc29b111
     // Aquí puedes agregar la lógica para enviar el formulario a tu API
     alert(`Gracias por tu mensaje, ${data.name}. Te contactaremos pronto.`);
   };

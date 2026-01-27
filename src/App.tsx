@@ -14,6 +14,7 @@ import NotFound from './pages/NotFound';
 import Register from './pages/Register';
 import LoginPage from './pages/LoginPage'
 import PrivateRoute from './components/PrivateRoute'
+import ConfirmAccount from './pages/ConfirmAccount'
 
 function App() {
   const navigate = useNavigate();
@@ -47,6 +48,7 @@ function App() {
             </PrivateRoute>
           }
         />
+        <Route path="/auth/confirmed" element={<ConfirmAccount />} />
       
 
       <Route path="*" element = {<NotFound/>} />

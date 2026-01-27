@@ -101,17 +101,19 @@
 }
 
 .btnLogout {
-  background-color: #ef4444;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
   border: none;
   border-radius: 12px;
   padding: 8px 20px;
-  font-weight: 500;
+  font-weight: 600;
+  color: #fff;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .btnLogout:hover {
-  background-color: #dc2626;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
 }
 
 /* Responsive */

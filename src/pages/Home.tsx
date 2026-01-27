@@ -2,6 +2,7 @@
 import React from 'react';
 import { Container, Row, Col, Button, Card, Navbar, Nav } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
 import { HOME_FEATURES } from '../constants/homeFeatures';
 import { HOME_STATS } from '../constants/homeStats';
@@ -10,6 +11,18 @@ import styles from './Home.module.css';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const { user, isAuthenticated, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      navigate('/login');
+    }
+  };
+
+  const avatarLetter = (user?.name?.[0] || user?.email?.[0] || 'U').toUpperCase();
+  const displayName = user?.name || user?.email || 'Usuario';
   
   usePageTitle({
     title: 'Inicio',
@@ -60,20 +73,53 @@ const Home: React.FC = () => {
               >
                 Contacto
               </Nav.Link>
-              <Button 
-                variant="outline-primary" 
-                className={styles.btnLogin}
-                onClick={() => navigate('/login')}
-              >
-                Iniciar Sesión
-              </Button>
-              <Button 
-                variant="primary" 
-                className={styles.btnRegister}
-                onClick={() => navigate('/register')}
-              >
-                Crear Cuenta
-              </Button>
+                {!isAuthenticated ? (
+                  <>
+                    <Button 
+                      variant="outline-primary" 
+                      className={styles.btnLogin}
+                      onClick={() => navigate('/login')}
+                    >
+                      Iniciar Sesión
+                    </Button>
+                    <Button 
+                      variant="primary" 
+                      className={styles.btnRegister}
+                      onClick={() => navigate('/register')}
+                    >
+                      Crear Cuenta
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      className={styles.userBadge}
+                      onClick={() => navigate('/profile')}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div className={styles.userAvatarSmall}>{avatarLetter}</div>
+                      <span>{displayName}</span>
+                    </div>
+
+                   
+
+                    <Button variant="danger" className={styles.btnLogout} onClick={handleLogout}>
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        style={{ marginRight: '6px' }}
+                      >
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" strokeWidth="2" />
+                        <polyline points="16 17 21 12 16 7" strokeWidth="2" />
+                        <line x1="21" y1="12" x2="9" y2="12" strokeWidth="2" />
+                      </svg>
+                      Salir
+                    </Button>
+                  </>
+                )}
             </Nav>
           </Navbar.Collapse>
         </Container>

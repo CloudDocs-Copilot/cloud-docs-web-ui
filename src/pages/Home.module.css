@@ -41,6 +41,68 @@
   color: #6366f1;
 }
 
+/* User badge (copiado de Header.module.css para consistencia) */
+.userBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background-color: #f3f4f6;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.userAvatarSmall {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #6366f1;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.btnUpload {
+  background-color: #3b82f6;
+  border: none;
+  border-radius: 12px;
+  padding: 8px 20px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.btnUpload:hover {
+  background-color: #2563eb;
+}
+
+.btnLogout {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 24px;
+  font-weight: 600;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  min-width: 88px;
+  justify-content: center;
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btnLogout:hover {
+  background: linear-gradient(135deg, #5558e3 0%, #7c4ee8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
 .btnLogin {
   padding: 8px 24px;
   font-weight: 600;

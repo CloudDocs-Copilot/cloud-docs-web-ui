@@ -32,23 +32,30 @@ export function NotificationToast({
     }
   };
 
+  // choose appropriate live region and role based on severity
+  const live = variant === 'danger' ? 'assertive' : 'polite';
+  const role = variant === 'danger' ? 'alert' : 'status';
+
   return (
-    <ToastContainer position="top-end" className="p-3" style={{ zIndex: 1050, position: 'fixed' }}>
-      <Toast 
-        onClose={onClose} 
-        show={show} 
-        delay={3000} 
-        autohide 
-        className={toastClass}
-      >
-        <Toast.Header closeButton={true} className={styles.toastHeader}>
-           <i className={`bi ${getIcon()} ${titleClass} ${styles.icon}`}></i>
-          <strong className={`me-auto ${titleClass}`}>{title || 'Notificación'}</strong>
-        </Toast.Header>
-        <Toast.Body className={styles.toastBody}>
-          {message}
-        </Toast.Body>
-      </Toast>
-    </ToastContainer>
+    <div aria-live={live} aria-atomic="true">
+      <ToastContainer position="top-end" className="p-3" style={{ zIndex: 1050, position: 'fixed' }}>
+        <Toast 
+          onClose={onClose} 
+          show={show} 
+          delay={3000} 
+          autohide 
+          className={toastClass}
+          role={role}
+        >
+          <Toast.Header closeButton={true} className={styles.toastHeader}>
+             <i className={`bi ${getIcon()} ${titleClass} ${styles.icon}`}></i>
+            <strong className={`me-auto ${titleClass}`}>{title || 'Notificación'}</strong>
+          </Toast.Header>
+          <Toast.Body className={styles.toastBody}>
+            {message}
+          </Toast.Body>
+        </Toast>
+      </ToastContainer>
+    </div>
   );
 }

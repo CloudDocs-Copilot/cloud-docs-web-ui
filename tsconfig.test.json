@@ -1,13 +1,13 @@
 {
   "extends": "./tsconfig.app.json",
   "compilerOptions": {
+    "jsx": "react-jsx",           
     "types": ["jest", "@testing-library/jest-dom"],
-    "composite": false,
-    "noEmit": true,
-    "verbatimModuleSyntax": false
+    "composite": true,
+    "noEmit": true
   },
   "include": [
-    "src",
+    "src",                       
     "jest.setup.ts",
     "src/**/*.test.tsx",
     "src/**/*.test.ts"

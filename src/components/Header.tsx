@@ -1,12 +1,14 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Form, Button, InputGroup } from 'react-bootstrap';
 import styles from './Header.module.css';
 import { useAuth } from '../hooks/useAuth';
+import OrganizationSelector from './OrganizationSelector';
 
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  const location = useLocation();
 
   const handleLogout = async () => {
     try {
@@ -40,7 +42,15 @@ const Header: React.FC = () => {
       </div>
 
       <div className={styles.headerActions}>
-        
+        {user && !location.pathname.startsWith('/dashboard') && (
+          <Button variant="link" className={styles.iconBtn} onClick={() => navigate('/dashboard')} title="Dashboard">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M3 13h8V3H3v10zM3 21h8v-6H3v6zM13 21h8V11h-8v10zM13 3v6h8V3h-8z" strokeWidth="1.5" />
+            </svg>
+          </Button>
+        )}
+        <OrganizationSelector />
+
         <Button variant="link" className={styles.iconBtn}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeWidth="2" />

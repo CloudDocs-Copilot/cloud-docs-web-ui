@@ -1,10 +1,11 @@
 import React from 'react';
-import { Container, Row, Col, Spinner, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Spinner, Alert, Dropdown } from 'react-bootstrap';
 import MainLayout from '../components/MainLayout';
 import DocumentCard from '../components/DocumentCard';
 import { useHttpRequest } from '../hooks/useHttpRequest';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
 import type { Document } from '../types/document.types';
+import { useNavigate } from 'react-router-dom';
 
 interface DocumentsApiResponse {
   success: boolean;
@@ -25,6 +26,7 @@ const Dashboard: React.FC = () => {
 
   // Usar el hook useHttpRequest para obtener documentos
   const { execute, data: documents, isLoading, isError, error } = useHttpRequest<DocumentsApiResponse>();
+  const navigate = useNavigate();
 
   
 
@@ -47,6 +49,16 @@ const Dashboard: React.FC = () => {
   return (
     <MainLayout>
       <Container fluid>
+        <Row className="mb-3">
+          <Col>
+            <Dropdown>
+              <Dropdown.Toggle variant="secondary" id="org-menu">Organización</Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={() => navigate('/organization/settings')}>Ajustes de organización</Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          </Col>
+        </Row>
        
         {/* Loading state */}
         {isLoading && (

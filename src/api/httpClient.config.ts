@@ -4,7 +4,9 @@ import type { ApiErrorResponse } from '../types/api.types';
 /**
  * Configuración base de la instancia de axios
  */
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+// Use environment variable for tests (process.env) and fallback to default.
+// Vite replaces `process.env` or defines envs at build time when configured.
+const API_BASE_URL = ((globalThis as any)?.process?.env?.VITE_API_BASE_URL) || 'http://localhost:3000/api';
 const REQUEST_TIMEOUT_MS = 30000; // 30 segundos
 
 /**

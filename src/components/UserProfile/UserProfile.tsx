@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { ProfileHeader } from './ProfileHeader';
 import { PersonalInfoSection } from './PersonalInfoSection';
@@ -52,6 +54,8 @@ export function UserProfile({ user, onSave, onBack }: UserProfileProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [, setSelectedFile] = useState<File | null>(null);
+  const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
 
   const handleImageSelect = (file: File) => {
     // Crear preview de la imagen
@@ -120,6 +124,11 @@ export function UserProfile({ user, onSave, onBack }: UserProfileProps) {
               <h1 className={styles.pageTitle}>Mi Perfil</h1>
               <p className={styles.pageSubtitle}>Gestiona tu información personal</p>
             </div>
+            {currentUser && (
+              <div style={{ marginLeft: 'auto' }}>
+                <Button variant="secondary" onClick={() => navigate('/dashboard')}>Ir a Dashboard</Button>
+              </div>
+            )}
           </div>
         </Container>
       </div>

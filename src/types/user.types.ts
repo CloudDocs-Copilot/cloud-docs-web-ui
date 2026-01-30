@@ -5,6 +5,15 @@
 export type UserRole = 'user' | 'admin';
 
 /**
+ * Preferencias del usuario
+ */
+export interface UserPreferences {
+  emailNotifications: boolean;
+  documentUpdates: boolean;
+  aiAnalysis: boolean;
+}
+
+/**
  * Interfaz del modelo de Usuario para el frontend
  * Basada en el modelo de Mongoose del backend
  * NOTA: El password nunca se expone desde el backend
@@ -32,6 +41,8 @@ export type UserRole = 'user' | 'admin';
   storageUsed: number;
   /** URL o path del avatar del usuario */
    avatar?: string;
+  /** Preferencias del usuario */
+  preferences: UserPreferences;
   /** Fecha de creación del usuario */
   createdAt: Date | string;
   /** Fecha de última actualización */

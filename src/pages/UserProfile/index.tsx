@@ -6,5 +6,5 @@ export { ProfileHeader } from './ProfileHeader';
 export { PersonalInfoSection } from './PersonalInfoSection';
 export { SecuritySection } from './SecuritySection';
 export { PreferencesSection } from './PreferencesSection';
-export { DangerZone } from './DangerZone';
-export { ImageUploadModal } from './ImageUploadModal';
+export { DangerZone } from '../../components/UserProfile/DangerZone';
+export { ImageUploadModal } from '../../components/UserProfile/ImageUploadModal';

@@ -4,7 +4,7 @@ import type { ApiErrorResponse } from '../types/api.types';
 /**
  * Configuración base de la instancia de axios
  */
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
 const REQUEST_TIMEOUT_MS = 30000; // 30 segundos
 
 /**

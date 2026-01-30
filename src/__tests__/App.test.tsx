@@ -3,6 +3,25 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import App from '../App';
 
+// Mock httpClient to avoid import.meta.env issues in Jest
+jest.mock('../api/httpClient.config', () => ({
+  default: {
+    request: jest.fn().mockResolvedValue({ data: {} }),
+  },
+  sanitizeData: jest.fn((data) => data),
+}));
+
+// Mock useAuth hook to simulate authenticated state
+jest.mock('../hooks/useAuth', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+    loading: false,
+    user: { name: 'Test User', email: 'test@example.com' },
+    login: jest.fn(),
+    logout: jest.fn(),
+  }),
+}));
+
 // Mock child components to isolate App test from page complexity
 jest.mock('../pages/Home', () => ({
   __esModule: true,

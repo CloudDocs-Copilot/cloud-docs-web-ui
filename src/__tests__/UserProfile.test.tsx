@@ -8,6 +8,15 @@ jest.mock('../components/Sidebar', () => {
   };
 });
 
+// Wrapper component with providers
+const renderWithProviders = (ui: React.ReactElement) => {
+  return render(
+    <PageProvider>
+      {ui}
+    </PageProvider>
+  );
+};
+
 describe('Componente UserProfile', () => {
   const mockUser = {
     name: 'Test User',
@@ -21,7 +30,7 @@ describe('Componente UserProfile', () => {
   });
 
   test('renderiza el perfil de usuario con los datos iniciales', () => {
-    render(
+    renderWithProviders(
       <UserProfile 
         user={mockUser} 
         onSave={mockOnSave} 
@@ -35,7 +44,7 @@ describe('Componente UserProfile', () => {
   });
 
   test('permite actualizar nombre y correo, y llama a onSave', () => {
-    render(
+    renderWithProviders(
       <UserProfile 
         user={mockUser} 
         onSave={mockOnSave} 
@@ -60,7 +69,7 @@ describe('Componente UserProfile', () => {
   });
 
   test('llama a onBack cuando se hace clic en el botón Cancelar', () => {
-    render(
+    renderWithProviders(
       <UserProfile 
         user={mockUser} 
         onSave={mockOnSave} 

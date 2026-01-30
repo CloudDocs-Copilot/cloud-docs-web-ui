@@ -10,8 +10,16 @@ const config: Config = {
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: 'tsconfig.test.json', // USA EL NUEVO TSCONFIG DE TEST
+      tsconfig: 'tsconfig.test.json',
     }],
+  },
+  // Define globals to replace import.meta.env
+  globals: {
+    'import.meta': {
+      env: {
+        VITE_API_BASE_URL: 'http://localhost:4000/api',
+      },
+    },
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

@@ -4,12 +4,15 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 import styles from './MainLayout.module.css';
 import { useLocation } from 'react-router-dom';
+import type { Document } from '../types/document.types';
 
 interface MainLayoutProps {
   children: React.ReactNode;
+  /** Callback cuando se suben documentos desde el Header */
+  onDocumentsUploaded?: (documents: Document[]) => void;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children, onDocumentsUploaded }) => {
   const location = useLocation();
   const activeMenuItem = location.pathname.split('/')[1] || 'colecciones';
   const { pageInfo } = usePageContext();
@@ -19,7 +22,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       <Sidebar activeItem={activeMenuItem}  />
       
       <div className={styles.mainContent}>
-        <Header />
+        <Header onDocumentsUploaded={onDocumentsUploaded} />
         
         <div className={styles.contentArea}>
           {pageInfo.title && (

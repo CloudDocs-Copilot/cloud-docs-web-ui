@@ -116,13 +116,13 @@ const { execute, data } = useHttpRequest<Document[]>();
 useEffect(() => {
   const userId = localStorage.getItem('userId');
   
-  execute({
-    method: 'GET',
-    url: '/api/documents/recent',
-    config: {
-      params: { userId, limit: 10 }
-    }
-  });
+    execute({
+      method: 'GET',
+      url: '/api/documents/recent',
+      config: {
+        params: { userId }
+      }
+    });
 }, []);
 ```
 

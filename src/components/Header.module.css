@@ -45,6 +45,16 @@
   margin-left: auto;
 }
 
+/* Style select inside header to match header theme */
+.headerActions select {
+  background-color: #f3f4f6;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 6px 10px;
+  font-size: 0.95rem;
+}
+
 .iconBtn {
   width: 40px;
   height: 40px;

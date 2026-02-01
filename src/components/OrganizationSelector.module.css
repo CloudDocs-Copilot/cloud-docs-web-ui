@@ -1,0 +1,22 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.select {
+  width: 220px;
+  border-radius: 12px;
+  padding: 6px 10px;
+  font-size: 0.95rem;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: #111827;
+}
+
+/* reduce size on small screens */
+@media (max-width: 768px) {
+  .select {
+    width: 160px;
+    font-size: 0.9rem;
+  }
+}

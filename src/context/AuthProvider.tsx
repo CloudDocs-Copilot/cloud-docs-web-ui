@@ -20,6 +20,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false);
   }, []);
 
+  // Listen for global unauthorized events (emitted by api client) and clear auth state
+  useEffect(() => {
+    const handler = () => {
+      setUser(null);
+      try { localStorage.removeItem('auth_user'); } catch {}
+    };
+    window.addEventListener('app:unauthenticated', handler as EventListener);
+    return () => window.removeEventListener('app:unauthenticated', handler as EventListener);
+  }, []);
+
   const login = useCallback(async (email: string, password: string) => {
     const r = await loginRequest({ email, password });
     setUser(r.user);

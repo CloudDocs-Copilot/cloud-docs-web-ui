@@ -1,0 +1,465 @@
+/**
+ * Estilos del componente FileUploader
+ */
+
+/* ============================================================================
+   Card Principal
+   ============================================================================ */
+
+.uploaderCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* ============================================================================
+   Header
+   ============================================================================ */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.headerTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #1f2937;
+}
+
+.headerTitle h5 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.closeBtn {
+  padding: 0.25rem;
+  color: #6b7280;
+  transition: color 0.2s;
+}
+
+.closeBtn:hover {
+  color: #1f2937;
+}
+
+/* ============================================================================
+   Body
+   ============================================================================ */
+
+.body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ============================================================================
+   Drop Zone
+   ============================================================================ */
+
+.dropZone {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #fafafa;
+}
+
+.dropZone:hover:not(.disabled) {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+
+.dropZone:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.dropZone.dragOver {
+  border-color: #3b82f6;
+  background-color: #dbeafe;
+  border-style: solid;
+}
+
+.dropZone.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #f3f4f6;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.dropZoneContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.uploadIconWrapper {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #eff6ff;
+  border-radius: 50%;
+  color: #3b82f6;
+}
+
+.uploadIcon {
+  color: #3b82f6;
+}
+
+.dropZoneText {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.dropZoneHint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   Alertas
+   ============================================================================ */
+
+.validationAlert {
+  margin: 0;
+}
+
+.alertHeading {
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.errorList {
+  margin: 0;
+  padding-left: 1.25rem;
+  font-size: 0.875rem;
+}
+
+.errorList li {
+  margin-bottom: 0.25rem;
+}
+
+.successAlert {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  font-weight: 500;
+}
+
+/* ============================================================================
+   Lista de Archivos
+   ============================================================================ */
+
+.fileList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.fileList::-webkit-scrollbar {
+  width: 6px;
+}
+
+.fileList::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.fileList::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.fileList::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+/* ============================================================================
+   Item de Archivo
+   ============================================================================ */
+
+.fileItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+
+.fileItem:hover {
+  border-color: #d1d5db;
+}
+
+.fileItemSuccess {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.fileItemError {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+}
+
+.fileItemCancelled {
+  background-color: #fffbeb;
+  border-color: #fde68a;
+}
+
+.fileItemMain {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.fileInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.fileName {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fileMeta {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.fileActions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  padding: 0.25rem;
+  color: #6b7280;
+  transition: color 0.2s;
+}
+
+.actionBtn:hover {
+  color: #3b82f6;
+}
+
+.actionBtnDanger:hover {
+  color: #ef4444;
+}
+
+/* ============================================================================
+   Estado del Archivo
+   ============================================================================ */
+
+.fileStatus {
+  width: 100%;
+}
+
+.progressBar {
+  height: 6px;
+  border-radius: 3px;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.statusPending {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.statusUploading {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.statusSuccess {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.statusError {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.statusCancelled {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.statusText {
+  line-height: 1;
+}
+
+.statusIconPending {
+  color: #9ca3af;
+}
+
+.statusIconUploading {
+  color: #3b82f6;
+}
+
+.statusIconSuccess {
+  color: #22c55e;
+}
+
+.statusIconError {
+  color: #ef4444;
+}
+
+.statusIconCancelled {
+  color: #f59e0b;
+}
+
+/* Animación de spinner */
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================================
+   Progreso Total
+   ============================================================================ */
+
+.totalProgress {
+  margin-top: 0.5rem;
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.375rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.totalProgressBar {
+  height: 8px;
+  border-radius: 4px;
+}
+
+/* ============================================================================
+   Footer
+   ============================================================================ */
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.85rem;
+}
+
+.statPending {
+  color: #6b7280;
+}
+
+.statSuccess {
+  color: #16a34a;
+}
+
+.statError {
+  color: #dc2626;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ============================================================================
+   Responsive
+   ============================================================================ */
+
+@media (max-width: 576px) {
+  .footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .stats {
+    justify-content: center;
+  }
+
+  .actions {
+    justify-content: center;
+  }
+
+  .dropZone {
+    padding: 1.5rem;
+  }
+
+  .uploadIconWrapper {
+    width: 48px;
+    height: 48px;
+  }
+
+  .uploadIcon {
+    width: 24px;
+    height: 24px;
+  }
+}

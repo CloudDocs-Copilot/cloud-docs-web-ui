@@ -37,6 +37,12 @@
   flex-direction: column;
 }
 
+.headerActionsRight {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
 .pageTitle {
   font-size: 1.25rem;
   margin-bottom: 0;

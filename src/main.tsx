@@ -7,15 +7,21 @@ import "./index.css";
 import App from "./App.tsx";
 import { PageProvider } from "./context/PageProvider.tsx";
 import { AuthProvider } from "./context/AuthProvider.tsx";
+import OrganizationProvider from "./context/OrganizationProvider";
+import { ToastProvider } from './context/ToastProvider';
 
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <PageProvider>
-          <App />
-        </PageProvider>
+        <ToastProvider>
+          <OrganizationProvider>
+            <PageProvider>
+              <App />
+            </PageProvider>
+          </OrganizationProvider>
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>

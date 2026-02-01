@@ -1,5 +1,5 @@
 // Barrel export - simplifica los imports
-export { UserProfile } from './UserProfile';
+export { UserProfile } from '../../pages/UserProfile';
 
 // También exportamos los subcomponentes por si se necesitan usar individualmente
 export { ProfileHeader } from './ProfileHeader';

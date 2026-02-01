@@ -1,12 +1,22 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Form, Button, InputGroup } from 'react-bootstrap';
+import React, { useState, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Form, Button, InputGroup, Modal } from 'react-bootstrap';
 import styles from './Header.module.css';
 import { useAuth } from '../hooks/useAuth';
+import { FileUploader } from './FileUploader';
+import type { Document } from '../types/document.types';
+import OrganizationSelector from './OrganizationSelector';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  /** Callback cuando se suben documentos exitosamente */
+  onDocumentsUploaded?: (documents: Document[]) => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
+  const location = useLocation();
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -19,9 +29,31 @@ const Header: React.FC = () => {
   const avatarLetter = (user?.name?.[0] || user?.email?.[0] || 'U').toUpperCase();
   const displayName = user?.name || user?.email || 'Usuario';
 
-  
+  /**
+   * Abre el modal de subida de archivos
+   */
+  const handleOpenUploadModal = useCallback(() => {
+    setShowUploadModal(true);
+  }, []);
+
+  /**
+   * Cierra el modal de subida de archivos
+   */
+  const handleCloseUploadModal = useCallback(() => {
+    setShowUploadModal(false);
+  }, []);
+
+  /**
+   * Maneja la subida exitosa de documentos
+   */
+  const handleUploadSuccess = useCallback((documents: Document[]) => {
+    onDocumentsUploaded?.(documents);
+    setShowUploadModal(false);
+  }, [onDocumentsUploaded]);
+
   return (
-    <header className={styles.header}>
+    <>
+      <header className={styles.header}>
       <div className={styles.searchBarWrapper}>
         <InputGroup>
           <InputGroup.Text className={styles.searchIcon}>
@@ -40,7 +72,15 @@ const Header: React.FC = () => {
       </div>
 
       <div className={styles.headerActions}>
-        
+        {user && !location.pathname.startsWith('/dashboard') && (
+          <Button variant="link" className={styles.iconBtn} onClick={() => navigate('/dashboard')} title="Dashboard">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M3 13h8V3H3v10zM3 21h8v-6H3v6zM13 21h8V11h-8v10zM13 3v6h8V3h-8z" strokeWidth="1.5" />
+            </svg>
+          </Button>
+        )}
+        <OrganizationSelector />
+
         <Button variant="link" className={styles.iconBtn}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeWidth="2" />
@@ -64,7 +104,11 @@ const Header: React.FC = () => {
           <span>{displayName}</span>
         </div>
 
-        <Button variant="primary" className={styles.btnUpload}>
+        <Button 
+          variant="primary" 
+          className={styles.btnUpload}
+          onClick={handleOpenUploadModal}
+        >
           <svg
             width="16"
             height="16"
@@ -97,6 +141,22 @@ const Header: React.FC = () => {
         </Button>
       </div>
     </header>
+
+    {/* Modal de Subida de Documentos */}
+    <Modal
+      show={showUploadModal}
+      onHide={handleCloseUploadModal}
+      size="lg"
+      centered
+      backdrop="static"
+      keyboard={false}
+    >
+      <FileUploader
+        onUploadSuccess={handleUploadSuccess}
+        onClose={handleCloseUploadModal}
+      />
+    </Modal>
+    </>
   );
 };
 

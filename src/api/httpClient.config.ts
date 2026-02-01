@@ -4,7 +4,23 @@ import type { ApiErrorResponse } from '../types/api.types';
 /**
  * Configuración base de la instancia de axios
  */
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+// Use environment variable for tests (process.env) and fallback to default.
+// Prefer process.env for Jest/Node; in Vite the developer build can still
+// inject the real URL at build time. This avoids TypeScript errors during
+// tests about `import.meta` when test tsconfig uses CommonJS.
+const getEnvVar = (key: string): string | undefined => {
+  const meta = (import.meta as unknown) as { env?: Record<string, unknown> } | undefined;
+  if (meta?.env && typeof meta.env[key] === 'string') {
+    return meta.env[key] as string;
+  }
+  const proc = (globalThis as unknown as { process?: { env?: Record<string, unknown> } }).process;
+  if (proc?.env && typeof proc.env[key] === 'string') {
+    return proc.env[key] as string;
+  }
+  return undefined;
+};
+
+const API_BASE_URL = getEnvVar('VITE_API_BASE_URL') ?? 'http://localhost:3000/api';
 const REQUEST_TIMEOUT_MS = 30000; // 30 segundos
 
 /**
@@ -90,9 +106,17 @@ const createAxiosInstance = (): AxiosInstance => {
         // El servidor respondió con un código de estado fuera del rango 2xx
         switch (error.response.status) {
           case 401:
-            // No autenticado - redirigir a login
-            // Las cookies se limpian automáticamente desde el servidor
-            window.location.href = '/login';
+            // No autenticado - señalizar la app en lugar de forzar una navegación
+            // Esto evita redirecciones inesperadas durante la inicialización.
+            try {
+              localStorage.removeItem('auth_user');
+            } catch {console.warn('Could not remove auth_user from localStorage'); }
+            try {
+              // Emitir evento global que los providers pueden escuchar
+              window.dispatchEvent(new CustomEvent('app:unauthenticated'));
+            } catch (e) {
+              console.warn('Could not dispatch unauthenticated event', e);
+            }
             break;
           case 403: {
             // Acceso prohibido o token CSRF inválido/faltante

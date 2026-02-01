@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Container, Row, Col, Spinner, Alert } from 'react-bootstrap';
 import MainLayout from '../components/MainLayout';
 import DocumentCard from '../components/DocumentCard';
 import { useHttpRequest } from '../hooks/useHttpRequest';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
+import useOrganization from '../hooks/useOrganization';
 import type { Document } from '../types/document.types';
+
 
 interface DocumentsApiResponse {
   success: boolean;
@@ -25,28 +27,42 @@ const Dashboard: React.FC = () => {
 
   // Usar el hook useHttpRequest para obtener documentos
   const { execute, data: documents, isLoading, isError, error } = useHttpRequest<DocumentsApiResponse>();
-
   
+
+  // Obtener ID de la organización activa desde el contexto
+  const { activeOrganization } = useOrganization();
+  const organizationId = activeOrganization?.id ?? '';
+
+  /**
+   * Obtiene los documentos recientes
+   */
+  const fetchDocuments = useCallback(() => {
+    if (!organizationId) return;
+    execute({
+      method: 'GET',
+      url: `/documents/recent/${organizationId}`,
+    });
+  }, [execute, organizationId]);
+
+  /**
+   * Callback cuando se suben documentos exitosamente
+   */
+  const handleDocumentsUploaded = useCallback(() => {
+    // Refrescar la lista de documentos
+    fetchDocuments();
+  }, [fetchDocuments]);
 
 
 
   React.useEffect(() => {
-    
-    // Obtener documentos al montar el componente   
-    const organizationId = '69743cfea9982c50feb47fa6';
-    
-      execute({
-      method: 'GET',
-      url: `/documents/recent/${organizationId}`,
-      
-    });
-    
-  }, [execute]);
+    fetchDocuments();
+  }, [fetchDocuments]);
 
  
   return (
-    <MainLayout>
+    <MainLayout onDocumentsUploaded={handleDocumentsUploaded}>
       <Container fluid>
+       
        
         {/* Loading state */}
         {isLoading && (

@@ -143,10 +143,10 @@ export default function LoginForm() {
             {/* Remember + Forgot */}
             <div className={styles.rememberRow}>
 
-              <label className={styles.rememberMe}>
+              <label className={styles.rememberLabel}>
                 <input
                   type="checkbox"
-                  className={styles.rememberCheckbox} 
+                  className={styles.checkbox} 
                 />
                 Recordarme
               </label>              

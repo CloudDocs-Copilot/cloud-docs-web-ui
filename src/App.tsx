@@ -14,11 +14,19 @@ import NoOrganization from './pages/NoOrganization'
 import RequireOrganization from './components/RequireOrganization'
 import OrganizationSettings from './pages/OrganizationSettings'
 
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
+
+
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<LoginPage />} />
+
+      <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+   
       <Route path="/register" element={<Register />} />
       <Route
         path="/dashboard"

@@ -48,3 +48,29 @@ export async function registerRequest(payload: RegisterPayload): Promise<{ messa
   );
   return resp.data;
 }
+
+
+
+// Solicitar link de recuperación de contraseña
+export async function forgotPasswordRequest(email: string): Promise<{ message: string }> {
+  const resp = await apiClient.post<{ message: string }>(
+    "/auth/forgot-password",
+    { email }
+  );
+
+  return resp.data;
+}
+
+// Resetear contraseña usando token
+export async function resetPasswordRequest(payload: {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}): Promise<{ message: string }> {
+  const resp = await apiClient.post<{ message: string }>(
+    "/auth/reset-password",
+    payload
+  );
+
+  return resp.data;
+}

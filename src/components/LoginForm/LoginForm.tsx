@@ -1,7 +1,7 @@
 // src/components/LoginForm/LoginForm.tsx
 import React, { useState } from "react";
 import styles from "./LoginForm.module.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { usePageTitle } from "../../hooks/usePageInfoTitle";
 import { useAuth } from "../../hooks/useAuth";
 import { useFormValidation } from "../../hooks/useFormValidation";
@@ -142,11 +142,19 @@ export default function LoginForm() {
 
             {/* Remember + Forgot */}
             <div className={styles.rememberRow}>
-              
 
-              <a className={styles.forgotPasswordLink} href="#">
-                ¿Olvidaste tu contraseña?
-              </a>
+              <label className={styles.rememberLabel}>
+                <input
+                  type="checkbox"
+                  className={styles.checkbox} 
+                />
+                Recordarme
+              </label>              
+
+              <Link className={styles.forgotPasswordLink} to="/auth/forgot-password">
+              ¿Olvidaste tu contraseña?
+              </Link>
+
             </div>
 
             {/* Error */}

@@ -1,0 +1,97 @@
+.imageViewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: #2d2d2d;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: #1a1a1a;
+  border-bottom: 1px solid #444;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.toolbarGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.zoomLevel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  min-width: 60px;
+  text-align: center;
+  color: #e0e0e0;
+}
+
+.imageContainer {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  user-select: none;
+}
+
+.imageContainer.dragging {
+  cursor: grabbing !important;
+}
+
+.image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+}
+
+.loadingState,
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #e0e0e0;
+}
+
+.errorState {
+  color: #dc3545;
+}
+
+.errorState i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.footer {
+  padding: 0.5rem 1rem;
+  background-color: #1a1a1a;
+  border-top: 1px solid #444;
+  text-align: center;
+}
+
+.footer small {
+  color: #e0e0e0 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .toolbar {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .toolbarGroup {
+    width: 100%;
+    justify-content: center;
+  }
+}

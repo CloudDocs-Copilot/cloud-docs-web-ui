@@ -1,15 +1,18 @@
 .documentCard {
   border: 1px solid #e5e7eb;
-  border-radius: 16px;
+  border-radius: 12px;
   transition: all 0.2s;
   cursor: pointer;
   height: 100%;
   position: relative;
+  background: white;
+  overflow: hidden;
 }
 
 .documentCard:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
+  border-color: #d1d5db;
 }
 
 .documentCard:hover .cardOptions {
@@ -17,10 +20,12 @@
 }
 
 .cardBody {
-  padding: 20px;
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 12px;
+  height: 100%;
 }
 
 .cardOptions {
@@ -53,17 +58,20 @@
   color: #374151;
 }
 
-.documentIconWrapper {
-  margin-bottom: 8px;
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 4px;
 }
 
 .fileIcon {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
 }
 
 .fileIconPdf {
-  color: #ef4444;
+  color: #dc2626;
 }
 
 .fileIconExcel {
@@ -71,33 +79,58 @@
 }
 
 .fileIconWord {
-  color: #3b82f6;
+  color: #2563eb;
 }
 
-.documentName {
-  font-size: 0.95rem;
+.documentTitle {
+  font-size: 1rem;
   font-weight: 500;
-  color: #1f2937;
+  color: #111827;
   margin: 0;
-  word-break: break-word;
+  line-height: 1.4;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
-.documentBadge {
-  font-size: 0.75rem;
+.badgeWrapper {
+  margin-top: 4px;
+}
+
+.categoryBadge {
+  font-size: 0.813rem;
   font-weight: 500;
-  padding: 4px 10px;
-  border-radius: 6px;
-  width: fit-content;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
   color: #fff;
 }
 
-.documentMeta {
+.badgeIcon {
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.cardFooter {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.8rem;
-  color: #6b7280;
+  width: 100%;
   margin-top: auto;
+  padding-top: 8px;
+}
+
+.documentDate,
+.documentSize {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 400;
 }
 
 .documentDate,

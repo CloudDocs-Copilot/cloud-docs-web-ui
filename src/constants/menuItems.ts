@@ -9,5 +9,6 @@ export const SIDEBAR_MENU_ITEMS: MenuItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊', path: '/dashboard' },
   { id: 'mi-unidad', label: 'Mi Unidad', icon: '🗄️', path: '/my-drive' },
   { id: 'compartido', label: 'Compartido', icon: '👥', path: '/shared' },
-  { id: 'colecciones', label: 'Colecciones Inteligentes', icon: '✨', path: '/collections' }
+  { id: 'colecciones', label: 'Colecciones Inteligentes', icon: '✨', path: '/collections' },
+  { id: 'trash', label: 'Papelera', icon: '🗑️', path: '/trash' }
 ];

@@ -52,6 +52,14 @@ const Dashboard: React.FC = () => {
     fetchDocuments();
   }, [fetchDocuments]);
 
+  /**
+   * Callback cuando se elimina un documento
+   */
+  const handleDocumentDeleted = useCallback(() => {
+    // Refrescar la lista de documentos
+    fetchDocuments();
+  }, [fetchDocuments]);
+
 
 
   React.useEffect(() => {
@@ -88,7 +96,7 @@ const Dashboard: React.FC = () => {
             {documents.documents.length > 0 ? (
               documents.documents.map((doc, index) => (
                 <Col key={index} xs={12} sm={6} md={4} lg={3}>
-                  <DocumentCard document={doc} />
+                  <DocumentCard document={doc} onDeleted={handleDocumentDeleted} />
                 </Col>
               ))
             ) : (

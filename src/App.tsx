@@ -14,6 +14,7 @@ import NoOrganization from './pages/NoOrganization'
 import RequireOrganization from './components/Organization/RequireOrganization'
 import OrganizationSettings from './pages/OrganizationSettings'
 import PendingInvitations from './pages/PendingInvitations'
+import TrashPage from './pages/TrashPage'
 
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
@@ -38,6 +39,16 @@ function App() {
               </RequireOrganization>
             </PrivateRoute>
           }
+      />
+      <Route
+        path="/trash"
+        element={
+          <PrivateRoute>
+            <RequireOrganization>
+              <TrashPage />
+            </RequireOrganization>
+          </PrivateRoute>
+        }
       />
       <Route
         path="/profile"

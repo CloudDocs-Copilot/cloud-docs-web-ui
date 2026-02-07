@@ -49,7 +49,7 @@ const getEnvVar = (key: string): string | undefined => {
   return undefined;
 };
 
-const API_BASE_URL = getEnvVar('VITE_API_BASE_URL') ?? 'http://localhost:3000/api';
+const API_BASE_URL = getEnvVar('VITE_API_BASE_URL') ?? 'http://localhost:4000/api';
 const REQUEST_TIMEOUT_MS = 30000; // 30 segundos
 
 /**

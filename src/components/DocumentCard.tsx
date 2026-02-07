@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Card, Badge } from 'react-bootstrap';
+import { Card, Badge, Modal, Button } from 'react-bootstrap';
 import type { Document } from '../types/document.types';
 import { getFileTypeFromMime, formatFileSize } from '../types/document.types';
+import { useDocumentDeletion } from '../hooks/useDocumentDeletion';
 import { DocumentPreviewModal } from './DocumentPreview';
 import type { PreviewDocument } from '../types/preview.types';
 import { previewService } from '../services/preview.service';
@@ -9,10 +10,25 @@ import styles from './DocumentCard.module.css';
 
 interface DocumentCardProps {
   document: Document;
+  onDeleted?: () => void;
 }
 
-const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
+const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
+  const { moveToTrash, loading } = useDocumentDeletion();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+
+  /**
+   * Maneja el movimiento a papelera
+   */
+  const handleMoveToTrash = async () => {
+    const documentId = document.id || (document as any)._id;
+    const deleted = await moveToTrash(documentId);
+    if (deleted) {
+      setShowDeleteModal(false);
+      onDeleted?.();
+    }
+  };
 
   // Mapeo de folder IDs a nombres de categorías
   const getFolderName = (folderId: string): string => {
@@ -177,15 +193,50 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document }) => {
               <line x1="12" y1="15" x2="12" y2="3" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
-          <button className={styles.optionBtn} title="Más opciones">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <circle cx="12" cy="5" r="2"/>
-              <circle cx="12" cy="12" r="2"/>
-              <circle cx="12" cy="19" r="2"/>
+          <button 
+            className={styles.optionBtn} 
+            title="Mover a papelera"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteModal(true);
+            }}
+            disabled={loading}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
         </div>
       </Card>
+
+      {/* Modal de confirmación de eliminación */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Mover a papelera</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>¿Deseas mover este documento a la papelera?</p>
+          <p className="text-muted">
+            <strong>{document.originalname || document.filename}</strong>
+          </p>
+          <p className="text-muted small">
+            El documento se eliminará automáticamente después de 30 días. Puedes restaurarlo desde la papelera antes de ese tiempo.
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Cancelar
+          </Button>
+          <Button 
+            variant="danger" 
+            onClick={handleMoveToTrash}
+            disabled={loading}
+          >
+            {loading ? 'Moviendo...' : 'Mover a papelera'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* Modal de preview */}
       <DocumentPreviewModal

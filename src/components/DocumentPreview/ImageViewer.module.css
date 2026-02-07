@@ -6,29 +6,39 @@
   background-color: #2d2d2d;
 }
 
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  background-color: #1a1a1a;
-  border-bottom: 1px solid #444;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+.iconButton {
+  color: #212529;
+  padding: 0.5rem;
+  text-decoration: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  position: relative;
 }
 
-.toolbarGroup {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+.iconButton:hover {
+  color: #000;
+  text-decoration: none;
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.plusIcon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.75rem;
+  font-weight: bold;
 }
 
 .zoomLevel {
   font-size: 0.875rem;
   font-weight: 500;
-  min-width: 60px;
+  color: #495057;
+  min-width: 50px;
   text-align: center;
-  color: #e0e0e0;
 }
 
 .imageContainer {
@@ -70,28 +80,4 @@
 .errorState i {
   font-size: 3rem;
   margin-bottom: 1rem;
-}
-
-.footer {
-  padding: 0.5rem 1rem;
-  background-color: #1a1a1a;
-  border-top: 1px solid #444;
-  text-align: center;
-}
-
-.footer small {
-  color: #e0e0e0 !important;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .toolbar {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .toolbarGroup {
-    width: 100%;
-    justify-content: center;
-  }
 }

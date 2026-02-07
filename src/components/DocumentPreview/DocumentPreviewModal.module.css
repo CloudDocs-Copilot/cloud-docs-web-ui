@@ -1,5 +1,20 @@
-.previewModal {
-  /* Estilos personalizados para el modal */
+.previewModal :global(.modal-dialog) {
+  margin: 0;
+  max-width: 100%;
+  height: 100vh;
+}
+
+.previewModal :global(.modal-content) {
+  height: 100vh;
+  border: none;
+  border-radius: 0;
+  background-color: #fff;
+}
+
+.previewModal :global(.modal-body) {
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .modalHeader {
@@ -17,9 +32,25 @@
 
 .modalBody {
   padding: 0;
-  height: 80vh;
-  min-height: 500px;
+  height: 100%;
   overflow: hidden;
+  display: flex;
+  flex-direction: row;
+}
+
+/* Forzar el sidebar a comportarse como parte del layout flex del modal */
+.modalBody :global(.sidebar) {
+  position: relative !important;
+  flex-shrink: 0;
+  height: 100%;
+}
+
+.viewerWrapper {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .audioContainer {
@@ -60,10 +91,4 @@
   background-color: white;
 }
 
-/* Ajustes para pantallas pequeñas */
-@media (max-width: 992px) {
-  .modalBody {
-    height: calc(100vh - 56px); /* Altura completa menos header */
-    min-height: unset;
-  }
-}
+

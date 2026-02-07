@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Spinner, Alert } from 'react-bootstrap';
 import type { ImageViewerProps } from '../../types/preview.types';
+import { PreviewHeader } from './PreviewHeader';
 import styles from './ImageViewer.module.css';
 
 /**
  * Componente para visualizar imágenes con zoom y controles
  */
-export const ImageViewer: React.FC<ImageViewerProps> = ({ url, filename, alt }) => {
+export const ImageViewer: React.FC<ImageViewerProps> = ({ url, filename, alt, onBack, fileSize }) => {
   const [scale, setScale] = useState<number>(1.0);
   const [rotation, setRotation] = useState<number>(0);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -81,14 +82,6 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ url, filename, alt }) 
   };
 
   /**
-   * Ajustar imagen a la ventana
-   */
-  const fitToWindow = () => {
-    setScale(1.0);
-    setPosition({ x: 0, y: 0 });
-  };
-
-  /**
    * Manejo de arrastre de imagen
    */
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -120,63 +113,56 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ url, filename, alt }) 
 
   return (
     <div className={styles.imageViewer}>
-      {/* Toolbar de controles */}
-      <div className={styles.toolbar}>
-        <div className={styles.toolbarGroup}>
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={zoomOut}
-            disabled={scale <= 0.25}
-            title="Zoom Out"
-          >
-            <i className="bi bi-zoom-out"></i>
-          </Button>
+      {/* Header con nombre de archivo y controles */}
+      <PreviewHeader
+        filename={filename}
+        fileSize={fileSize}
+        onBack={onBack}
+        onDownload={() => window.open(url, '_blank')}
+      >
+        <Button
+          variant="link"
+          className={styles.iconButton}
+          onClick={zoomOut}
+          disabled={scale <= 0.25}
+          title="Reducir zoom"
+        >
+          <i className="bi bi-search"></i>
+        </Button>
 
-          <span className={styles.zoomLevel}>
-            {Math.round(scale * 100)}%
-          </span>
+        <span className={styles.zoomLevel}>
+          {Math.round(scale * 100)}%
+        </span>
 
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={zoomIn}
-            disabled={scale >= 5.0}
-            title="Zoom In"
-          >
-            <i className="bi bi-zoom-in"></i>
-          </Button>
+        <Button
+          variant="link"
+          className={styles.iconButton}
+          onClick={zoomIn}
+          disabled={scale >= 5.0}
+          title="Aumentar zoom"
+        >
+          <i className="bi bi-search"></i>
+          <span className={styles.plusIcon}>+</span>
+        </Button>
 
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={fitToWindow}
-            title="Fit to Window"
-          >
-            <i className="bi bi-arrows-fullscreen"></i>
-          </Button>
-        </div>
+        <Button
+          variant="link"
+          className={styles.iconButton}
+          onClick={rotate}
+          title="Rotar 90°"
+        >
+          <i className="bi bi-arrow-clockwise"></i>
+        </Button>
 
-        <div className={styles.toolbarGroup}>
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={rotate}
-            title="Rotate 90°"
-          >
-            <i className="bi bi-arrow-clockwise"></i>
-          </Button>
-
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={resetView}
-            title="Reset View"
-          >
-            <i className="bi bi-arrow-counterclockwise"></i> Reset
-          </Button>
-        </div>
-      </div>
+        <Button
+          variant="link"
+          className={styles.iconButton}
+          onClick={resetView}
+          title="Resetear vista"
+        >
+          <i className="bi bi-arrow-counterclockwise"></i>
+        </Button>
+      </PreviewHeader>
 
       {/* Área de visualización de la imagen */}
       <div
@@ -214,11 +200,6 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ url, filename, alt }) 
             draggable={false}
           />
         )}
-      </div>
-
-      {/* Footer con información */}
-      <div className={styles.footer}>
-        <small className="text-muted">{filename}</small>
       </div>
     </div>
   );

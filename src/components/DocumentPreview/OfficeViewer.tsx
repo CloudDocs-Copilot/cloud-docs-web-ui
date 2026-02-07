@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, Spinner } from 'react-bootstrap';
-import { apiClient } from '../../api/httpClient.config';
+import { Alert, Spinner, Button } from 'react-bootstrap';
+import { PreviewHeader } from './PreviewHeader';
+import { previewService } from '../../services/preview.service';
 import styles from './OfficeViewer.module.css';
 
 interface OfficeViewerProps {
   url: string;
   filename: string;
+  onBack?: () => void;
+  fileSize?: number;
 }
 
 /**
  * Visor de documentos Office (Word, Excel, PowerPoint)
  * Carga el HTML convertido desde el backend y lo renderiza de forma segura
  */
-export const OfficeViewer: React.FC<OfficeViewerProps> = ({ url, filename }) => {
+export const OfficeViewer: React.FC<OfficeViewerProps> = ({ url, filename, onBack, fileSize }) => {
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [scale, setScale] = useState<number>(1.0);
 
   useEffect(() => {
     const loadDocument = async () => {
@@ -45,48 +49,84 @@ export const OfficeViewer: React.FC<OfficeViewerProps> = ({ url, filename }) => 
     loadDocument();
   }, [url]);
 
-  if (loading) {
-    return (
-      <div className={styles.loadingContainer}>
-        <Spinner animation="border" variant="primary" />
-        <p className="mt-3 text-muted">Loading document...</p>
-      </div>
-    );
-  }
+  /**
+   * Aumentar zoom
+   */
+  const zoomIn = () => {
+    setScale((prev) => Math.min(prev + 0.2, 3.0));
+  };
 
-  if (error) {
-    return (
-      <Alert variant="danger" className="m-4">
-        <Alert.Heading>
-          <i className="bi bi-exclamation-triangle"></i> Error Loading Document
-        </Alert.Heading>
-        <p>{error}</p>
-        <hr />
-        <a href={url} download className="btn btn-primary">
-          <i className="bi bi-download"></i> Download Original File
-        </a>
-      </Alert>
-    );
-  }
+  /**
+   * Reducir zoom
+   */
+  const zoomOut = () => {
+    setScale((prev) => Math.max(prev - 0.2, 0.5));
+  };
+
+  const formattedFileSize = fileSize ? previewService.formatFileSize(fileSize) : '';
 
   return (
     <div className={styles.viewerContainer}>
-      <div className={styles.toolbar}>
-        <span className="text-muted">
-          <i className="bi bi-file-earmark-word"></i> {filename}
-        </span>
-        <a
-          className="btn btn-sm btn-outline-primary"
-          href={url}
-          download
+      <PreviewHeader
+        filename={filename}
+        fileSize={fileSize}
+        fileInfo={formattedFileSize}
+        onBack={onBack}
+        onDownload={() => window.open(url, '_blank')}
+      >
+        <Button
+          variant="link"
+          className={styles.zoomButton}
+          onClick={zoomOut}
+          disabled={scale <= 0.5}
+          title="Reducir zoom"
         >
-          <i className="bi bi-download"></i> Download
-        </a>
+          <i className="bi bi-dash"></i>
+        </Button>
+        
+        <span className={styles.zoomLevel}>
+          {Math.round(scale * 100)}%
+        </span>
+        
+        <Button
+          variant="link"
+          className={styles.zoomButton}
+          onClick={zoomIn}
+          disabled={scale >= 3.0}
+          title="Aumentar zoom"
+        >
+          <i className="bi bi-plus"></i>
+        </Button>
+      </PreviewHeader>
+      
+      <div className={styles.documentContainer}>
+        {loading && (
+          <div className={styles.loadingState}>
+            <Spinner animation="border" role="status">
+              <span className="visually-hidden">Loading document...</span>
+            </Spinner>
+            <p className="mt-3">Loading document...</p>
+          </div>
+        )}
+
+        {error && (
+          <Alert variant="danger" className="m-3">
+            <Alert.Heading>Error Loading Document</Alert.Heading>
+            <p>{error}</p>
+          </Alert>
+        )}
+
+        {!loading && !error && (
+          <div 
+            className={styles.contentContainer}
+            style={{ 
+              transform: `scale(${scale})`,
+              transformOrigin: 'top center'
+            }}
+            dangerouslySetInnerHTML={{ __html: htmlContent }}
+          />
+        )}
       </div>
-      <div 
-        className={styles.contentContainer}
-        dangerouslySetInnerHTML={{ __html: htmlContent }}
-      />
     </div>
   );
 };

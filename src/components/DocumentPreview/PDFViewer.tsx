@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Button, Spinner, Alert } from 'react-bootstrap';
 import type { PDFViewerProps } from '../../types/preview.types';
+import { previewService } from '../../services/preview.service';
+import { PreviewHeader } from './PreviewHeader';
 import styles from './PDFViewer.module.css';
 
 // Configurar worker de PDF.js usando el paquete npm
@@ -13,8 +15,9 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 /**
  * Componente para visualizar documentos PDF con navegación de páginas
  */
-export const PDFViewer: React.FC<PDFViewerProps> = ({ url, filename }) => {
+export const PDFViewer: React.FC<PDFViewerProps> = ({ url, filename, onBack, fileSize }) => {
   const [numPages, setNumPages] = useState<number>(0);
+  // @ts-ignore - setPageNumber will be used in future navigation features
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
   const [loading, setLoading] = useState<boolean>(true);
@@ -96,20 +99,6 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ url, filename }) => {
   };
 
   /**
-   * Navegar a la página anterior
-   */
-  const goToPrevPage = () => {
-    setPageNumber((prev) => Math.max(prev - 1, 1));
-  };
-
-  /**
-   * Navegar a la página siguiente
-   */
-  const goToNextPage = () => {
-    setPageNumber((prev) => Math.min(prev + 1, numPages));
-  };
-
-  /**
    * Aumentar zoom
    */
   const zoomIn = () => {
@@ -123,73 +112,45 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ url, filename }) => {
     setScale((prev) => Math.max(prev - 0.2, 0.5));
   };
 
-  /**
-   * Resetear zoom
-   */
-  const resetZoom = () => {
-    setScale(1.0);
-  };
+  const formattedFileSize = fileSize ? previewService.formatFileSize(fileSize) : '';
+  const fileInfo = numPages 
+    ? `${formattedFileSize}${formattedFileSize ? ' • ' : ''}${numPages} página${numPages !== 1 ? 's' : ''}`
+    : formattedFileSize;
 
   return (
     <div className={styles.pdfViewer}>
-      {/* Toolbar de controles */}
-      <div className={styles.toolbar}>
-        <div className={styles.toolbarGroup}>
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={goToPrevPage}
-            disabled={pageNumber <= 1}
-          >
-            <i className="bi bi-chevron-left"></i> Previous
-          </Button>
-          
-          <span className={styles.pageInfo}>
-            Page {pageNumber} of {numPages || '...'}
-          </span>
-          
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={goToNextPage}
-            disabled={pageNumber >= numPages}
-          >
-            Next <i className="bi bi-chevron-right"></i>
-          </Button>
-        </div>
-
-        <div className={styles.toolbarGroup}>
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={zoomOut}
-            disabled={scale <= 0.5}
-          >
-            <i className="bi bi-zoom-out"></i>
-          </Button>
-          
-          <span className={styles.zoomLevel}>
-            {Math.round(scale * 100)}%
-          </span>
-          
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={zoomIn}
-            disabled={scale >= 3.0}
-          >
-            <i className="bi bi-zoom-in"></i>
-          </Button>
-          
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={resetZoom}
-          >
-            Reset
-          </Button>
-        </div>
-      </div>
+      {/* Header con nombre de archivo y controles */}
+      <PreviewHeader
+        filename={filename}
+        fileSize={fileSize}
+        fileInfo={fileInfo}
+        onBack={onBack}
+        onDownload={() => window.open(url, '_blank')}
+      >
+        <Button
+          variant="link"
+          className={styles.zoomButton}
+          onClick={zoomOut}
+          disabled={scale <= 0.5}
+          title="Reducir zoom"
+        >
+          <i className="bi bi-dash"></i>
+        </Button>
+        
+        <span className={styles.zoomLevel}>
+          {Math.round(scale * 100)}%
+        </span>
+        
+        <Button
+          variant="link"
+          className={styles.zoomButton}
+          onClick={zoomIn}
+          disabled={scale >= 3.0}
+          title="Aumentar zoom"
+        >
+          <i className="bi bi-plus"></i>
+        </Button>
+      </PreviewHeader>
 
       {/* Área de visualización del PDF */}
       <div className={styles.documentContainer}>
@@ -232,11 +193,6 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ url, filename }) => {
             />
           </Document>
         )}
-      </div>
-
-      {/* Footer con información del documento */}
-      <div className={styles.footer}>
-        <small className="text-muted">{filename}</small>
       </div>
     </div>
   );

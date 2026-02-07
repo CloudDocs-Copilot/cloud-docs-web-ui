@@ -2,24 +2,88 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  width: 100%;
   background-color: #f5f5f5;
 }
 
-.toolbar {
+.iconButton {
+  color: #212529;
+  padding: 0.5rem;
+  text-decoration: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  position: relative;
+}
+
+.iconButton:hover {
+  color: #000;
+  text-decoration: none;
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.zoomButton {
+  color: #495057;
+  padding: 0.25rem 0.5rem;
+  text-decoration: none;
+  font-size: 1.125rem;
+  line-height: 1;
+  min-width: 32px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  background-color: white;
-  border-bottom: 1px solid #dee2e6;
-  flex-shrink: 0;
+  justify-content: center;
+}
+
+.zoomButton:hover {
+  color: #212529;
+  text-decoration: none;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.zoomButton:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.zoomLevel {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #495057;
+  min-width: 45px;
+  text-align: center;
+  user-select: none;
+}
+
+.documentContainer {
+  flex: 1;
+  overflow: auto;
+  padding: 1rem;
+  position: relative;
+  background-color: #f5f5f5;
 }
 
 .contentContainer {
-  flex: 1;
-  overflow-y: auto;
-  background-color: #f5f5f5;
-  padding: 20px;
+  width: 100%;
+  max-width: 1200px;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  min-height: 100%;
+  margin: 0 auto;
+  transition: transform 0.2s ease;
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #6c757d;
 }
 
 /* Estilos para el contenido HTML renderizado */
@@ -29,18 +93,13 @@
   margin: 0 !important;
 }
 
-.loadingContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  background-color: #f8f9fa;
-}
-
 /* Ajustes para pantallas pequeñas */
 @media (max-width: 768px) {
+  .documentContainer {
+    padding: 0.5rem;
+  }
+  
   .contentContainer {
-    padding: 10px;
+    padding: 20px;
   }
 }

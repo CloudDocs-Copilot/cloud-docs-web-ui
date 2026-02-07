@@ -8,6 +8,7 @@ import { ImageViewer } from './ImageViewer';
 import { VideoPlayer } from './VideoPlayer';
 import { TextViewer } from './TextViewer';
 import { OfficeViewer } from './OfficeViewer';
+import Sidebar from '../Sidebar';
 import styles from './DocumentPreviewModal.module.css';
 
 /**
@@ -75,7 +76,9 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         return (
           <PDFViewer
             url={previewUrl}
-            filename={document.filename || document.originalname || 'document.pdf'}
+            filename={document.originalname || document.filename || 'document.pdf'}
+            onBack={onHide}
+            fileSize={document.size}
           />
         );
 
@@ -83,8 +86,10 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         return (
           <ImageViewer
             url={previewUrl}
-            filename={document.filename || document.originalname || 'image'}
+            filename={document.originalname || document.filename || 'image'}
             alt={document.originalname}
+            onBack={onHide}
+            fileSize={document.size}
           />
         );
 
@@ -93,7 +98,9 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
           <VideoPlayer
             url={previewUrl}
             mimeType={document.mimeType}
-            filename={document.filename || document.originalname || 'video'}
+            filename={document.originalname || document.filename || 'video'}
+            onBack={onHide}
+            fileSize={document.size}
           />
         );
 
@@ -104,7 +111,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             <audio controls src={previewUrl} className={styles.audioPlayer}>
               Your browser does not support the audio element.
             </audio>
-            <p className="text-muted mt-3">{document.filename || document.originalname}</p>
+            <p className="text-muted mt-3">{document.originalname || document.filename}</p>
           </div>
         );
 
@@ -113,8 +120,10 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         return (
           <TextViewer
             url={previewUrl}
-            filename={document.filename || document.originalname || 'file.txt'}
+            filename={document.originalname || document.filename || 'file.txt'}
             mimeType={document.mimeType}
+            onBack={onHide}
+            fileSize={document.size}
           />
         );
 
@@ -122,7 +131,9 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         return (
           <OfficeViewer
             url={previewUrl}
-            filename={document.filename || document.originalname || 'document'}
+            filename={document.originalname || document.filename || 'document'}
+            onBack={onHide}
+            fileSize={document.size}
           />
         );
 
@@ -146,24 +157,39 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
     }
   };
 
+  // Determinar si debe mostrar el header del modal
+  const viewersWithOwnHeader = [
+    DocumentPreviewType.PDF, 
+    DocumentPreviewType.IMAGE, 
+    DocumentPreviewType.VIDEO, 
+    DocumentPreviewType.TEXT, 
+    DocumentPreviewType.CODE,
+    DocumentPreviewType.OFFICE
+  ] as const;
+  
+  const shouldShowModalHeader = !viewersWithOwnHeader.some(type => type === previewType);
+
   return (
     <Modal
       show={show}
       onHide={onHide}
-      size="xl"
-      fullscreen="lg-down"
+      fullscreen
       className={styles.previewModal}
-      centered
     >
-      <Modal.Header closeButton className={styles.modalHeader}>
-        <Modal.Title>
-          <i className="bi bi-eye"></i>{' '}
-          {document.originalname || document.filename || 'Document Preview'}
-        </Modal.Title>
-      </Modal.Header>
+      {shouldShowModalHeader && (
+        <Modal.Header closeButton className={styles.modalHeader}>
+          <Modal.Title>
+            <i className="bi bi-eye"></i>{' '}
+            {document.originalname || document.filename || 'Document Preview'}
+          </Modal.Title>
+        </Modal.Header>
+      )}
 
       <Modal.Body className={styles.modalBody}>
-        {renderViewer()}
+        <Sidebar activeItem="" />
+        <div className={styles.viewerWrapper}>
+          {renderViewer()}
+        </div>
       </Modal.Body>
     </Modal>
   );

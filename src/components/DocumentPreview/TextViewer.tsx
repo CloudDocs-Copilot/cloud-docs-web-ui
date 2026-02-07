@@ -4,12 +4,13 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Button, Spinner, Alert } from 'react-bootstrap';
 import type { TextViewerProps } from '../../types/preview.types';
 import { previewService } from '../../services/preview.service';
+import { PreviewHeader } from './PreviewHeader';
 import styles from './TextViewer.module.css';
 
 /**
  * Componente para visualizar archivos de texto con syntax highlighting
  */
-export const TextViewer: React.FC<TextViewerProps> = ({ url, filename, mimeType, language }) => {
+export const TextViewer: React.FC<TextViewerProps> = ({ url, filename, mimeType, language, onBack, fileSize }) => {
   const [content, setContent] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -93,59 +94,46 @@ export const TextViewer: React.FC<TextViewerProps> = ({ url, filename, mimeType,
 
   return (
     <div className={styles.textViewer}>
-      {/* Toolbar */}
-      <div className={styles.toolbar}>
-        <div className={styles.toolbarGroup}>
-          <span className={styles.fileInfo}>
-            <i className="bi bi-file-text"></i>
-            {isCodeFile && (
-              <span className={styles.languageBadge}>{detectedLanguage}</span>
-            )}
-          </span>
-        </div>
+      {/* Header */}
+      <PreviewHeader
+        filename={filename}
+        fileSize={fileSize}
+        fileInfo={content ? `${content.split('\n').length} líneas` : ''}
+        onBack={onBack}
+        onDownload={downloadFile}
+      >
+        {isCodeFile && (
+          <>
+            <Button
+              variant="link"
+              className={styles.iconButton}
+              onClick={toggleLineNumbers}
+              title={lineNumbers ? 'Ocultar números de línea' : 'Mostrar números de línea'}
+            >
+              <i className="bi bi-list-ol"></i>
+            </Button>
 
-        <div className={styles.toolbarGroup}>
-          {isCodeFile && (
-            <>
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={toggleLineNumbers}
-                active={lineNumbers}
-              >
-                <i className="bi bi-list-ol"></i> Line Numbers
-              </Button>
+            <Button
+              variant="link"
+              className={styles.iconButton}
+              onClick={toggleWrapLines}
+              title={wrapLines ? 'Desactivar ajuste de líneas' : 'Activar ajuste de líneas'}
+            >
+              <i className="bi bi-text-wrap"></i>
+            </Button>
+          </>
+        )}
 
-              <Button
-                variant="outline-secondary"
-                size="sm"
-                onClick={toggleWrapLines}
-                active={wrapLines}
-              >
-                <i className="bi bi-text-wrap"></i> Wrap
-              </Button>
-            </>
-          )}
-
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={copyToClipboard}
-            disabled={loading || !!error}
-          >
-            <i className="bi bi-clipboard"></i> Copy
-          </Button>
-
-          <Button
-            variant="outline-secondary"
-            size="sm"
-            onClick={downloadFile}
-            disabled={loading || !!error}
-          >
-            <i className="bi bi-download"></i> Download
-          </Button>
-        </div>
-      </div>
+        <Button
+          variant="link"
+          className={styles.iconButton}
+          onClick={copyToClipboard}
+          disabled={loading || !!error}
+          title="Copiar al portapapeles"
+        >
+          <i className="bi bi-clipboard"></i>
+        </Button>
+      </PreviewHeader>
 
       {/* Content Area */}
       <div className={styles.contentContainer}>
@@ -189,13 +177,6 @@ export const TextViewer: React.FC<TextViewerProps> = ({ url, filename, mimeType,
             )}
           </>
         )}
-      </div>
-
-      {/* Footer */}
-      <div className={styles.footer}>
-        <small className="text-muted">
-          {filename} • {content.split('\n').length} lines
-        </small>
       </div>
     </div>
   );

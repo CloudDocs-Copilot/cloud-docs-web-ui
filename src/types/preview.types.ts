@@ -42,18 +42,24 @@ export interface DocumentPreviewModalProps {
 export interface PDFViewerProps {
   url: string;
   filename: string;
+  onBack?: () => void;
+  fileSize?: number;
 }
 
 export interface ImageViewerProps {
   url: string;
   filename: string;
   alt?: string;
+  onBack?: () => void;
+  fileSize?: number;
 }
 
 export interface VideoPlayerProps {
   url: string;
   mimeType: string;
   filename: string;
+  onBack?: () => void;
+  fileSize?: number;
 }
 
 export interface TextViewerProps {
@@ -61,12 +67,16 @@ export interface TextViewerProps {
   filename: string;
   mimeType: string;
   language?: string;
+  onBack?: () => void;
+  fileSize?: number;
 }
 
 export interface AudioPlayerProps {
   url: string;
   mimeType: string;
   filename: string;
+  onBack?: () => void;
+  fileSize?: number;
 }
 
 /**

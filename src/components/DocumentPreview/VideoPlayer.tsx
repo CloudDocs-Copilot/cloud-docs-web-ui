@@ -1,12 +1,13 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Button } from 'react-bootstrap';
 import type { VideoPlayerProps } from '../../types/preview.types';
+import { PreviewHeader } from './PreviewHeader';
 import styles from './VideoPlayer.module.css';
 
 /**
  * Componente para reproducir videos con controles HTML5
  */
-export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, mimeType, filename }) => {
+export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, mimeType, filename, onBack, fileSize }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -205,6 +206,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, mimeType, filenam
 
   return (
     <div className={styles.videoPlayer}>
+      <PreviewHeader
+        filename={filename}
+        fileSize={fileSize}
+        onBack={onBack}
+        onDownload={() => window.open(url, '_blank')}
+      />
+      
       <div className={styles.videoContainer}>
         {loading && (
           <div className={styles.loadingState}>
@@ -306,11 +314,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, mimeType, filenam
             </Button>
           </div>
         </div>
-      </div>
-
-      {/* Footer */}
-      <div className={styles.footer}>
-        <small className="text-muted">{filename}</small>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import {
   getPendingInvitations,
   acceptInvitation as acceptInvitationService,
   rejectInvitation as rejectInvitationService,
-} from '../services/invitation.services';
+} from '../services/invitation.service';
 import type { Invitation, AcceptInvitationResponse } from '../types/invitation.types';
 import { useToast } from './useToast';
 

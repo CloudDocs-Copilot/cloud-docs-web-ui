@@ -1,8 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import InviteMemberModal from '../../components/Organization/InviteMemberModal';
-import { inviteMember } from '../../services/membership.services';
-import { searchUserByEmail } from '../../services/user.services';
+import { inviteMember } from '../../services/membership.service';
+import { searchUserByEmail } from '../../services/user.service';
 
 // Mock httpClient to avoid import.meta.env issues in Jest
 jest.mock('../../api/httpClient.config', () => ({
@@ -13,8 +13,8 @@ jest.mock('../../api/httpClient.config', () => ({
 }));
 
 // Mocks
-jest.mock('../../services/membership.services');
-jest.mock('../../services/user.services');
+jest.mock('../../services/membership.service');
+jest.mock('../../services/user.service');
 
 const mockShowToast = jest.fn();
 jest.mock('../../hooks/useToast', () => ({

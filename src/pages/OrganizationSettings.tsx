@@ -160,7 +160,7 @@ function md5(str: string): string {
 }
 
 const OrganizationSettings: React.FC = () => {
-  const { activeOrganization, isAdmin, isOwner } = useOrganization();
+  const { activeOrganization, isAdmin, isOwner, fetchActiveOrganization, loading: contextLoading } = useOrganization();
   usePageTitle({
     title: 'Configuración de Organización',
     subtitle: 'Gestiona miembros y ajustes',
@@ -209,7 +209,6 @@ const OrganizationSettings: React.FC = () => {
       
       }
       setMembers(items);
-      // no server-side pagination; client handles filtering only
     } catch (err: unknown) {
       const msg = (err as Error)?.message ?? 'Error al cargar miembros';
       showToast({ message: msg, variant: 'danger', title: 'Organización' });
@@ -219,13 +218,22 @@ const OrganizationSettings: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchMembers();
+    if (!contextLoading) {
+      fetchMembers();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeOrganization]);
+  }, [activeOrganization, contextLoading]);
 
   return (
     <MainLayout>
       <Container fluid className={styles.container}>
+      {contextLoading ? (
+        <div className="text-center my-5">
+          <Spinner animation="border" />
+          <p className="mt-2 text-muted">Cargando contexto de organización...</p>
+        </div>
+      ) : (
+        <>
       <Row className="mb-2">
         <Col>
           <p>Organización activa: <strong>{activeOrganization?.name ?? 'Ninguna'}</strong></p>
@@ -376,7 +384,7 @@ const OrganizationSettings: React.FC = () => {
           </Table>
         </Col>
       </Row>
-      <InviteMemberModal show={showInvite} onHide={() => setShowInvite(false)} onSuccess={() => fetchMembers()} />
+      <InviteMemberModal show={showInvite} onHide={() => setShowInvite(false)} onSuccess={async () => await fetchMembers()} />
 
       <ConfirmActionModal
         show={!!pendingRoleChange}
@@ -393,7 +401,10 @@ const OrganizationSettings: React.FC = () => {
             await apiClient.patch(`/memberships/organization/${activeOrganization.id}/members/${pending.member.id}`, { role: pending.newRole });
             showToast({ message: 'Rol actualizado', variant: 'success', title: 'Organización' });
             setPendingRoleChange(null);
-            fetchMembers();
+            // Actualizar lista de miembros
+            await fetchMembers();
+            // Actualizar contexto solo si podría afectar permisos del usuario actual
+            await fetchActiveOrganization();
           } catch (err: unknown) {
             const msg = (err as Error)?.message ?? 'Error al actualizar rol';
             showToast({ message: msg, variant: 'danger', title: 'Organización' });
@@ -419,10 +430,12 @@ const OrganizationSettings: React.FC = () => {
           if (!target || !activeOrganization) return;
           setProcessingRevoke(true);
           try {
+            // Endpoint correcto para revocar miembro
             await apiClient.delete(`/memberships/organization/${activeOrganization.id}/members/${target.id}`);
             showToast({ message: 'Miembro revocado', variant: 'success', title: 'Organización' });
             setPendingRevoke(null);
-            fetchMembers();
+            // Solo actualizar lista de miembros, no el contexto (ya que no se puede revocar a uno mismo)
+            await fetchMembers();
           } catch (err: unknown) {
             const msg = (err as Error)?.message ?? 'Error al revocar';
             showToast({ message: msg, variant: 'danger', title: 'Organización' });
@@ -449,7 +462,8 @@ const OrganizationSettings: React.FC = () => {
             await apiClient.post(`/memberships/organization/${activeOrganization.id}/members/${target.id}/resend`);
             showToast({ message: 'Invitación reenviada', variant: 'success', title: 'Organización' });
             setPendingResend(null);
-            fetchMembers();
+            // Solo actualizar lista de miembros
+            await fetchMembers();
           } catch (err: unknown) {
             const msg = (err as Error)?.message ?? 'Error al reenviar invitación';
             showToast({ message: msg, variant: 'danger', title: 'Organización' });
@@ -460,6 +474,8 @@ const OrganizationSettings: React.FC = () => {
       >
         <p>¿Deseas reenviar la invitación a <strong>{(typeof pendingResend?.user === 'string') ? pendingResend.user : (pendingResend?.user?.name ?? pendingResend?.user?.email ?? '—')}</strong>?</p>
       </ConfirmActionModal>
+      </>
+      )}
       </Container>
     </MainLayout>
   );

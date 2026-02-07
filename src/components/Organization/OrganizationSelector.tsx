@@ -16,7 +16,11 @@ const OrganizationSelector: React.FC = () => {
     }
   };
 
-  if (loading)
+  // Determinar si tiene organizaciones disponibles
+  const hasOrganizations = organizations.length > 0;
+  const hasActiveOrganization = !!activeOrganization;
+
+  if (loading && !hasActiveOrganization)
     return (
       <div className={styles.wrapper}>
         <Spinner animation="border" size="sm" />
@@ -30,8 +34,16 @@ const OrganizationSelector: React.FC = () => {
         value={activeOrganization?.id ?? ''}
         onChange={handleChange}
         className={`${styles.select} me-2`}
+        disabled={!hasOrganizations}
       >
-        <option value="">Sin organización</option>
+        {/* Si hay organización activa pero no está en el array, mostrarla */}
+        {hasActiveOrganization && !organizations.find(o => o.id === activeOrganization.id) && (
+          <option key={activeOrganization.id} value={activeOrganization.id}>
+            {activeOrganization.name}
+          </option>
+        )}
+        
+        {/* Listar organizaciones disponibles */}
         {organizations.map((o) => (
           <option key={o.id} value={o.id}>
             {o.name}

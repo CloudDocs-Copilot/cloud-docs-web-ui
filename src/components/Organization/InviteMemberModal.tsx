@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useId } from 'react';
 import { Modal, Button, Form, Spinner } from 'react-bootstrap';
-import { inviteMember } from '../../services/membership.services';
-import { searchUserByEmail } from '../../services/user.services';
+import { inviteMember } from '../../services/membership.service';
+import { searchUserByEmail } from '../../services/user.service';
 import useOrganization from '../../hooks/useOrganization';
 import { useToast } from '../../hooks/useToast';
-import type { User } from '../../services/user.services';
+import type { User } from '../../types/user.types';
 
 interface Props {
   show: boolean;

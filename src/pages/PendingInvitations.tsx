@@ -5,11 +5,13 @@ import MainLayout from '../components/MainLayout';
 import InvitationCard from '../components/Invitations/InvitationCard';
 import { useInvitations } from '../hooks/useInvitations';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
+import useOrganization from '../hooks/useOrganization';
 import styles from './PendingInvitations.module.css';
 
 const PendingInvitations: React.FC = () => {
   const navigate = useNavigate();
   const { invitations, loading, acceptInvitation, rejectInvitation } = useInvitations();
+  const { fetchOrganizations, setActiveOrganization } = useOrganization();
 
   usePageTitle({
     title: 'Invitaciones Pendientes',
@@ -21,7 +23,19 @@ const PendingInvitations: React.FC = () => {
   const handleAccept = async (id: string) => {
     const result = await acceptInvitation(id);
     if (result?.membership?.organization) {
-      // Redirigir al dashboard o a la organización
+      // Recargar el contexto de organizaciones
+      await fetchOrganizations();
+      
+      // Establecer la nueva organización como activa
+      const newOrgId = typeof result.membership.organization === 'string' 
+        ? result.membership.organization 
+        : result.membership.organization.id;
+      
+      if (newOrgId) {
+        await setActiveOrganization(newOrgId);
+      }
+      
+      // Redirigir al dashboard
       setTimeout(() => {
         navigate('/dashboard');
       }, 1500);

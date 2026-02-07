@@ -547,7 +547,7 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 5. Hace clic en "Enviar Invitación"
 6. Backend crea membership con `status: 'pending'`
 7. Se envía email al usuario invitado
-8. Toast: "Invitación enviada a `newuser@example.com`"
+8. Toast: "Invitación enviada a 0000m`"
 9. Modal se cierra
 10. Lista de miembros se refresca mostrando invitación pendiente
 

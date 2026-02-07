@@ -34,6 +34,7 @@ El sistema de invitaciones permite a los administradores y propietarios de organ
 ## Actores
 
 ### 1. **Administrador/Propietario (Invitador)**
+
 - Usuario con rol `admin` u `owner` en una organización
 - Tiene permisos para invitar nuevos miembros
 - Puede asignar roles a los invitados
@@ -41,6 +42,7 @@ El sistema de invitaciones permite a los administradores y propietarios de organ
 - Puede revocar invitaciones
 
 ### 2. **Usuario Invitado**
+
 - Usuario con cuenta existente en CloudDocs
 - Recibe invitación por email
 - Puede aceptar o rechazar la invitación
@@ -51,11 +53,13 @@ El sistema de invitaciones permite a los administradores y propietarios de organ
 ## Requisitos Previos
 
 ### Para Invitar
+
 1. El invitador debe tener rol `admin` u `owner` en la organización
 2. Debe existir una organización activa
 3. El usuario a invitar debe tener una cuenta existente (email registrado)
 
 ### Para Aceptar
+
 1. El usuario invitado debe estar autenticado
 2. La invitación debe estar en estado `pending`
 3. La invitación no debe haber expirado (si aplica)
@@ -66,7 +70,7 @@ El sistema de invitaciones permite a los administradores y propietarios de organ
 
 ### **Fase 1: Invitación**
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │ 1. ADMINISTRADOR ABRE MODAL DE INVITACIÓN                  │
 └─────────────────────────────────────────────────────────────┘
@@ -109,7 +113,7 @@ El sistema de invitaciones permite a los administradores y propietarios de organ
 
 ### **Fase 2: Notificación**
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │ 1. USUARIO INVITADO RECIBE EMAIL                           │
 │    - Asunto: "Invitación a [Organización]"                 │
@@ -120,7 +124,7 @@ El sistema de invitaciones permite a los administradores y propietarios de organ
 
 ### **Fase 3: Visualización de Invitaciones**
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │ 1. USUARIO ACCEDE A /invitations                           │
 │    - Se autentica si es necesario                          │
@@ -149,7 +153,7 @@ El sistema de invitaciones permite a los administradores y propietarios de organ
 
 #### **Opción A: Aceptar**
 
-```
+```e
 ┌─────────────────────────────────────────────────────────────┐
 │ 1. USUARIO HACE CLIC EN "ACEPTAR"                          │
 └─────────────────────────────────────────────────────────────┘
@@ -173,7 +177,7 @@ El sistema de invitaciones permite a los administradores y propietarios de organ
 
 #### **Opción B: Rechazar**
 
-```
+```e
 ┌─────────────────────────────────────────────────────────────┐
 │ 1. USUARIO HACE CLIC EN "RECHAZAR"                         │
 │    Confirmación: "¿Estás seguro de rechazar?"              │
@@ -199,12 +203,14 @@ El sistema de invitaciones permite a los administradores y propietarios de organ
 
 ### **Frontend**
 
-#### 1. **InviteMemberModal** 
+#### 1. **InviteMemberModal**
+
 `src/components/Organization/InviteMemberModal.tsx`
 
 **Propósito:** Modal para invitar nuevos miembros a la organización
 
 **Características:**
+
 - Búsqueda de usuarios por email con debounce (500ms)
 - Validación en tiempo real (usuario encontrado/no encontrado)
 - Selección de rol con descripciones
@@ -213,6 +219,7 @@ El sistema de invitaciones permite a los administradores y propietarios de organ
 - Toast notifications
 
 **Props:**
+
 ```typescript
 interface Props {
   show: boolean;           // Controla visibilidad del modal
@@ -222,6 +229,7 @@ interface Props {
 ```
 
 **Estados:**
+
 ```typescript
 const [email, setEmail] = useState('');                    // Email del usuario
 const [role, setRole] = useState('member');                // Rol seleccionado
@@ -231,6 +239,7 @@ const [foundUser, setFoundUser] = useState<User | null>(null); // Usuario encont
 ```
 
 **Validaciones:**
+
 - ✅ Usuario debe tener permisos (admin/owner)
 - ✅ Email debe ser válido (contener @)
 - ✅ Usuario debe existir en el sistema
@@ -239,17 +248,20 @@ const [foundUser, setFoundUser] = useState<User | null>(null); // Usuario encont
 ---
 
 #### 2. **PendingInvitations** (Página)
+
 `src/pages/PendingInvitations.tsx`
 
 **Propósito:** Página para ver y gestionar invitaciones pendientes
 
 **Características:**
+
 - Lista todas las invitaciones pendientes del usuario
 - Permite aceptar/rechazar invitaciones
 - Redirección automática al dashboard después de aceptar
 - Estado vacío cuando no hay invitaciones
 
 **Hook principal:**
+
 ```typescript
 const { invitations, loading, acceptInvitation, rejectInvitation } = useInvitations();
 ```
@@ -257,11 +269,13 @@ const { invitations, loading, acceptInvitation, rejectInvitation } = useInvitati
 ---
 
 #### 3. **InvitationCard**
+
 `src/components/Invitations/InvitationCard.tsx`
 
 **Propósito:** Card individual para cada invitación
 
 **Muestra:**
+
 - Avatar de la organización (primera letra)
 - Nombre de la organización
 - Plan (badge con color)
@@ -271,6 +285,7 @@ const { invitations, loading, acceptInvitation, rejectInvitation } = useInvitati
 - Botones de acción
 
 **Props:**
+
 ```typescript
 interface InvitationCardProps {
   invitation: Invitation;
@@ -282,11 +297,13 @@ interface InvitationCardProps {
 ---
 
 #### 4. **OrganizationSettings** (Página)
+
 `src/pages/OrganizationSettings.tsx`
 
 **Propósito:** Página de gestión de miembros de la organización
 
 **Características:**
+
 - Lista de miembros actuales
 - Botón "Invitar miembro" (abre InviteMemberModal)
 - Búsqueda de miembros
@@ -296,6 +313,7 @@ interface InvitationCardProps {
 - Muestra estado de cada membresía (active/pending)
 
 **Funcionalidades para invitaciones:**
+
 - Botón "Reenviar" para invitaciones con `status: 'pending'`
 - Indicador visual de estado en la tabla
 
@@ -388,7 +406,8 @@ export const useInvitations = () => {
 ### **Backend Endpoints**
 
 #### **Crear Invitación**
-```
+
+```json
 POST /api/memberships/organization/:organizationId/members
 Body: { userId: string, role: string }
 
@@ -409,7 +428,8 @@ Respuesta:
 ```
 
 #### **Listar Invitaciones Pendientes**
-```
+
+```json
 GET /api/memberships/pending-invitations
 
 Respuesta:
@@ -437,7 +457,8 @@ Respuesta:
 ```
 
 #### **Aceptar Invitación**
-```
+
+```json
 PATCH /api/memberships/:membershipId/accept
 
 Respuesta:
@@ -453,7 +474,8 @@ Respuesta:
 ```
 
 #### **Rechazar Invitación**
-```
+
+```json
 DELETE /api/memberships/:membershipId
 
 Respuesta:
@@ -464,7 +486,8 @@ Respuesta:
 ```
 
 #### **Reenviar Invitación**
-```
+
+```json
 POST /api/memberships/organization/:orgId/members/:membershipId/resend
 
 Respuesta:
@@ -483,6 +506,7 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 ```
 
 ### **pending**
+
 - Invitación enviada pero no aceptada
 - Usuario no tiene acceso a la organización
 - Aparece en `/invitations` del usuario invitado
@@ -490,12 +514,14 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 - Administrador puede reenviar email
 
 ### **active**
+
 - Invitación aceptada
 - Usuario tiene acceso completo según su rol
 - Aparece en lista de miembros de la organización
 - Puede acceder a recursos de la organización
 
 ### **suspended**
+
 - Membresía temporalmente deshabilitada
 - Usuario no puede acceder a la organización
 - No se usa en el flujo de invitaciones actual
@@ -507,11 +533,13 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 ### **Caso 1: Invitación Exitosa**
 
 **Precondiciones:**
+
 - Usuario admin autenticado
 - Organización activa seleccionada
 - Usuario a invitar existe en el sistema
 
 **Flujo:**
+
 1. Admin abre modal de invitación
 2. Escribe email: `newuser@example.com`
 3. Sistema encuentra usuario ✓
@@ -519,11 +547,12 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 5. Hace clic en "Enviar Invitación"
 6. Backend crea membership con `status: 'pending'`
 7. Se envía email al usuario invitado
-8. Toast: "Invitación enviada a newuser@example.com"
+8. Toast: "Invitación enviada a `newuser@example.com`"
 9. Modal se cierra
 10. Lista de miembros se refresca mostrando invitación pendiente
 
 **Postcondiciones:**
+
 - Membership creado en BD con status `pending`
 - Email enviado al usuario
 - Usuario ve invitación en `/invitations`
@@ -533,10 +562,12 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 ### **Caso 2: Usuario No Existe**
 
 **Precondiciones:**
+
 - Usuario admin autenticado
 - Email ingresado no corresponde a ninguna cuenta
 
 **Flujo:**
+
 1. Admin escribe email: `noexiste@example.com`
 2. Sistema busca usuario (500ms debounce)
 3. No encuentra usuario
@@ -544,6 +575,7 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 5. Botón "Enviar Invitación" permanece deshabilitado
 
 **Postcondiciones:**
+
 - No se crea ninguna membresía
 - No se envía ningún email
 - Admin debe verificar el email o el usuario debe registrarse primero
@@ -553,9 +585,11 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 ### **Caso 3: Usuario Ya es Miembro**
 
 **Precondiciones:**
+
 - Usuario a invitar ya tiene membership activo
 
 **Flujo:**
+
 1. Admin intenta invitar usuario existente
 2. Backend valida y detecta membership activo
 3. Responde con error: `{ error: "El usuario ya es miembro" }`
@@ -566,10 +600,12 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 ### **Caso 4: Aceptar Invitación**
 
 **Precondiciones:**
+
 - Usuario invitado autenticado
 - Tiene invitación pending
 
 **Flujo:**
+
 1. Usuario navega a `/invitations`
 2. Ve card con detalles de la invitación
 3. Hace clic en "Aceptar"
@@ -580,6 +616,7 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 8. Organización se activa automáticamente
 
 **Postcondiciones:**
+
 - Membership status = `active`
 - Usuario puede acceder a la organización
 - Invitación desaparece de `/invitations`
@@ -589,10 +626,12 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 ### **Caso 5: Reenviar Invitación**
 
 **Precondiciones:**
+
 - Admin ve miembro con status `pending`
 - Invitación fue enviada hace tiempo
 
 **Flujo:**
+
 1. Admin hace clic en botón "Reenviar"
 2. Modal de confirmación
 3. Backend reenvía email de invitación
@@ -602,7 +641,7 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 
 ## Validaciones
 
-### **Frontend**
+### **Frontend (validaciones)**
 
 1. **Permisos:**
    - Solo admin/owner pueden abrir modal
@@ -646,6 +685,7 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 ### **Toast Notifications (Frontend)**
 
 #### **Éxito:**
+
 - "Invitación enviada a {email}. Se ha enviado un email con el link de aceptación."
 - "Rol actualizado"
 - "Miembro revocado"
@@ -653,6 +693,7 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 - "Te has unido a {organización}"
 
 #### **Error:**
+
 - "No hay organización activa"
 - "Usuario no encontrado"
 - "Error al invitar"
@@ -661,6 +702,7 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 - "No puedes revocar tu propia membresía"
 
 #### **Advertencia:**
+
 - "Necesitas permisos de administrador para invitar miembros"
 
 ---
@@ -668,10 +710,12 @@ type MembershipStatus = 'active' | 'pending' | 'suspended';
 ### **Email Notifications (Backend)**
 
 #### **Email de Invitación:**
+
 **Asunto:** "Invitación a {Nombre Organización}"
 
 **Contenido:**
-```
+
+```e
 Hola {NombreUsuario},
 
 {NombreAdmin} te ha invitado a unirte a {NombreOrganización} como {Rol}.
@@ -746,9 +790,11 @@ sequenceDiagram
 ## Testing
 
 Tests implementados en:
+
 - `src/__tests__/components/InviteMemberModal.test.tsx`
 
 **Cobertura:**
+
 - ✅ Renderizado básico
 - ✅ Permisos (admin/owner)
 - ✅ Búsqueda de usuarios
@@ -759,6 +805,7 @@ Tests implementados en:
 - ✅ Validaciones
 
 **Ejecutar tests:**
+
 ```bash
 npm test -- InviteMemberModal.test.tsx
 ```
@@ -778,6 +825,7 @@ Actualmente el sistema **requiere** que el usuario exista. Una mejora sería:
 5. Token expira después de X días
 
 **Beneficios:**
+
 - Invitar usuarios que aún no tienen cuenta
 - Proceso más fluido de onboarding
 - Reduce fricción para nuevos usuarios

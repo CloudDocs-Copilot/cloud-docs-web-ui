@@ -4,19 +4,48 @@ import type { ApiErrorResponse } from '../types/api.types';
 /**
  * Configuración base de la instancia de axios
  */
-// Use environment variable for tests (process.env) and fallback to default.
-// Prefer process.env for Jest/Node; in Vite the developer build can still
-// inject the real URL at build time. This avoids TypeScript errors during
-// tests about `import.meta` when test tsconfig uses CommonJS.
+// Usar variable de entorno para tests (process.env) y fallback por defecto.
+// Priorizar `process.env` para Jest/Node; en Vite el build/dev puede inyectar
+// la URL real en tiempo de compilación. Evita errores de TypeScript sobre
+// `import.meta` cuando la configuración de tests usa CommonJS.
 const getEnvVar = (key: string): string | undefined => {
-  const meta = (import.meta as unknown) as { env?: Record<string, unknown> } | undefined;
-  if (meta?.env && typeof meta.env[key] === 'string') {
-    return meta.env[key] as string;
+  // 1) Usar `process.env` (vía globalThis) si está disponible (tests/Node)
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const proc = (globalThis as any).process;
+    const v = proc?.env?.[key];
+    if (typeof v === 'string' && v !== '') {
+      console.debug(`env(process): ${key}=${v}`);
+      return v;
+    }
+  } catch {
+    console.debug('env(process): process.env not available');
   }
-  const proc = (globalThis as unknown as { process?: { env?: Record<string, unknown> } }).process;
-  if (proc?.env && typeof proc.env[key] === 'string') {
-    return proc.env[key] as string;
+
+  // 2) Intentar la propiedad literal que Vite reemplaza en tiempo de compilación
+  try {
+   
+   
+    const viteEnv = (import.meta as unknown as { env?: Record<string, unknown> }).env;
+    const viteLiteral = typeof viteEnv?.VITE_API_BASE_URL === 'string'
+      ? (viteEnv.VITE_API_BASE_URL as string)
+      : undefined;
+    if (typeof viteLiteral === 'string' && viteLiteral !== '') {
+      console.debug(`env(import.meta): VITE_API_BASE_URL=${viteLiteral}`);
+      return viteLiteral;
+    }
+
+    // 3) Lectura dinámica como respaldo
+    const meta = (import.meta as unknown) as { env?: Record<string, unknown> } | undefined;
+    const value = meta?.env?.[key] ?? meta?.env?.[key.replace(/^VITE_/, '')];
+    if (typeof value === 'string' && value !== '') {
+      console.debug(`env(import.meta): ${key}=${value}`);
+      return value;
+    }
+  } catch {
+    console.debug('env(import.meta): import.meta.env not available');
   }
+
   return undefined;
 };
 

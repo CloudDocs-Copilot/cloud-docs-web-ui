@@ -55,13 +55,14 @@ function normalizeError(err: unknown): Error {
 }
 
 export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { showToast } = useToast();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [activeOrganization, setActiveOrganizationState] = useState<Organization | null>(null);
   const [membership, setMembership] = useState<Membership | null>(null);
   const [memberships, setMemberships] = useState<MembershipWithOrgDTO[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [initializing, setInitializing] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
   const fetchOrganizations = useCallback(async (): Promise<void> => {
@@ -388,35 +389,41 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Initialize when user authenticates
   useEffect(() => {
-    if (!isAuthenticated) {
-      // clear local state when logged out
+    if (!isAuthenticated || !user) {
+      // clear local state when logged out or no user
       setOrganizations([]);
       setActiveOrganizationState(null);
       setMembership(null);
+      setMemberships([]);
       setError(null);
+      setLoading(false);
+      setInitializing(false);
       return;
     }
     // fetch organizations and active org in sequence and validate membership
     const init = async () => {
+      setInitializing(true);
       try {
         await fetchOrganizations();
         await fetchActiveOrganization();
         await validateActiveMembership();
       } catch (e) {
         setError(normalizeError(e));
+      } finally {
+        setInitializing(false);
       }
     };
 
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.id]);
 
   const value = useMemo<OrgContextValue>(
     () => ({
       organizations,
       activeOrganization,
       membership,
-      loading,
+      loading: loading || initializing,
       error,
       fetchOrganizations,
       fetchActiveOrganization,
@@ -428,7 +435,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       isAdmin,
       isOwner,
     }),
-    [organizations, activeOrganization, membership, loading, error, fetchOrganizations, fetchActiveOrganization, setActiveOrganization, createOrganization, refreshOrganization, clearOrganization, hasRole, isAdmin, isOwner]
+    [organizations, activeOrganization, membership, loading, initializing, error, fetchOrganizations, fetchActiveOrganization, setActiveOrganization, createOrganization, refreshOrganization, clearOrganization, hasRole, isAdmin, isOwner]
   );
 
   return <OrganizationContext.Provider value={value}>{children}</OrganizationContext.Provider>;

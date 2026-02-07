@@ -1,0 +1,92 @@
+.card {
+  margin-bottom: 1rem;
+  border: 1px solid #e0e0e0;
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.header {
+  margin-bottom: 1rem;
+}
+
+.orgInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.orgAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.orgDetails {
+  flex: 1;
+}
+
+.orgName {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.planBadge {
+  font-size: 0.7rem;
+  margin-left: 8px;
+  padding: 2px 6px;
+}
+
+.info {
+  margin-bottom: 1rem;
+}
+
+.infoItem {
+  margin-bottom: 0.5rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.infoItem strong {
+  color: #333;
+}
+
+.timeAgo {
+  font-size: 0.8rem;
+  color: #999;
+  margin-top: 0.5rem;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.acceptButton,
+.rejectButton {
+  flex: 1;
+  font-weight: 500;
+}
+
+@media (max-width: 576px) {
+  .actions {
+    flex-direction: column;
+  }
+
+  .acceptButton,
+  .rejectButton {
+    width: 100%;
+  }
+}

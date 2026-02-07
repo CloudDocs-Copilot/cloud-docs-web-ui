@@ -34,6 +34,10 @@ export default function CreateOrganization() {
       setToastMessage('Organización creada correctamente');
       setToastTitle('Éxito');
       setToastShow(true);
+      // Navegar al dashboard después de un breve delay para mostrar el toast
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 3500);
     } catch (err) {
       console.error('Create organization failed', err);
       const msg = err instanceof Error ? err.message : String(err ?? 'Error desconocido');

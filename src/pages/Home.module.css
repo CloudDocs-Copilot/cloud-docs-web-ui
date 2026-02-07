@@ -698,3 +698,33 @@
     font-size: 3rem;
   }
 }
+/* Quick Access Cards for Logged In Users */
+.quickAccessCard {
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  background: #ffffff;
+}
+
+.quickAccessCard:hover {
+  border-color: #6366f1;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.15);
+  transform: translateY(-4px);
+}
+
+.quickAccessIcon {
+  font-size: 3rem;
+  position: relative;
+  display: inline-block;
+}
+
+.quickAccessCard h5 {
+  color: #1f2937;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.quickAccessCard .text-muted {
+  color: #6b7280 !important;
+  font-size: 0.875rem;
+}

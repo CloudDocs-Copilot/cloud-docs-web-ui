@@ -5,7 +5,7 @@ import styles from './Header.module.css';
 import { useAuth } from '../hooks/useAuth';
 import { FileUploader } from './FileUploader';
 import type { Document } from '../types/document.types';
-import OrganizationSelector from './OrganizationSelector';
+import OrganizationSelector from './Organization/OrganizationSelector';
 
 interface HeaderProps {
   /** Callback cuando se suben documentos exitosamente */

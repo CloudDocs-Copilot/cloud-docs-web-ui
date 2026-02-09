@@ -1,0 +1,102 @@
+.pdfViewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: #f5f5f5;
+}
+
+.iconButton {
+  color: #212529;
+  padding: 0.5rem;
+  text-decoration: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  position: relative;
+}
+
+.iconButton:hover {
+  color: #000;
+  text-decoration: none;
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.zoomButton {
+  color: #495057;
+  padding: 0.25rem 0.5rem;
+  text-decoration: none;
+  font-size: 1.125rem;
+  line-height: 1;
+  min-width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zoomButton:hover {
+  color: #212529;
+  text-decoration: none;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.zoomButton:disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.zoomLevel {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: #495057;
+  min-width: 45px;
+  text-align: center;
+  user-select: none;
+}
+
+.documentContainer {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 1rem;
+  position: relative;
+}
+
+.pdfDocument {
+  display: flex;
+  justify-content: center;
+}
+
+.pdfPage {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: white;
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #6c757d;
+}
+
+.pageLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .documentContainer {
+    padding: 0.5rem;
+  }
+}

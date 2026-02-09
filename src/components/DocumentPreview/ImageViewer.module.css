@@ -1,0 +1,83 @@
+.imageViewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: #2d2d2d;
+}
+
+.iconButton {
+  color: #212529;
+  padding: 0.5rem;
+  text-decoration: none;
+  font-size: 1.25rem;
+  line-height: 1;
+  position: relative;
+}
+
+.iconButton:hover {
+  color: #000;
+  text-decoration: none;
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.plusIcon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.zoomLevel {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #495057;
+  min-width: 50px;
+  text-align: center;
+}
+
+.imageContainer {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  user-select: none;
+}
+
+.imageContainer.dragging {
+  cursor: grabbing !important;
+}
+
+.image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+}
+
+.loadingState,
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #e0e0e0;
+}
+
+.errorState {
+  color: #dc3545;
+}
+
+.errorState i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}

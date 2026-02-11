@@ -77,6 +77,7 @@ export const useSearch = () => {
 
       return response;
     } catch (err: any) {
+      console.error('[useSearch] Search error:', err);
       const errorMessage = err.response?.data?.message || 'Error al buscar documentos';
       setError(errorMessage);
       setResults([]);

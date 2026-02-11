@@ -82,7 +82,7 @@ export const searchService = {
       queryParams.append('offset', params.offset.toString());
     }
 
-    const response = await apiClient.get<SearchResponse>(`/documents/search?${queryParams.toString()}`);
+    const response = await apiClient.get<SearchResponse>(`/search?${queryParams.toString()}`);
     return response.data;
   },
 

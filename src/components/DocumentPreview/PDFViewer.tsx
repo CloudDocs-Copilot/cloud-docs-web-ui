@@ -6,8 +6,8 @@ import { previewService } from '../../services/preview.service';
 import { PreviewHeader } from './PreviewHeader';
 import styles from './PDFViewer.module.css';
 
-// Configurar worker de PDF.js
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+// Configurar worker de PDF.js - usar worker local desde public/
+pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 /**
  * Componente para visualizar documentos PDF con navegación de páginas

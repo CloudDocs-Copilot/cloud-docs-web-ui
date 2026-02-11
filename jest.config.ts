@@ -8,6 +8,9 @@ const config: Config = {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^uuid$': '<rootDir>/__mocks__/uuid.js',
+    '^react-pdf$': '<rootDir>/__mocks__/react-pdf.js',
+    '^react-syntax-highlighter$': '<rootDir>/__mocks__/react-syntax-highlighter.js',
+    '^react-syntax-highlighter/dist/esm/styles/prism$': '<rootDir>/__mocks__/react-syntax-highlighter-styles.js',
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {

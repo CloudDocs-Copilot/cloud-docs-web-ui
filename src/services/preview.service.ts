@@ -184,7 +184,9 @@ export class PreviewService {
    */
   getPreviewUrl(document: PreviewDocument): string {
     // Siempre usar el endpoint de preview del API para asegurar autenticación correcta
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+    const baseUrl = typeof process !== 'undefined' && process.env?.VITE_API_BASE_URL 
+      ? process.env.VITE_API_BASE_URL 
+      : 'http://localhost:4000/api';
     const url = `${baseUrl}/documents/preview/${document.id}`;
     
     console.log('[PreviewService] Generating preview URL:', {

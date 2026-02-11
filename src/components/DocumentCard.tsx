@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, Badge, Modal, Button } from 'react-bootstrap';
 import type { Document } from '../types/document.types';
 import { getFileTypeFromMime, formatFileSize } from '../types/document.types';
-import { useDocumentDeletion } from '../hooks/useDocumentDeletion';
+import { apiClient } from '../api';
 import { DocumentPreviewModal } from './DocumentPreview';
 import type { PreviewDocument } from '../types/preview.types';
 import { previewService } from '../services/preview.service';
@@ -14,19 +14,28 @@ interface DocumentCardProps {
 }
 
 const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
-  const { moveToTrash, loading } = useDocumentDeletion();
+  const [loading, setLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   /**
-   * Maneja el movimiento a papelera
+   * Elimina el documento directamente
    */
-  const handleMoveToTrash = async () => {
+  const handleDelete = async () => {
     const documentId = document.id || (document as any)._id;
-    const deleted = await moveToTrash(documentId);
-    if (deleted) {
+    
+    try {
+      setLoading(true);
+      setError(null);
+      await apiClient.delete(`/documents/${documentId}`);
       setShowDeleteModal(false);
       onDeleted?.();
+    } catch (err: any) {
+      console.error('Error deleting document:', err);
+      setError(err.response?.data?.message || 'Error al eliminar el documento');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -195,7 +204,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
           </button>
           <button 
             className={styles.optionBtn} 
-            title="Mover a papelera"
+            title="Eliminar documento"
             onClick={(e) => {
               e.stopPropagation();
               setShowDeleteModal(true);
@@ -211,29 +220,38 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
       </Card>
 
       {/* Modal de confirmación de eliminación */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Mover a papelera</Modal.Title>
+      <Modal show={showDeleteModal} onHide={() => !loading && setShowDeleteModal(false)}>
+        <Modal.Header closeButton={!loading}>
+          <Modal.Title>Eliminar documento</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p>¿Deseas mover este documento a la papelera?</p>
-          <p className="text-muted">
-            <strong>{document.originalname || document.filename}</strong>
+          <p>¿Estás seguro de que deseas eliminar este documento?</p>
+          <p className="fw-bold">
+            {document.originalname || document.filename}
           </p>
-          <p className="text-muted small">
-            El documento se eliminará automáticamente después de 30 días. Puedes restaurarlo desde la papelera antes de ese tiempo.
+          <p className="text-danger small">
+            Esta acción no se puede deshacer.
           </p>
+          {error && (
+            <div className="alert alert-danger mt-2">
+              {error}
+            </div>
+          )}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+          <Button 
+            variant="secondary" 
+            onClick={() => setShowDeleteModal(false)}
+            disabled={loading}
+          >
             Cancelar
           </Button>
           <Button 
             variant="danger" 
-            onClick={handleMoveToTrash}
+            onClick={handleDelete}
             disabled={loading}
           >
-            {loading ? 'Moviendo...' : 'Mover a papelera'}
+            {loading ? 'Eliminando...' : 'Eliminar'}
           </Button>
         </Modal.Footer>
       </Modal>

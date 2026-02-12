@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@types/react-syntax-highlighter": "^15.5.13",
-    "axios": "^1.13.2",
+    "axios": "^1.13.5",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
     "lucide-react": "^0.562.0",

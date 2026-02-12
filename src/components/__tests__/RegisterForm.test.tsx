@@ -6,7 +6,7 @@ import { PageProvider } from '../../context/PageProvider';
 // Create mock functions that can be overridden
 const mockExecute = jest.fn().mockResolvedValue({ message: 'ok', user: {} });
 const mockValidateAllFields = jest.fn(() => true);
-const mockGetFieldError = jest.fn((_k?: string) => '');
+const mockGetFieldError = jest.fn(() => '');
 const mockClearAllErrors = jest.fn();
 const mockNavigate = jest.fn();
 

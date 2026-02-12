@@ -1,5 +1,6 @@
 import membershipService, { inviteMember, type InviteMemberPayload } from '../membership.service';
 import { apiClient } from '../../api';
+import type { AxiosResponse } from 'axios';
 
 jest.mock('../../api', () => ({
   apiClient: {
@@ -35,7 +36,7 @@ describe('membership.service', () => {
 
       mockApiClient.post.mockResolvedValueOnce({
         data: mockResponse,
-      } as any);
+      } as AxiosResponse);
 
       const result = await inviteMember('org-1', payload);
 
@@ -65,7 +66,7 @@ describe('membership.service', () => {
 
       mockApiClient.post.mockResolvedValueOnce({
         data: mockResponse,
-      } as any);
+      } as AxiosResponse);
 
       const result = await inviteMember('org-2', payload);
 
@@ -93,7 +94,7 @@ describe('membership.service', () => {
 
       mockApiClient.post.mockResolvedValueOnce({
         data: mockResponse,
-      } as any);
+      } as AxiosResponse);
 
       const result = await inviteMember('org-1', payload);
 
@@ -113,7 +114,7 @@ describe('membership.service', () => {
 
       mockApiClient.post.mockResolvedValueOnce({
         data: mockResponse,
-      } as any);
+      } as AxiosResponse);
 
       const result = await inviteMember('org-1', payload);
 
@@ -135,7 +136,7 @@ describe('membership.service', () => {
 
       mockApiClient.post.mockResolvedValueOnce({
         data: mockResponse,
-      } as any);
+      } as AxiosResponse);
 
       const result = await inviteMember('org-1', payload);
 

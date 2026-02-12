@@ -1,5 +1,6 @@
 import { deletionService } from '../deletion.service';
 import { apiClient } from '../../api';
+import type { AxiosResponse } from 'axios';
 
 jest.mock('../../api', () => ({
   apiClient: {
@@ -42,7 +43,7 @@ describe('deletionService', () => {
           message: 'Document moved to trash',
           data: mockDeletedDoc,
         },
-      } as any);
+      } as AxiosResponse);
 
       const result = await deletionService.moveToTrash('doc-1');
 
@@ -76,7 +77,7 @@ describe('deletionService', () => {
           message: 'Document moved to trash',
           data: mockDeletedDoc,
         },
-      } as any);
+      } as AxiosResponse);
 
       const result = await deletionService.moveToTrash('doc-2', { reason: 'No longer needed' });
 
@@ -108,7 +109,7 @@ describe('deletionService', () => {
           message: 'Document restored',
           data: mockRestoredDoc,
         },
-      } as any);
+      } as AxiosResponse);
 
       const result = await deletionService.restoreFromTrash('doc-1');
 
@@ -162,7 +163,7 @@ describe('deletionService', () => {
           count: 2,
           data: mockTrashDocs,
         },
-      } as any);
+      } as AxiosResponse);
 
       const result = await deletionService.getTrash();
 
@@ -178,7 +179,7 @@ describe('deletionService', () => {
           count: 0,
           data: [],
         },
-      } as any);
+      } as AxiosResponse);
 
       const result = await deletionService.getTrash();
 
@@ -194,7 +195,7 @@ describe('deletionService', () => {
           message: 'Trash emptied',
           deletedCount: 5,
         },
-      } as any);
+      } as AxiosResponse);
 
       const result = await deletionService.emptyTrash();
 
@@ -209,7 +210,7 @@ describe('deletionService', () => {
           message: 'Trash was already empty',
           deletedCount: 0,
         },
-      } as any);
+      } as AxiosResponse);
 
       const result = await deletionService.emptyTrash();
 
@@ -224,7 +225,7 @@ describe('deletionService', () => {
           success: true,
           message: 'Document permanently deleted',
         },
-      } as any);
+      } as AxiosResponse);
 
       await deletionService.permanentDelete('doc-1');
 

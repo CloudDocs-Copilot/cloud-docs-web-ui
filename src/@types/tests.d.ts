@@ -13,7 +13,7 @@ declare module '__mocks__/*';
 // Provide a permissive fetch/global for tests
 declare namespace NodeJS {
   interface Global {
-    fetch?: any;
+    fetch?: typeof fetch;
   }
 }
 

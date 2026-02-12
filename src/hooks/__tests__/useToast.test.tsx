@@ -21,6 +21,7 @@ describe('useToast basic behavior', () => {
       useEffect(() => {
         showToast({ message: 'hello', variant: 'success', title: 'T' });
         setTimeout(() => hideToast(), 100);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       }, []);
       return <div>consumer</div>;
     };

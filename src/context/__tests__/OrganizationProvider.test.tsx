@@ -569,14 +569,12 @@ describe('OrganizationProvider', () => {
     });
 
     it('sets active organization optimistically and updates with canonical data on success', async () => {
-      let callCount = 0;
       mockPost.mockResolvedValue({ status: 200 });
       mockGet.mockImplementation((url: string) => {
         if (url === '/organizations/org-1') {
           return Promise.resolve({ data: { organization: { id: 'org-1', name: 'Org One' } } });
         }
         if (url === '/memberships/my-organizations') {
-          callCount++;
           return Promise.resolve({ data: [] });
         }
         if (url === '/memberships/active-organization') {

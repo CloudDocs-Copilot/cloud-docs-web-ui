@@ -4,7 +4,7 @@ import DropZone from '../DropZone';
 describe('DropZone interactions and edge cases', () => {
   it('shows drag over text on dragOver and reverts on dragLeave', () => {
     const onFilesSelected = jest.fn();
-    render(<DropZone onFilesSelected={onFilesSelected} /> as any);
+    render(<DropZone onFilesSelected={onFilesSelected} />);
 
     const zone = screen.getByRole('button');
     fireEvent.dragOver(zone);
@@ -16,7 +16,7 @@ describe('DropZone interactions and edge cases', () => {
 
   it('calls onFilesSelected when files are dropped', () => {
     const onFilesSelected = jest.fn();
-    render(<DropZone onFilesSelected={onFilesSelected} /> as any);
+    render(<DropZone onFilesSelected={onFilesSelected} />);
 
     const zone = screen.getByRole('button');
 
@@ -27,13 +27,13 @@ describe('DropZone interactions and edge cases', () => {
       stopPropagation: jest.fn()
     } as unknown as DragEvent;
 
-    fireEvent.drop(zone, data as any);
+    fireEvent.drop(zone, data);
     expect(onFilesSelected).toHaveBeenCalled();
   });
 
   it('click triggers file input when not disabled', () => {
     const onFilesSelected = jest.fn();
-    render(<DropZone onFilesSelected={onFilesSelected} /> as any);
+    render(<DropZone onFilesSelected={onFilesSelected} />);
     const zone = screen.getByRole('button');
     const input = zone.querySelector('input[type=file]') as HTMLInputElement;
     // spy on click
@@ -44,7 +44,7 @@ describe('DropZone interactions and edge cases', () => {
 
   it('keyboard Enter triggers file input click', () => {
     const onFilesSelected = jest.fn();
-    render(<DropZone onFilesSelected={onFilesSelected} /> as any);
+    render(<DropZone onFilesSelected={onFilesSelected} />);
     const zone = screen.getByRole('button');
     const input = zone.querySelector('input[type=file]') as HTMLInputElement;
     const spy = jest.spyOn(input, 'click');
@@ -54,7 +54,7 @@ describe('DropZone interactions and edge cases', () => {
 
   it('does not allow interactions when disabled', () => {
     const onFilesSelected = jest.fn();
-    render(<DropZone onFilesSelected={onFilesSelected} disabled={true} /> as any);
+    render(<DropZone onFilesSelected={onFilesSelected} disabled={true} />);
     const zone = screen.getByRole('button');
     fireEvent.click(zone);
     expect(onFilesSelected).not.toHaveBeenCalled();

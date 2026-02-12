@@ -11,7 +11,7 @@ try {
   // Use a public CDN worker to avoid `import.meta.url` parsing issues
   // during tests/coverage collection where TS may use CommonJS.
   pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@2.16.105/build/pdf.worker.min.js';
-} catch (e) {
+} catch {
   // Best-effort: ignore if setting the worker fails in some envs
 }
 

@@ -1,9 +1,9 @@
 /// <reference types="jest" />
-/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-require-imports */
 
 // Ensure process.env is available before any imports or mocks
-if (typeof (globalThis as any).process === 'undefined') {
-  (globalThis as any).process = { env: { VITE_API_BASE_URL: 'http://localhost:3000/api' } };
+if (typeof (globalThis as Record<string, any>).process === 'undefined') {
+  (globalThis as Record<string, any>).process = { env: { VITE_API_BASE_URL: 'http://localhost:3000/api' } };
 }
 
 import '@testing-library/jest-dom';
@@ -25,7 +25,7 @@ jest.mock('axios', () => {
     const instance = {
       interceptors: {
         request: {
-          use: jest.fn((req: (req: unknown) => unknown, _err?: unknown) => {
+          use: jest.fn((req: (req: unknown) => unknown) => {
             requestHandlers.request = req;
             return 0;
           }),

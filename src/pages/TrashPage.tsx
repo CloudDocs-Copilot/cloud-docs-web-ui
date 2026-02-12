@@ -154,7 +154,7 @@ const TrashPage: React.FC = () => {
                     <div className={styles.cardActions}>
                       <button
                         className={styles.restoreBtn}
-                        onClick={() => handleRestore(doc.id)}
+                        onClick={() => handleRestore(doc.id ?? doc._id ?? '')}
                         disabled={actionLoading}
                       >
                         <ArrowClockwise />
@@ -163,7 +163,7 @@ const TrashPage: React.FC = () => {
                       <button
                         className={styles.permanentDeleteBtn}
                         onClick={() => {
-                          setSelectedDocId(doc.id);
+                          setSelectedDocId(doc.id ?? doc._id ?? null);
                           setShowDeleteModal(true);
                         }}
                         disabled={actionLoading}

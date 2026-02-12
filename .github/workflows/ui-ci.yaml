@@ -48,6 +48,49 @@ jobs:
       # Run tests
       - name: Run tests
         run: npm run test:coverage
+
+      # Report coverage summary and fail with clear message if below threshold
+      - name: Report coverage summary
+        if: always()
+        run: |
+          echo "## Coverage Report" >> $GITHUB_STEP_SUMMARY
+          if [ -f coverage/coverage-summary.json ]; then
+            node -e "
+              const fs = require('fs');
+              const summary = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8')).total;
+              const thresholds = { statements: 70, branches: 60, functions: 70 };
+              const results = {};
+              let hasFailed = false;
+              
+              Object.keys(thresholds).forEach(key => {
+                const actual = summary[key] ? summary[key].pct : 0;
+                const required = thresholds[key];
+                const status = actual >= required ? '✅' : '❌';
+                results[key] = { actual, required, status };
+                if (actual < required) hasFailed = true;
+              });
+              
+              // Write to GitHub step summary
+              let output = '| Metric | Actual | Required | Status |\n';
+              output += '|--------|--------|----------|--------|\n';
+              Object.keys(results).forEach(key => {
+                const r = results[key];
+                output += '| ' + key + ' | ' + r.actual.toFixed(2) + '% | ' + r.required + '% | ' + r.status + ' |\n';
+              });
+              fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, output);
+              
+              // Exit with error if any threshold not met
+              if (hasFailed) {
+                console.error('Coverage thresholds not met');
+                process.exit(1);
+              } else {
+                console.log('All coverage thresholds met ✅');
+              }
+            "
+          else
+            echo "⚠️ coverage/coverage-summary.json not found" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
       
       # Upload coverage reports (optional)
       - name: Upload coverage reports

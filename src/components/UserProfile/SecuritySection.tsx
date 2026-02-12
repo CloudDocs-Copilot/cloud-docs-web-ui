@@ -3,11 +3,7 @@ import { Form, Button } from 'react-bootstrap';
 import styles from './SecuritySection.module.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
-interface SecuritySectionProps {
-  onPasswordChange?: (currentPassword: string, newPassword: string) => void;
-}
-
-export function SecuritySection({ onPasswordChange: _ }: SecuritySectionProps) {
+export function SecuritySection() {
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');

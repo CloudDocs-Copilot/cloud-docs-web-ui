@@ -11,8 +11,7 @@ import type { ApiErrorResponse } from '../types/api.types';
 const getEnvVar = (key: string): string | undefined => {
   // 1) Usar `process.env` (vía globalThis) si está disponible (tests/Node)
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const proc = (globalThis as any).process;
+    const proc = (globalThis as unknown as { process?: { env?: Record<string, string> } }).process;
     const v = proc?.env?.[key];
     if (typeof v === 'string' && v !== '') {
       console.debug(`env(process): ${key}=${v}`);
@@ -22,28 +21,26 @@ const getEnvVar = (key: string): string | undefined => {
     console.debug('env(process): process.env not available');
   }
 
-  // 2) Intentar la propiedad literal que Vite reemplaza en tiempo de compilación
+  // 2) Intentar leer un env global inyectado (útil en tests) en lugar de usar
+  // `import.meta` directamente, lo que puede romper la compilación bajo CommonJS
   try {
-   
-   
-    const viteEnv = (import.meta as unknown as { env?: Record<string, unknown> }).env;
-    const viteLiteral = typeof viteEnv?.VITE_API_BASE_URL === 'string'
-      ? (viteEnv.VITE_API_BASE_URL as string)
+    const globalEnv = (globalThis as unknown as { __VITE_ENV__?: Record<string, string> }).__VITE_ENV__;
+    const viteLiteral = typeof globalEnv?.VITE_API_BASE_URL === 'string'
+      ? globalEnv.VITE_API_BASE_URL
       : undefined;
     if (typeof viteLiteral === 'string' && viteLiteral !== '') {
-      console.debug(`env(import.meta): VITE_API_BASE_URL=${viteLiteral}`);
+      console.debug(`env(global): VITE_API_BASE_URL=${viteLiteral}`);
       return viteLiteral;
     }
 
-    // 3) Lectura dinámica como respaldo
-    const meta = (import.meta as unknown) as { env?: Record<string, unknown> } | undefined;
-    const value = meta?.env?.[key] ?? meta?.env?.[key.replace(/^VITE_/, '')];
+    // 3) Lectura dinámica como respaldo desde el objeto global
+    const value = globalEnv?.[key] ?? globalEnv?.[key.replace(/^VITE_/, '')];
     if (typeof value === 'string' && value !== '') {
-      console.debug(`env(import.meta): ${key}=${value}`);
+      console.debug(`env(global): ${key}=${value}`);
       return value;
     }
   } catch {
-    console.debug('env(import.meta): import.meta.env not available');
+    console.debug('env(global): __VITE_ENV__ not available');
   }
 
   return undefined;

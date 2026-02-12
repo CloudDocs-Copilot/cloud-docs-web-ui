@@ -22,7 +22,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
    * Maneja el movimiento a papelera
    */
   const handleMoveToTrash = async () => {
-    const documentId = document.id || (document as any)._id;
+    const documentId = document.id ?? document._id ?? '';
     const deleted = await moveToTrash(documentId);
     if (deleted) {
       setShowDeleteModal(false);
@@ -83,7 +83,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
    * Convertir Document a PreviewDocument para el modal de preview
    */
   const previewDocument: PreviewDocument = {
-    id: document.id || (document as any)._id, // Usar _id si id no existe (MongoDB)
+    id: document.id ?? document._id ?? '', // Usar _id si id no existe (MongoDB)
     filename: document.filename || document.originalname || 'unknown',
     originalname: document.originalname,
     mimeType: document.mimeType,
@@ -94,7 +94,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
 
   console.log('[DocumentCard] Preview document:', {
     originalId: document.id,
-    mongoId: (document as any)._id,
+    mongoId: document._id,
     finalId: previewDocument.id,
     filename: previewDocument.filename
   });

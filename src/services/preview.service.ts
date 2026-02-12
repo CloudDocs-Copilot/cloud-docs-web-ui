@@ -183,8 +183,25 @@ export class PreviewService {
    * Genera la URL de preview para un documento
    */
   getPreviewUrl(document: PreviewDocument): string {
-    // Siempre usar el endpoint de preview del API para asegurar autenticación correcta
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+    // Determinar base URL de forma segura (preferir `process.env`, luego un
+    // env inyectado en `globalThis.__VITE_ENV__`). Evitar `import.meta` para
+    // que la colección de cobertura no falle bajo CommonJS/ts-jest.
+    const getBaseUrl = (): string => {
+      const fromProcess = (process.env.VITE_API_BASE_URL as string) || undefined;
+      if (fromProcess && fromProcess !== '') return fromProcess;
+
+      try {
+        const globalEnv = (globalThis as unknown as { __VITE_ENV__?: Record<string, string> }).__VITE_ENV__;
+        const vite = globalEnv?.VITE_API_BASE_URL;
+        if (typeof vite === 'string' && vite !== '') return vite;
+      } catch {
+        // ignore
+      }
+
+      return 'http://localhost:4000/api';
+    };
+
+    const baseUrl = getBaseUrl();
     const url = `${baseUrl}/documents/preview/${document.id}`;
     
     console.log('[PreviewService] Generating preview URL:', {

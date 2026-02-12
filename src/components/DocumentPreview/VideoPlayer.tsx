@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Button } from 'react-bootstrap';
 import type { VideoPlayerProps } from '../../types/preview.types';
 import { PreviewHeader } from './PreviewHeader';
@@ -54,12 +54,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, mimeType, filenam
         URL.revokeObjectURL(blobUrl);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
   /**
    * Alternar reproducción/pausa
    */
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     if (!videoRef.current) return;
 
     if (isPlaying) {
@@ -68,7 +69,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, mimeType, filenam
       videoRef.current.play();
     }
     setIsPlaying(!isPlaying);
-  };
+  }, [isPlaying]);
 
   /**
    * Manejo de actualización de tiempo
@@ -110,17 +111,17 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, mimeType, filenam
   /**
    * Alternar mute
    */
-  const toggleMute = () => {
+  const toggleMute = useCallback(() => {
     if (!videoRef.current) return;
     const newMuted = !isMuted;
     videoRef.current.muted = newMuted;
     setIsMuted(newMuted);
-  };
+  }, [isMuted]);
 
   /**
    * Alternar pantalla completa
    */
-  const toggleFullscreen = () => {
+  const toggleFullscreen = useCallback(() => {
     if (!videoRef.current) return;
 
     if (!isFullscreen) {
@@ -132,7 +133,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, mimeType, filenam
         document.exitFullscreen();
       }
     }
-  };
+  }, [isFullscreen]);
 
   /**
    * Cambiar velocidad de reproducción
@@ -183,7 +184,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, mimeType, filenam
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isPlaying]);
+  }, [togglePlay, toggleFullscreen, toggleMute]);
 
   /**
    * Detectar cambios de fullscreen

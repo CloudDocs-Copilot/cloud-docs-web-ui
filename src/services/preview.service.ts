@@ -187,7 +187,7 @@ export class PreviewService {
     // env inyectado en `globalThis.__VITE_ENV__`). Evitar `import.meta` para
     // que la colección de cobertura no falle bajo CommonJS/ts-jest.
     const getBaseUrl = (): string => {
-      const fromProcess = (process.env.VITE_API_BASE_URL as string) || undefined;
+      const fromProcess = (typeof process !== 'undefined' && process.env?.VITE_API_BASE_URL) || undefined;
       if (fromProcess && fromProcess !== '') return fromProcess;
 
       try {

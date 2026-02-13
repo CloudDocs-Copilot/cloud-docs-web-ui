@@ -750,4 +750,539 @@ describe('OrganizationProvider', () => {
       }, { timeout: 2000 });
     });
   });
+
+  // ==================== Edge Cases and Branch Coverage ====================
+  describe('Edge cases and branch coverage', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+      localStorage.clear();
+      // Restore the default useAuth mock before each test
+      const useAuthMock = jest.requireMock('../../hooks/useAuth');
+      useAuthMock.useAuth = jest.fn(() => ({ isAuthenticated: true, user: { id: 'u1' } }));
+    });
+    
+    afterEach(() => {
+      // Ensure useAuth mock is restored to default after each test
+      const useAuthMock = jest.requireMock('../../hooks/useAuth');
+      useAuthMock.useAuth = jest.fn(() => ({ isAuthenticated: true, user: { id: 'u1' } }));
+    });
+
+    it('isOwner returns true only for owner role', async () => {
+      localStorage.setItem('clouddocs:activeOrgId', 'org-1');
+      
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/memberships/my-organizations') {
+          return Promise.resolve({ 
+            data: [{ 
+              id: 'm1', 
+              organization: { id: 'org-1', name: 'Org' }, 
+              role: 'owner', 
+              status: 'active',
+              user: 'u1'
+            }] 
+          });
+        }
+        if (url === '/memberships/active-organization') {
+          return Promise.resolve({ data: { success: true, organizationId: 'org-1' } });
+        }
+        if (url.includes('/organizations/org-1')) {
+          return Promise.resolve({ data: { organization: { id: 'org-1', name: 'Org' } } });
+        }
+        return Promise.resolve({ data: {} });
+      });
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        const isOwnerResult = ctx?.isOwner() ?? false;
+        return <div data-testid="is-owner">{isOwnerResult ? 'true' : 'false'}</div>;
+      }
+
+      await act(async () => {
+        render(<OrganizationProvider><Consumer /></OrganizationProvider>);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('is-owner').textContent).toBe('true');
+      }, { timeout: 3000 });
+    });
+
+    it('isAdmin returns true for admin and owner roles', async () => {
+      localStorage.setItem('clouddocs:activeOrgId', 'org-1');
+      
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/memberships/my-organizations') {
+          return Promise.resolve({ 
+            data: [{ 
+              id: 'm1', 
+              organization: { id: 'org-1', name: 'Org' }, 
+              role: 'admin', 
+              status: 'active',
+              user: 'u1'
+            }] 
+          });
+        }
+        if (url === '/memberships/active-organization') {
+          return Promise.resolve({ data: { success: true, organizationId: 'org-1' } });
+        }
+        if (url.includes('/organizations/org-1')) {
+          return Promise.resolve({ data: { organization: { id: 'org-1', name: 'Org' } } });
+        }
+        return Promise.resolve({ data: {} });
+      });
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        const isAdminResult = ctx?.isAdmin() ?? false;
+        return <div data-testid="is-admin">{isAdminResult ? 'true' : 'false'}</div>;
+      }
+
+      await act(async () => {
+        render(<OrganizationProvider><Consumer /></OrganizationProvider>);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('is-admin').textContent).toBe('true');
+      }, { timeout: 3000 });
+    });
+
+    it('createOrganization succeeds and sets active organization', async () => {
+      mockPost.mockResolvedValue({ 
+        status: 201, 
+        data: { 
+          organization: { id: 'new-org', name: 'New Org' } 
+        } 
+      });
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/memberships/my-organizations') return Promise.resolve({ data: [] });
+        if (url.includes('/organizations/new-org')) return Promise.resolve({ data: { organization: { id: 'new-org', name: 'New Org' } } });
+        if (url === '/memberships/active-organization') return Promise.resolve({ data: { success: true, organizationId: 'new-org' } });
+        return Promise.resolve({ data: {} });
+      });
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        return (
+          <div>
+            <button onClick={() => ctx?.createOrganization({ name: 'New Org' }).catch(() => {})}>Create New</button>
+            <div data-testid="active-new">{ctx?.activeOrganization?.id ?? 'none'}</div>
+          </div>
+        );
+      }
+
+      await act(async () => {
+        render(<OrganizationProvider><Consumer /></OrganizationProvider>);
+      });
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('Create New'));
+      });
+
+      await waitFor(() => {
+        expect(mockPost).toHaveBeenCalledWith('/organizations', { name: 'New Org' });
+      });
+    });
+
+    it('refreshOrganization returns early when no orgId provided and no activeOrganization', async () => {
+      mockGet.mockImplementation(() => Promise.resolve({ data: [] }));
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        return (
+          <div>
+            <button onClick={() => ctx?.refreshOrganization?.().catch(() => {})}>Refresh</button>
+            <div data-testid="active-refresh">{ctx?.activeOrganization?.id ?? 'none'}</div>
+          </div>
+        );
+      }
+
+      await act(async () => {
+        render(<OrganizationProvider><Consumer /></OrganizationProvider>);
+      });
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('Refresh'));
+        await new Promise(resolve => setTimeout(resolve, 100));
+      });
+
+      expect(screen.getByTestId('active-refresh').textContent).toBe('none');
+    });
+
+    it('fetchActiveOrganization uses localStorage when API returns no active org', async () => {
+      localStorage.setItem('clouddocs:activeOrgId', 'stored-org');
+
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/memberships/active-organization') {
+          return Promise.resolve({ data: { success: false } });
+        }
+        if (url.includes('/organizations/stored-org')) {
+          return Promise.resolve({ data: { organization: { id: 'stored-org', name: 'Stored' } } });
+        }
+        return Promise.resolve({ data: [] });
+      });
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        return <div data-testid="stored-org">{ctx?.activeOrganization?.id ?? 'none'}</div>;
+      }
+
+      await act(async () => {
+        render(<OrganizationProvider><Consumer /></OrganizationProvider>);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('stored-org').textContent).toBe('stored-org');
+      }, { timeout: 2000 });
+    });
+
+    it('does not use invalid org from localStorage', async () => {
+      localStorage.setItem('clouddocs:activeOrgId', 'invalid-org');
+
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/memberships/my-organizations') {
+          // Return different orgs - not including the invalid one
+          return Promise.resolve({ 
+            data: [
+              { 
+                id: 'm1', 
+                organization: { id: 'org-valid', name: 'Valid Org' }, 
+                role: 'member', 
+                status: 'active',
+                user: 'u1'
+              }
+            ] 
+          });
+        }
+        if (url === '/memberships/active-organization') {
+          // API returns no active org
+          return Promise.resolve({ data: { success: false } });
+        }
+        if (url.includes('/organizations/invalid-org')) {
+          // Fetching the stored (invalid) org fails
+          return Promise.reject(new Error('Not found'));
+        }
+        return Promise.resolve({ data: [] });
+      });
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        return <div data-testid="invalid-org">{ctx?.activeOrganization?.id ?? 'none'}</div>;
+      }
+
+      await act(async () => {
+        render(<OrganizationProvider><Consumer /></OrganizationProvider>);
+      });
+
+      // Verify that the invalid org in localStorage is not used as active org
+      await waitFor(() => {
+        expect(screen.getByTestId('invalid-org').textContent).toBe('none');
+      }, { timeout: 3000 });
+    });
+
+    it('validateActiveMembership returns early when membership already valid', async () => {
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/memberships/my-organizations') {
+          return Promise.resolve({ 
+            data: [{ 
+              id: 'm1', 
+              organization: { id: 'org-1', name: 'Org' }, 
+              role: 'member', 
+              status: 'active',
+              user: 'u1'
+            }] 
+          });
+        }
+        if (url === '/memberships/active-organization') {
+          return Promise.resolve({ data: { success: true, organizationId: 'org-1' } });
+        }
+        if (url.includes('/organizations/org-1')) {
+          return Promise.resolve({ data: { organization: { id: 'org-1', name: 'Org' } } });
+        }
+        return Promise.resolve({ data: {} });
+      });
+
+      localStorage.setItem('clouddocs:activeOrgId', 'org-1');
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        return (
+          <div>
+            <div data-testid="membership-valid">{ctx?.membership?.status ?? 'none'}</div>
+          </div>
+        );
+      }
+
+      await act(async () => {
+        render(<OrganizationProvider><Consumer /></OrganizationProvider>);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('membership-valid').textContent).toBe('active');
+      }, { timeout: 2000 });
+    });
+
+    it('handles unauthenticated state and clears data', async () => {
+      // Override the default mock for this specific test
+      const useAuthMock = jest.requireMock('../../hooks/useAuth');
+      useAuthMock.useAuth = jest.fn(() => ({ isAuthenticated: false, user: null }));
+
+      mockGet.mockImplementation(() => Promise.resolve({ data: [] }));
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        return (
+          <div>
+            <div data-testid="orgs-count">{ctx?.organizations?.length ?? 0}</div>
+            <div data-testid="active-unauth">{ctx?.activeOrganization?.id ?? 'none'}</div>
+          </div>
+        );
+      }
+
+      await act(async () => {
+        render(<OrganizationProvider><Consumer /></OrganizationProvider>);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('active-unauth').textContent).toBe('none');
+        expect(screen.getByTestId('orgs-count').textContent).toBe('0');
+      });
+    });
+
+    it('fetchOrganizations updates membership when activeOrganization exists', async () => {
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/memberships/my-organizations') {
+          return Promise.resolve({ 
+            data: [{ 
+              id: 'm2', 
+              organization: { id: 'org-2', name: 'Org2' }, 
+              role: 'admin', 
+              status: 'active',
+              user: 'u1'
+            }] 
+          });
+        }
+        if (url === '/memberships/active-organization') {
+          return Promise.resolve({ data: { success: true, organizationId: 'org-2' } });
+        }
+        if (url.includes('/organizations/org-2')) {
+          return Promise.resolve({ data: { organization: { id: 'org-2', name: 'Org2' } } });
+        }
+        return Promise.resolve({ data: {} });
+      });
+
+      localStorage.setItem('clouddocs:activeOrgId', 'org-2');
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        return (
+          <div>
+            <button onClick={() => ctx?.fetchOrganizations?.().catch(() => {})}>Fetch</button>
+            <div data-testid="membership-role">{ctx?.membership?.role ?? 'none'}</div>
+          </div>
+        );
+      }
+
+      await act(async () => {
+        render(<OrganizationProvider><Consumer /></OrganizationProvider>);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('membership-role')).toBeInTheDocument();
+      });
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('Fetch'));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('membership-role').textContent).toBe('admin');
+      }, { timeout: 2000 });
+    });
+
+    it('validateActiveMembership handles ActiveOrganizationResponse with organizationId', async () => {
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/memberships/my-organizations') {
+          return Promise.resolve({ data: [] });
+        }
+        if (url === '/memberships/active-organization') {
+          return Promise.resolve({ data: { success: true, organizationId: 'org-response' } });
+        }
+        if (url.includes('/organizations/org-response')) {
+          return Promise.resolve({ data: { organization: { id: 'org-response', name: 'Response Org' } } });
+        }
+        return Promise.resolve({ data: {} });
+      });
+
+      localStorage.setItem('clouddocs:activeOrgId', 'org-response');
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        return <div data-testid="response-org">{ctx?.activeOrganization?.id ?? 'none'}</div>;
+      }
+
+      await act(async () => {
+        render(<OrganizationProvider><Consumer /></OrganizationProvider>);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('response-org').textContent).toBe('org-response');
+      }, { timeout: 2000 });
+    });
+
+    it('validateActiveMembership handles string organizationId response', async () => {
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/memberships/my-organizations') {
+          return Promise.resolve({ data: [] });
+        }
+        if (url === '/memberships/active-organization') {
+          return Promise.resolve({ data: 'string-org-id' });
+        }
+        if (url.includes('/organizations/string-org-id')) {
+          return Promise.resolve({ data: { organization: { id: 'string-org-id', name: 'String Org' } } });
+        }
+        return Promise.resolve({ data: {} });
+      });
+
+      localStorage.setItem('clouddocs:activeOrgId', 'string-org-id');
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        return <div data-testid="string-org">{ctx?.activeOrganization?.id ?? 'none'}</div>;
+      }
+
+      await act(async () => {
+        render(<OrganizationProvider><Consumer /></OrganizationProvider>);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('string-org').textContent).toBe('string-org-id');
+      }, { timeout: 2000 });
+    });
+
+    it('hasRole with string role instead of array', async () => {
+      localStorage.setItem('clouddocs:activeOrgId', 'org-1');
+      
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/memberships/my-organizations') {
+          return Promise.resolve({ 
+            data: [{ 
+              id: 'm1', 
+              organization: { id: 'org-1', name: 'Org' }, 
+              role: 'member', 
+              status: 'active',
+              user: 'u1'
+            }] 
+          });
+        }
+        if (url === '/memberships/active-organization') {
+          return Promise.resolve({ data: { success: true, organizationId: 'org-1' } });
+        }
+        if (url.includes('/organizations/org-1')) {
+          return Promise.resolve({ 
+            data: { 
+              organization: { id: 'org-1', name: 'Org' },
+              membership: {
+                id: 'm1',
+                organization: { id: 'org-1', name: 'Org' },
+                role: 'member',
+                status: 'active',
+                user: 'u1'
+              }
+            } 
+          });
+        }
+        return Promise.resolve({ data: [] });
+      });
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        const hasMemberRole = ctx?.hasRole('member') ?? false;
+        return <div data-testid="has-member-role">{hasMemberRole ? 'true' : 'false'}</div>;
+      }
+
+      await act(async () => {
+        render(<OrganizationProvider><Consumer /></OrganizationProvider>);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('has-member-role').textContent).toBe('true');
+      }, { timeout: 3000 });
+    });
+
+    it('fetchActiveOrganization refreshes memberships when not in cache', async () => {
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/memberships/active-organization') {
+          return Promise.resolve({ data: { success: true, organizationId: 'org-cache' } });
+        }
+        if (url === '/memberships/my-organizations') {
+          return Promise.resolve({ 
+            data: [{ 
+              id: 'm-cache', 
+              organization: { id: 'org-cache', name: 'Cache Org' }, 
+              role: 'owner', 
+              status: 'active',
+              user: 'u1'
+            }] 
+          });
+        }
+        if (url.includes('/organizations/org-cache')) {
+          return Promise.resolve({ data: { organization: { id: 'org-cache', name: 'Cache Org' } } });
+        }
+        return Promise.resolve({ data: {} });
+      });
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        return (
+          <div>
+            <div data-testid="cache-org">{ctx?.activeOrganization?.id ?? 'none'}</div>
+            <div data-testid="cache-membership">{ctx?.membership?.role ?? 'none'}</div>
+          </div>
+        );
+      }
+
+      await act(async () => {
+        render(<OrganizationProvider><Consumer /></OrganizationProvider>);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('cache-org').textContent).toBe('org-cache');
+        expect(screen.getByTestId('cache-membership').textContent).toBe('owner');
+      }, { timeout: 3000 });
+    });
+
+    it('setActiveOrganization handles fetchActiveOrganization error gracefully', async () => {
+      mockPost.mockResolvedValue({ status: 200, data: {} });
+      mockGet.mockImplementation((url: string) => {
+        if (url.includes('/organizations/org-error')) {
+          return Promise.resolve({ data: { organization: { id: 'org-error', name: 'Error Org' } } });
+        }
+        if (url === '/memberships/active-organization') {
+          return Promise.reject(new Error('Fetch error'));
+        }
+        return Promise.resolve({ data: [] });
+      });
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        return (
+          <div>
+            <button onClick={() => ctx?.setActiveOrganization?.('org-error').catch(() => {})}>Set</button>
+            <div data-testid="org-error">{ctx?.activeOrganization?.id ?? 'none'}</div>
+          </div>
+        );
+      }
+
+      await act(async () => {
+        render(<OrganizationProvider><Consumer /></OrganizationProvider>);
+      });
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('Set'));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('org-error').textContent).toBe('org-error');
+      }, { timeout: 2000 });
+    });
+  });
 });

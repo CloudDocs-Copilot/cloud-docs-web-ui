@@ -1,53 +1,6 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type InternalAxiosRequestConfig, type AxiosError } from 'axios';
 import type { ApiErrorResponse } from '../types/api.types';
-
-/**
- * Configuración base de la instancia de axios
- */
-// Usar variable de entorno para tests (process.env) y fallback por defecto.
-// Priorizar `process.env` para Jest/Node; en Vite el build/dev puede inyectar
-// la URL real en tiempo de compilación. Evita errores de TypeScript sobre
-// `import.meta` cuando la configuración de tests usa CommonJS.
-const getEnvVar = (key: string): string | undefined => {
-  // 1) Usar `process.env` (vía globalThis) si está disponible (tests/Node)
-  try {
-    const proc = (globalThis as unknown as { process?: { env?: Record<string, string> } }).process;
-    const v = proc?.env?.[key];
-    if (typeof v === 'string' && v !== '') {
-      console.debug(`env(process): ${key}=${v}`);
-      return v;
-    }
-  } catch {
-    console.debug('env(process): process.env not available');
-  }
-
-  // 2) Intentar leer un env global inyectado (útil en tests) en lugar de usar
-  // `import.meta` directamente, lo que puede romper la compilación bajo CommonJS
-  try {
-    const globalEnv = (globalThis as unknown as { __VITE_ENV__?: Record<string, string> }).__VITE_ENV__;
-    const viteLiteral = typeof globalEnv?.VITE_API_BASE_URL === 'string'
-      ? globalEnv.VITE_API_BASE_URL
-      : undefined;
-    if (typeof viteLiteral === 'string' && viteLiteral !== '') {
-      console.debug(`env(global): VITE_API_BASE_URL=${viteLiteral}`);
-      return viteLiteral;
-    }
-
-    // 3) Lectura dinámica como respaldo desde el objeto global
-    const value = globalEnv?.[key] ?? globalEnv?.[key.replace(/^VITE_/, '')];
-    if (typeof value === 'string' && value !== '') {
-      console.debug(`env(global): ${key}=${value}`);
-      return value;
-    }
-  } catch {
-    console.debug('env(global): __VITE_ENV__ not available');
-  }
-
-  return undefined;
-};
-
-const API_BASE_URL = getEnvVar('VITE_API_BASE_URL') ?? 'http://localhost:4000/api';
-const REQUEST_TIMEOUT_MS = 30000; // 30 segundos
+import { API_BASE_URL, REQUEST_TIMEOUT_MS } from '../config/env';
 
 /**
  * Variable para almacenar el token CSRF en memoria

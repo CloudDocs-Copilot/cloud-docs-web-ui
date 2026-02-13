@@ -8,6 +8,12 @@ const config: Config = {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^uuid$': '<rootDir>/__mocks__/uuid.js',
+    // Mock del módulo de configuración de entorno para tests
+    '^@/config/env$': '<rootDir>/src/config/__mocks__/env.ts',
+    // map direct relative imports used in tests to the mock
+    '^\\.\\./env$': '<rootDir>/src/config/__mocks__/env.ts',
+    '^../config/env$': '<rootDir>/src/config/__mocks__/env.ts',
+    '^\\.\\./config/env$': '<rootDir>/src/config/__mocks__/env.ts',
   },
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {

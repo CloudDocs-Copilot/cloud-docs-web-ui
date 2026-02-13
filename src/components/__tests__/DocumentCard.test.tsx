@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import DocumentCard from '../DocumentCard';
 import type { Document } from '../../types/document.types';
+import * as previewServiceModule from '../../services/preview.service';
 
 jest.mock('../../hooks/useDocumentDeletion', () => ({
   useDocumentDeletion: () => ({ moveToTrash: jest.fn().mockResolvedValue(true), loading: false })
@@ -90,5 +91,48 @@ describe('DocumentCard', () => {
     const card = screen.getByText(/original.pdf|file.pdf/i).closest('div') as HTMLElement;
     fireEvent.click(card);
     expect(screen.getByTestId('preview-modal')).toBeInTheDocument();
+  });
+
+  it('does not open preview modal when canPreview is false', () => {
+    jest.spyOn(previewServiceModule.previewService, 'canPreview').mockReturnValueOnce(false);
+
+    render(<DocumentCard document={baseDoc as Document} />);
+    const card = screen.getByText(/original.pdf|file.pdf/i).closest('div') as HTMLElement;
+    fireEvent.click(card);
+    
+    expect(screen.queryByTestId('preview-modal')).not.toBeInTheDocument();
+  });
+
+  it('displays different folder names correctly', () => {
+    const folders = [
+      { id: 'folder_proyectos', name: 'Proyectos' },
+      { id: 'folder_tecnico', name: 'Técnico' },
+      { id: 'folder_marketing', name: 'Marketing' },
+      { id: 'folder_unknown', name: 'General' }
+    ];
+
+    folders.forEach(({ id, name }) => {
+      const doc = { ...baseDoc, folder: id };
+      const { unmount } = render(<DocumentCard document={doc as Document} />);
+      expect(screen.getByText(name)).toBeInTheDocument();
+      unmount();
+    });
+  });
+
+  it('handles delete without onDeleted callback', async () => {
+    render(<DocumentCard document={baseDoc as Document} />);
+
+    const deleteBtn = screen.getByTitle('Mover a papelera');
+    fireEvent.click(deleteBtn);
+
+    const confirmButtons = screen.getAllByRole('button', { name: /Mover a papelera/i });
+    const confirmBtn = confirmButtons.find(btn => btn.className.includes('btn-danger')) || confirmButtons[confirmButtons.length - 1];
+    
+    await act(async () => {
+      fireEvent.click(confirmBtn);
+    });
+
+    // Should not throw error even without onDeleted callback
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

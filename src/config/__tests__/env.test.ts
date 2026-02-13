@@ -23,7 +23,7 @@ describe('Environment Configuration', () => {
     expect(API_BASE_URL).toBe(process.env.VITE_API_BASE_URL || 'http://localhost:4000/api');
   });
 
-  it('should allow process.env override in tests', () => {
+  it('should allow process.env override in tests', async () => {
     // Simular cambio de variable de entorno
     const originalEnv = process.env;
     // Replace process.env for this test in a type-safe way (avoid `any`)
@@ -34,7 +34,7 @@ describe('Environment Configuration', () => {
 
     // Re-importar el módulo para que tome el nuevo valor
     jest.resetModules();
-    const { API_BASE_URL: newUrl } = require('../env');
+    const { API_BASE_URL: newUrl } = await import('../env');
 
     expect(newUrl).toBe('http://custom-test-url.com/api');
 

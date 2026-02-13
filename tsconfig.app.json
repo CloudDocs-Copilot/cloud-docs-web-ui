@@ -5,7 +5,7 @@
     "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "types": ["vite/client"],
+    "types": ["vite/client", "node"],
     "typeRoots": ["./src/types", "./node_modules/@types"],
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -29,10 +29,10 @@
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.d.ts"],
   "exclude": [
-    //"src/**/__tests__/*",
-    //"src/**/*.test.ts",
-    //"src/**/*.test.tsx",
-    //"src/**/*.spec.ts",
-   // "src/**/*.spec.tsx"
+    "src/**/__tests__/*",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx"
   ]
 }

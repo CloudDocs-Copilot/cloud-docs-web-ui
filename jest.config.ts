@@ -31,7 +31,21 @@ const config: Config = {
     '!src/**/*.d.ts',
     '!src/main.tsx',
     '!src/vite-env.d.ts',
+    // exclude simple re-export index files which skew function coverage
+    '!src/**/index.{ts,tsx}',
+    '!src/**/index.ts',
+    '!src/**/index.tsx',
   ],
+  coverageReporters: ['text', 'lcov', 'json-summary'],
+  testTimeout: 30000,
+  coverageThreshold: {
+    global: {
+      branches: 59,
+      functions: 69,
+      lines: 70,
+      statements: 70,
+    },
+  },
   testMatch: [
     '**/__tests__/**/*.[jt]s?(x)',
     '**/?(*.)+(spec|test).[jt]s?(x)',

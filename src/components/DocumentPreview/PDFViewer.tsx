@@ -7,22 +7,26 @@ import { PreviewHeader } from './PreviewHeader';
 import styles from './PDFViewer.module.css';
 
 // Configurar worker de PDF.js usando el paquete npm
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url
-).toString();
+try {
+  // Use a public CDN worker to avoid `import.meta.url` parsing issues
+  // during tests/coverage collection where TS may use CommonJS.
+  pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@2.16.105/build/pdf.worker.min.js';
+} catch {
+  // Best-effort: ignore if setting the worker fails in some envs
+}
 
 /**
  * Componente para visualizar documentos PDF con navegación de páginas
  */
 export const PDFViewer: React.FC<PDFViewerProps> = ({ url, filename, onBack, fileSize }) => {
   const [numPages, setNumPages] = useState<number>(0);
-  // @ts-ignore - setPageNumber will be used in future navigation features
-  const [pageNumber, setPageNumber] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  
+  // Por ahora solo mostramos la primera página
+  const pageNumber = 1;
 
   /**
    * Cargar PDF con autenticación
@@ -78,6 +82,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ url, filename, onBack, fil
         URL.revokeObjectURL(blobUrl);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
   /**

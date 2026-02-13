@@ -652,4 +652,102 @@ describe('OrganizationProvider', () => {
       expect(removeSpy).toHaveBeenCalled();
     });
   });
+
+  // ==================== Additional Coverage Tests ====================
+  describe('Additional coverage tests', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+      localStorage.clear();
+    });
+
+    it('hasRole returns false when membership is null', async () => {
+      mockGet.mockImplementation(() => Promise.resolve({ data: [] }));
+      
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        const hasAdminRole = ctx?.hasRole(['admin', 'owner']) ?? false;
+        return <div data-testid="has-role">{hasAdminRole ? 'true' : 'false'}</div>;
+      }
+
+      await act(async () => {
+        render(
+          <OrganizationProvider>
+            <Consumer />
+          </OrganizationProvider>
+        );
+      });
+
+      expect(screen.getByTestId('has-role').textContent).toBe('false');
+    });
+
+    it('refreshOrganization handles error gracefully', async () => {
+      mockGet.mockImplementation((url: string) => {
+        if (url.includes('/organizations/')) {
+          return Promise.reject(new Error('Network error'));
+        }
+        return Promise.resolve({ data: [] });
+      });
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        return (
+          <div>
+            <button onClick={() => ctx?.refreshOrganization?.('org-fail').catch(() => {})}>refresh</button>
+            <div data-testid="error">{ctx?.error?.message ?? 'none'}</div>
+          </div>
+        );
+      }
+
+      await act(async () => {
+        render(
+          <OrganizationProvider>
+            <Consumer />
+          </OrganizationProvider>
+        );
+      });
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('refresh'));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error').textContent).toContain('Network error');
+      });
+    });
+
+    it('fetchOrganizations handles network error and sets error state', async () => {
+      mockGet.mockImplementation((url: string) => {
+        if (url === '/memberships/my-organizations') {
+          return Promise.reject(new Error('Fetch failed'));
+        }
+        return Promise.resolve({ data: [] });
+      });
+
+      function Consumer() {
+        const ctx = React.useContext(OrganizationContextTyped);
+        return (
+          <div>
+            <button onClick={() => ctx?.fetchOrganizations?.().catch(() => {})}>fetch</button>
+            <div data-testid="error-state">{ctx?.error?.message ?? 'none'}</div>
+          </div>
+        );
+      }
+
+      await act(async () => {
+        render(
+          <OrganizationProvider>
+            <Consumer />
+          </OrganizationProvider>
+        );
+      });
+
+      await act(async () => {
+        fireEvent.click(screen.getByText('fetch'));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('error-state').textContent).toContain('Fetch failed');
+      }, { timeout: 2000 });
+    });
+  });
 });

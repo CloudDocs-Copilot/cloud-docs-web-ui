@@ -47,4 +47,28 @@ describe('ConfirmAccount page', () => {
       expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
     }, { timeout: 3000 });
   });
+
+  it('shows error message when status is invalid or missing', () => {
+    mockUseLocation.mockReturnValue({
+      pathname: '/auth/confirmed',
+      search: '?status=invalid',
+    });
+
+    render(<ConfirmAccount />);
+
+    expect(screen.getByText(/No se pudo verificar el estado de la cuenta/i)).toBeInTheDocument();
+    expect(screen.getByText(/contacta soporte/i)).toBeInTheDocument();
+  });
+
+  it('navigates to home when clicking back button', () => {
+    mockUseLocation.mockReturnValue({
+      pathname: '/auth/confirmed',
+      search: '?status=confirmed',
+    });
+
+    render(<ConfirmAccount />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Volver al Inicio/i }));
+    expect(mockNavigate).toHaveBeenCalledWith('/');
+  });
 });

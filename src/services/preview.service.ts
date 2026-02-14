@@ -187,12 +187,6 @@ export class PreviewService {
     const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
     const url = `${baseUrl}/documents/preview/${document.id}`;
     
-    console.log('[PreviewService] Generating preview URL:', {
-      documentId: document.id,
-      originalUrl: document.url,
-      generatedUrl: url
-    });
-    
     return url;
   }
 

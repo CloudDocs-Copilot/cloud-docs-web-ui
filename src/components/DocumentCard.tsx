@@ -93,13 +93,6 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDel
     path: document.path
   };
 
-  console.log('[DocumentCard] Preview document:', {
-    originalId: document.id,
-    mongoId: (document as any)._id,
-    finalId: previewDocument.id,
-    filename: previewDocument.filename
-  });
-
   /**
    * Verificar si el documento puede tener preview
    */

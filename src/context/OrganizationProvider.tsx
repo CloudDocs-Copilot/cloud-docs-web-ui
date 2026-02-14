@@ -69,7 +69,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const applyActiveOrgRoleMapping = useCallback((org: Organization | null, role?: string | null): void => {
     if (!org) return;
     const mappedRole = String(role || (membership as Membership)?.role || 'member');
-    setActiveOrganizationState({ ...(org as Organization), membershipRole: mappedRole, role: mappedRole } as any);
+    setActiveOrganizationState({ ...(org as Organization), membershipRole: mappedRole, role: mappedRole } as unknown as Organization);
   }, [membership]);
 
   const fetchOrganizations = useCallback(async (): Promise<void> => {

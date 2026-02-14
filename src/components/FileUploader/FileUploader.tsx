@@ -150,8 +150,8 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           onUploadSuccess?.(docs);
           onClose?.();
         }, UPLOAD_CONSTRAINTS.SUCCESS_CLOSE_DELAY_MS);
-      } catch (e: any) {
-        setCustomError(e?.message || 'Error al subir el archivo');
+      } catch {
+        setCustomError('Error al subir el archivo');
       } finally {
         setCustomUploading(false);
       }

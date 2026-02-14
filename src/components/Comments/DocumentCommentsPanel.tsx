@@ -11,6 +11,36 @@ interface Props {
   canModerateComments?: boolean;
 }
 
+type CreatedByLike =
+  | string
+  | {
+      id?: string;
+      _id?: string;
+      name?: string;
+      email?: string;
+    };
+
+type CommentLike = Comment & {
+  _id?: string;
+  createdBy?: CreatedByLike;
+};
+
+function getCommentId(comment: CommentLike): string {
+  // Prefer Comment.id, fall back to _id
+  return comment.id ?? comment._id ?? '';
+}
+
+function getCreatedById(createdBy: CreatedByLike | undefined): string | undefined {
+  if (!createdBy) return undefined;
+  if (typeof createdBy === 'string') return createdBy;
+  return createdBy._id ?? createdBy.id;
+}
+
+function getAuthorName(createdBy: CreatedByLike | undefined): string {
+  if (!createdBy || typeof createdBy === 'string') return 'Usuario';
+  return createdBy.name ?? createdBy.email ?? 'Usuario';
+}
+
 export const DocumentCommentsPanel: React.FC<Props> = ({
   documentId,
   currentUserId,
@@ -38,8 +68,8 @@ export const DocumentCommentsPanel: React.FC<Props> = ({
     try {
       const res = await commentsService.listByDocument(documentId);
       setItems(res.comments || []);
-    } catch (e: any) {
-      setError(e?.message || 'Failed to load comments');
+    } catch {
+      setError('Failed to load comments');
     } finally {
       setLoading(false);
     }
@@ -58,18 +88,16 @@ export const DocumentCommentsPanel: React.FC<Props> = ({
       const res = await commentsService.create(documentId, content.trim());
       setItems((prev) => [res.comment, ...prev]);
       setContent('');
-    } catch (e: any) {
-      setError(e?.message || 'Failed to create comment');
+    } catch {
+      setError('Failed to create comment');
     } finally {
       setSaving(false);
     }
   };
 
   const canEditComment = (comment: Comment) => {
-    const createdById =
-      (comment as any)?.createdBy?._id ||
-      (comment as any)?.createdBy?.id ||
-      (comment as any)?.createdBy;
+    const c = comment as CommentLike;
+    const createdById = getCreatedById(c.createdBy);
 
     const isOwner = String(createdById || '') === String(currentUserId || '');
     return isOwner || canModerateComments;
@@ -77,7 +105,7 @@ export const DocumentCommentsPanel: React.FC<Props> = ({
 
   const startEdit = (comment: Comment) => {
     if (!canEditComment(comment)) return;
-    const cid = comment.id || (comment as any)._id;
+    const cid = getCommentId(comment as CommentLike);
     setEditingId(cid);
     setEditingValue(comment.content);
   };
@@ -91,7 +119,7 @@ export const DocumentCommentsPanel: React.FC<Props> = ({
     if (!editingId) return;
     if (!editingValue.trim()) return;
 
-    const target = items.find((c) => (c.id || (c as any)._id) === editingId);
+    const target = items.find((c) => getCommentId(c as CommentLike) === editingId);
     if (!target || !canEditComment(target)) {
       setError('No tienes permisos para editar este comentario');
       cancelEdit();
@@ -103,14 +131,11 @@ export const DocumentCommentsPanel: React.FC<Props> = ({
     try {
       const res = await commentsService.update(editingId, editingValue.trim());
       setItems((prev) =>
-        prev.map((c) => {
-          const cid = c.id || (c as any)._id;
-          return cid === editingId ? res.comment : c;
-        })
+        prev.map((c) => (getCommentId(c as CommentLike) === editingId ? res.comment : c))
       );
       cancelEdit();
-    } catch (e: any) {
-      setError(e?.message || 'Failed to update comment');
+    } catch {
+      setError('Failed to update comment');
     } finally {
       setSaving(false);
     }
@@ -192,8 +217,8 @@ export const DocumentCommentsPanel: React.FC<Props> = ({
           <div className={styles.empty}>Aún no hay comentarios.</div>
         ) : (
           items.map((c) => {
-            const cid = c.id || (c as any)._id;
-            const authorName = c.createdBy?.name || c.createdBy?.email || 'Usuario';
+            const cid = getCommentId(c as CommentLike);
+            const authorName = getAuthorName((c as CommentLike).createdBy);
             const isEditing = editingId === cid;
             const canEdit = canEditComment(c);
 

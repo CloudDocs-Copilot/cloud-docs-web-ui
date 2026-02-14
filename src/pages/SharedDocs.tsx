@@ -8,12 +8,16 @@ import useOrganization from '../hooks/useOrganization';
 import type { Document } from '../types/document.types';
 import type { MembershipRole } from '../types/organization.types';
 
-
 interface DocumentsApiResponse {
   success: boolean;
   count: number;
   documents: Document[];
-};
+}
+
+interface UseOrganizationReturn {
+  activeOrganization: { role?: MembershipRole } | null;
+  membership: { role?: MembershipRole } | null;
+}
 
 const Dashboard: React.FC = () => {
     
@@ -31,12 +35,12 @@ const Dashboard: React.FC = () => {
   
 
   // Obtener ID de la organización activa desde el contexto
-  const { activeOrganization, membership } = useOrganization() as any;
+  const { activeOrganization, membership } = useOrganization() as UseOrganizationReturn;
 
   // Permission: delete only for owner/admin
   const orgRole: MembershipRole =
     membership?.role ||
-    (activeOrganization as any)?.role ||
+    activeOrganization?.role ||
     'member';
 
   const normalizedRole = typeof orgRole === 'string' ? orgRole.toLowerCase() : orgRole;

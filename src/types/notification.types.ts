@@ -13,7 +13,7 @@ export type NotificationDTO = {
   type: NotificationType;
   entity: NotificationEntity;
   message?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   readAt?: string | null;
   createdAt?: string;
 };

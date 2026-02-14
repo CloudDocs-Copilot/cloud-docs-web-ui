@@ -31,14 +31,13 @@ const Dashboard: React.FC = () => {
   
 
   // Obtener ID de la organización activa desde el contexto
-  const { activeOrganization, membership } = useOrganization() as any;
+  const { activeOrganization, membership } = useOrganization();
   const organizationId = activeOrganization?.id ?? '';
 
   // Permission: delete only for owner/admin
-  const orgRole: MembershipRole =
-    membership?.role ||
-    (activeOrganization as any)?.role ||
-    'member';
+  const orgRole = (membership?.role ||
+    activeOrganization?.role ||
+    'member') as MembershipRole;
 
   const normalizedRole = typeof orgRole === 'string' ? orgRole.toLowerCase() : orgRole;
   const canDeleteDocuments = normalizedRole === 'owner' || normalizedRole === 'admin';

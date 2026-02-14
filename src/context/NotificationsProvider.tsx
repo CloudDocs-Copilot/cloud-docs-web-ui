@@ -76,7 +76,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
       try {
         await notificationApi.markNotificationRead(id);
-      } catch (e) {
+      } catch {
         // rollback by refetching; simplest + consistent
         await refresh();
       }
@@ -97,7 +97,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       await notificationApi.markAllNotificationsRead({ organizationId: activeOrganization.id });
-    } catch (e) {
+    } catch {
       await refresh();
     }
   }, [activeOrganization?.id, recalcUnread, refresh]);

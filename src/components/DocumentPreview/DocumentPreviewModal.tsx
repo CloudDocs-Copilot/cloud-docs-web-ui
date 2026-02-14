@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Modal, Alert, Button } from 'react-bootstrap';
-import type { DocumentPreviewModalProps } from '../../types/preview.types';
+import type { DocumentPreviewModalProps, PreviewDocument } from '../../types/preview.types';
 import { DocumentPreviewType } from '../../types/preview.types';
 import { previewService } from '../../services/preview.service';
 import { PDFViewer } from './PDFViewer';
@@ -21,13 +21,76 @@ import FileUploader from '../FileUploader';
  * Modal principal para preview de documentos
  * Detecta el tipo de documento y muestra el viewer apropiado
  */
+
+type OrgRole = 'owner' | 'admin' | 'member' | 'viewer' | string;
+
+type IdRef = string | { id?: string; _id?: string };
+
+type UploadedByRef =
+  | string
+  | {
+      id?: string;
+      _id?: string;
+    };
+    
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function extractId(value: IdRef | undefined | null): string {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  return value.id ?? value._id ?? '';
+}
+
+function extractUploadedById(value: UploadedByRef | undefined | null): string {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  return value.id ?? value._id ?? '';
+}
+
+function getRoleFromActiveOrg(activeOrganization: unknown): OrgRole {
+  if (!isRecord(activeOrganization)) return 'member';
+  const role = activeOrganization['role'];
+  return typeof role === 'string' && role.trim() ? role : 'member';
+}
+
+function getUserId(user: unknown): string {
+  if (!isRecord(user)) return '';
+  const id = user['id'];
+  if (typeof id === 'string') return id;
+
+  const _id = user['_id'];
+  if (typeof _id === 'string') return _id;
+
+  const userId = user['userId'];
+  if (typeof userId === 'string') return userId;
+
+  return '';
+}
+
+function getUpdatedDocumentFromResponse(res: unknown): unknown {
+  if (!isRecord(res)) return undefined;
+  const data = res['data'];
+  if (!isRecord(data)) return undefined;
+  return data['document'];
+}
+
+function getMessageFromResponse(res: unknown): string | undefined {
+  if (!isRecord(res)) return undefined;
+  const data = res['data'];
+  if (!isRecord(data)) return undefined;
+  const msg = data['message'];
+  return typeof msg === 'string' ? msg : undefined;
+}
+
 export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   show,
   onHide,
   document,
 }) => {
   const [showReplace, setShowReplace] = useState(false);
-  const [localDoc, setLocalDoc] = useState<any>(document);
+  const [localDoc, setLocalDoc] = useState<PreviewDocument>(document);
   const [previewNonce, setPreviewNonce] = useState(0);
 
   React.useEffect(() => {
@@ -61,21 +124,16 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   const { activeOrganization } = useOrganization();
   const { user } = useAuth();
 
-  const orgRole: string = (activeOrganization as any)?.role || 'member';
+  const orgRole: string = getRoleFromActiveOrg(activeOrganization);
 
   const canModerateComments = orgRole === 'owner' || orgRole === 'admin';
 
-  const documentId = (localDoc as any)?.id || (localDoc as any)?._id || '';
+  const documentId = extractId(localDoc as unknown as IdRef);
   const canComment = orgRole !== 'viewer';
 
-  const currentUserId =
-    (user as any)?.id || (user as any)?._id || (user as any)?.userId || '';
+  const currentUserId = getUserId(user);
 
-  const uploadedById =
-    (localDoc as any)?.uploadedBy?.id ||
-    (localDoc as any)?.uploadedBy?._id ||
-    (localDoc as any)?.uploadedBy ||
-    '';
+  const uploadedById = extractUploadedById(localDoc.uploadedBy);
 
   const canReplaceFile =
     orgRole === 'owner' ||
@@ -101,18 +159,16 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
       },
     );
 
-    const updated = (res as any)?.data?.document;
+    const updated = getUpdatedDocumentFromResponse(res);
     if (!updated) {
-      throw new Error(
-        (res as any)?.data?.message || 'Failed to replace document',
-      );
+      throw new Error(getMessageFromResponse(res) || 'Failed to replace document');
     }
 
-    setLocalDoc(updated);
+    setLocalDoc(updated as PreviewDocument);
     setPreviewNonce((n) => n + 1);
     setShowReplace(false);
 
-    return [updated];
+    return [updated as Document];
   };
 
   /**

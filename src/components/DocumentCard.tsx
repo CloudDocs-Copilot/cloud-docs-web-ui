@@ -125,7 +125,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
    */
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const downloadUrl = previewService.getPreviewUrl(previewDocument);
+    const downloadUrl = previewService.getDownloadUrl(previewDocument);
     window.open(downloadUrl, '_blank');
   };
 

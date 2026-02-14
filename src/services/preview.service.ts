@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '../config/env';
 import { DocumentPreviewType } from '../types/preview.types';
 import type { PreviewConfig, PreviewDocument } from '../types/preview.types';
 
@@ -184,7 +185,7 @@ export class PreviewService {
    */
   getPreviewUrl(document: PreviewDocument): string {
     // Siempre usar el endpoint de preview del API para asegurar autenticación correcta
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+    const baseUrl = API_BASE_URL || 'http://localhost:4000/api';
     const url = `${baseUrl}/documents/preview/${document.id}`;
     
     return url;
@@ -194,7 +195,7 @@ export class PreviewService {
    * Genera la URL de descarga para un documento
    */
   getDownloadUrl(document: PreviewDocument): string {
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+    const baseUrl = API_BASE_URL || 'http://localhost:4000/api';
     const url = `${baseUrl}/documents/download/${document.id}`;
 
     return url;

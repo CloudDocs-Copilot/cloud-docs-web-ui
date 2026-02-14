@@ -16,6 +16,17 @@ jest.mock('../../hooks/useAuth', () => ({
   }) 
 }));
 
+jest.mock('../../hooks/useNotifications', () => ({
+  useNotifications: () => ({
+    notifications: [],
+    unreadCount: 0,
+    loading: false,
+    refresh: jest.fn().mockResolvedValue(undefined),
+    markRead: jest.fn().mockResolvedValue(undefined),
+    markAllRead: jest.fn().mockResolvedValue(undefined),
+  }),
+}));
+
 jest.mock('../Organization/OrganizationSelector', () => () => <div>OrgSel</div>);
 
 interface FileUploaderProps {

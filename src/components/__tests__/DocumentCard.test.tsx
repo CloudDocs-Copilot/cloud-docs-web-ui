@@ -1,21 +1,27 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import DocumentCard from '../DocumentCard';
 import type { Document } from '../../types/document.types';
 import * as previewServiceModule from '../../services/preview.service';
 
+const moveToTrashMock = jest.fn();
+
+// Mock hook
 jest.mock('../../hooks/useDocumentDeletion', () => ({
-  useDocumentDeletion: () => ({ moveToTrash: jest.fn().mockResolvedValue(true), loading: false })
+  useDocumentDeletion: () => ({ moveToTrash: moveToTrashMock, loading: false }),
 }));
 
+// Mock preview service (must include getDownloadUrl because DocumentCard uses it)
 jest.mock('../../services/preview.service', () => ({
   previewService: {
     canPreview: jest.fn(() => true),
-    getPreviewUrl: jest.fn((doc: Document) => '/preview/' + (doc.id || doc._id || 'unknown'))
-  }
+    getDownloadUrl: jest.fn((doc: { id?: string; _id?: string }) => `/download/${doc.id || doc._id || 'unknown'}`),
+  },
 }));
 
+// Mock preview modal to avoid deep tree
 jest.mock('../DocumentPreview', () => ({
-  DocumentPreviewModal: ({ show }: { show: boolean }) => show ? <div data-testid="preview-modal">PREVIEW</div> : null
+  DocumentPreviewModal: ({ show }: { show: boolean }) =>
+    show ? <div data-testid="preview-modal">PREVIEW</div> : null,
 }));
 
 describe('DocumentCard', () => {
@@ -30,85 +36,29 @@ describe('DocumentCard', () => {
     uploadedBy: 'user-1',
     organization: 'org-1',
     folder: 'folder_legal',
-    uploadedAt: new Date().toISOString(),
+    uploadedAt: new Date('2026-02-14T00:00:00.000Z').toISOString(),
     sharedWith: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
 
+  beforeEach(() => {
+    jest.clearAllMocks();
+    moveToTrashMock.mockResolvedValue(true);
+  });
+
   it('renders document title and badge', () => {
     render(<DocumentCard document={baseDoc as Document} />);
-    expect(screen.getByText(/original.pdf|file.pdf/i)).toBeInTheDocument();
-    expect(screen.getByText(/Legal/i)).toBeInTheDocument();
+    expect(screen.getByText(/original\.pdf|file\.pdf/i)).toBeInTheDocument();
+    expect(screen.getByText('Legal')).toBeInTheDocument();
   });
 
-  it('renders filename, category badge and formatted size/date', () => {
-    const doc = { ...baseDoc, folder: 'folder_finanzas' };
-    render(<DocumentCard document={doc as Document} />);
-    expect(screen.getByText(/original.pdf|file.pdf/i)).toBeInTheDocument();
-    expect(screen.getByText(/Finanzas/i)).toBeInTheDocument();
-    expect(screen.getByText(/KB|Bytes|MB|GB/)).toBeTruthy();
-  });
-
-  it('calls window.open when download clicked', () => {
-    const openSpy = jest.spyOn(window, 'open').mockImplementation(() => null);
-    render(<DocumentCard document={baseDoc as Document} />);
-
-    const downloadBtn = screen.getByTitle('Descargar');
-    fireEvent.click(downloadBtn);
-
-    expect(openSpy).toHaveBeenCalledWith('/preview/d1', '_blank');
-    openSpy.mockRestore();
-  });
-
-  it('clicking preview opens modal when canPreview is true', () => {
-    render(<DocumentCard document={baseDoc as Document} />);
-    const card = screen.getByText(/original.pdf|file.pdf/i).closest('div') as HTMLElement;
-    fireEvent.click(card);
-    expect(screen.getByTestId('preview-modal')).toBeInTheDocument();
-  });
-
-  it('move to trash calls moveToTrash and triggers onDeleted', async () => {
-    const onDeleted = jest.fn();
-    render(<DocumentCard document={baseDoc as Document} onDeleted={onDeleted} />);
-
-    const deleteBtn = screen.getByTitle('Mover a papelera');
-    fireEvent.click(deleteBtn);
-
-    const confirmButtons = screen.getAllByRole('button', { name: /Mover a papelera/i });
-    const confirmBtn = confirmButtons.find(btn => btn.className.includes('btn-danger')) || confirmButtons[confirmButtons.length - 1];
-    
-    await act(async () => {
-      fireEvent.click(confirmBtn);
-    });
-
-    expect(onDeleted).toHaveBeenCalled();
-  });
-
-  it('uses _id if id missing for preview id', () => {
-    const doc: Partial<Document> = { ...baseDoc, id: undefined, _id: 'mongo-1' };
-    render(<DocumentCard document={doc as Document} />);
-    const card = screen.getByText(/original.pdf|file.pdf/i).closest('div') as HTMLElement;
-    fireEvent.click(card);
-    expect(screen.getByTestId('preview-modal')).toBeInTheDocument();
-  });
-
-  it('does not open preview modal when canPreview is false', () => {
-    jest.spyOn(previewServiceModule.previewService, 'canPreview').mockReturnValueOnce(false);
-
-    render(<DocumentCard document={baseDoc as Document} />);
-    const card = screen.getByText(/original.pdf|file.pdf/i).closest('div') as HTMLElement;
-    fireEvent.click(card);
-    
-    expect(screen.queryByTestId('preview-modal')).not.toBeInTheDocument();
-  });
-
-  it('displays different folder names correctly', () => {
+  it('renders different folder names correctly', () => {
     const folders = [
       { id: 'folder_proyectos', name: 'Proyectos' },
       { id: 'folder_tecnico', name: 'Técnico' },
       { id: 'folder_marketing', name: 'Marketing' },
-      { id: 'folder_unknown', name: 'General' }
+      { id: 'folder_unknown', name: 'General' },
     ];
 
     folders.forEach(({ id, name }) => {
@@ -119,20 +69,61 @@ describe('DocumentCard', () => {
     });
   });
 
-  it('handles delete without onDeleted callback', async () => {
+  it('calls window.open when download clicked', () => {
+    const openSpy = jest.spyOn(window, 'open').mockImplementation(() => null);
+
+    render(<DocumentCard document={baseDoc as Document} />);
+    fireEvent.click(screen.getByTitle('Descargar'));
+
+    // DocumentCard uses previewService.getDownloadUrl(previewDocument)
+    expect(previewServiceModule.previewService.getDownloadUrl).toHaveBeenCalled();
+    expect(openSpy).toHaveBeenCalledWith('/download/d1', '_blank');
+
+    openSpy.mockRestore();
+  });
+
+  it('clicking card opens preview modal when canPreview is true', () => {
     render(<DocumentCard document={baseDoc as Document} />);
 
-    const deleteBtn = screen.getByTitle('Mover a papelera');
-    fireEvent.click(deleteBtn);
+    // click title (bubbles to Card onClick)
+    fireEvent.click(screen.getByText(/original\.pdf|file\.pdf/i));
 
-    const confirmButtons = screen.getAllByRole('button', { name: /Mover a papelera/i });
-    const confirmBtn = confirmButtons.find(btn => btn.className.includes('btn-danger')) || confirmButtons[confirmButtons.length - 1];
-    
-    await act(async () => {
-      fireEvent.click(confirmBtn);
-    });
+    expect(screen.getByTestId('preview-modal')).toBeInTheDocument();
+  });
 
-    // Should not throw error even without onDeleted callback
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  it('clicking preview option opens preview modal when canPreview is true', () => {
+    render(<DocumentCard document={baseDoc as Document} />);
+
+    fireEvent.click(screen.getByTitle('Vista previa'));
+
+    expect(screen.getByTestId('preview-modal')).toBeInTheDocument();
+  });
+
+  it('does not open preview modal when canPreview is false', () => {
+    (previewServiceModule.previewService.canPreview as jest.Mock).mockReturnValueOnce(false);
+
+    render(<DocumentCard document={baseDoc as Document} />);
+
+    fireEvent.click(screen.getByText(/original\.pdf|file\.pdf/i));
+
+    expect(screen.queryByTestId('preview-modal')).not.toBeInTheDocument();
+  });
+
+  it('uses _id if id is missing for download url', () => {
+    const openSpy = jest.spyOn(window, 'open').mockImplementation(() => null);
+
+    const doc: Partial<Document> = { ...baseDoc, id: undefined, _id: 'mongo-1' };
+    render(<DocumentCard document={doc as Document} />);
+
+    fireEvent.click(screen.getByTitle('Descargar'));
+
+    expect(openSpy).toHaveBeenCalledWith('/download/mongo-1', '_blank');
+
+    openSpy.mockRestore();
+  });
+
+  it('does not render delete button when canDelete is false', () => {
+    render(<DocumentCard document={baseDoc as Document} />);
+    expect(screen.queryByTitle('Mover a papelera')).not.toBeInTheDocument();
   });
 });

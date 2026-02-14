@@ -1,4 +1,5 @@
 import { io, type Socket } from 'socket.io-client';
+import { API_BASE_URL } from '../config/env';
 
 /**
  * Derives the socket server origin from the API base URL.
@@ -7,9 +8,7 @@ import { io, type Socket } from 'socket.io-client';
  *  Socket: http://localhost:4000
  */
 function getSocketBaseUrl(): string {
-  const apiBase =
-    (import.meta as unknown as { env?: Record<string, unknown> }).env?.VITE_API_BASE_URL ??
-    'http://localhost:4000/api';
+  const apiBase = API_BASE_URL;
 
   const apiBaseStr = String(apiBase);
   // Remove trailing "/api" if present

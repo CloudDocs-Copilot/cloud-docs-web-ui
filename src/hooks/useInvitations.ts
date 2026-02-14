@@ -6,12 +6,14 @@ import {
 } from '../services/invitation.service';
 import type { Invitation, AcceptInvitationResponse } from '../types/invitation.types';
 import { useToast } from './useToast';
+import { useAuth } from './useAuth';
 
 export function useInvitations() {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showToast } = useToast();
+  const { isAuthenticated } = useAuth();
 
   const fetchInvitations = useCallback(async () => {
     setLoading(true);
@@ -22,15 +24,17 @@ export function useInvitations() {
     } catch (err: unknown) {
       const message = (err as Error)?.message || 'Error al cargar invitaciones';
       setError(message);
-      showToast({ 
-        message: 'No se pudieron cargar las invitaciones', 
-        variant: 'danger',
-        title: 'Invitaciones'
-      });
+      if (isAuthenticated) {
+        showToast({ 
+          message: 'No se pudieron cargar las invitaciones', 
+          variant: 'danger',
+          title: 'Invitaciones'
+        });
+      }
     } finally {
       setLoading(false);
     }
-  }, [showToast]);
+  }, [showToast, isAuthenticated]);
 
   const acceptInvitation = useCallback(async (membershipId: string): Promise<AcceptInvitationResponse | null> => {
     setLoading(true);

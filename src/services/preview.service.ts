@@ -197,6 +197,22 @@ export class PreviewService {
   }
 
   /**
+   * Genera la URL de descarga para un documento
+   */
+  getDownloadUrl(document: PreviewDocument): string {
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+    const url = `${baseUrl}/documents/download/${document.id}`;
+
+    console.log('[PreviewService] Generating download URL:', {
+      documentId: document.id,
+      originalUrl: document.url,
+      generatedUrl: url
+    });
+
+    return url;
+  }
+
+  /**
    * Formatea el tamaño de archivo para mostrar
    */
   formatFileSize(bytes: number): string {

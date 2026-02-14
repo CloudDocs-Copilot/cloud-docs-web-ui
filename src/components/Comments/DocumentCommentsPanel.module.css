@@ -1,0 +1,101 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 12px;
+  gap: 12px;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.title {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.newComment {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.newActions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.alert {
+  margin: 0;
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 4px;
+}
+
+.item {
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  padding: 10px;
+  background: #fff;
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.author {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.date {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.content {
+  white-space: pre-wrap;
+  font-size: 13px;
+}
+
+.actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px 0;
+}
+
+.centerText {
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.empty {
+  padding: 20px 0;
+  text-align: center;
+  opacity: 0.7;
+  font-size: 13px;
+}

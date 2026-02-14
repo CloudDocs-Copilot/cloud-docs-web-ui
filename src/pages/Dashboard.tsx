@@ -6,6 +6,7 @@ import { useHttpRequest } from '../hooks/useHttpRequest';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
 import useOrganization from '../hooks/useOrganization';
 import type { Document } from '../types/document.types';
+import type { MembershipRole } from '../types/organization.types';
 
 
 interface DocumentsApiResponse {
@@ -20,7 +21,7 @@ const Dashboard: React.FC = () => {
     title: 'Mis Documentos',
     subtitle: 'Organizado automáticamente con IA',
     documentTitle: 'Mis Documentos',
-    metaDescription: 'Gestiona y organiza tus documentos con inteligencia artificial'
+    metaDescription: 'Gestiona y organiza tus documentos con inteligencia artificial',
   });
 
   
@@ -30,12 +31,21 @@ const Dashboard: React.FC = () => {
   
 
   // Obtener ID de la organización activa desde el contexto
-  const { activeOrganization } = useOrganization();
+  const { activeOrganization, membership } = useOrganization() as any;
   const organizationId = activeOrganization?.id ?? '';
 
-  /**
-   * Obtiene los documentos recientes
-   */
+  // Permission: delete only for owner/admin
+  const orgRole: MembershipRole =
+    membership?.role ||
+    membership?.membershipRole ||
+    (activeOrganization as any)?.membershipRole ||
+    (activeOrganization as any)?.role ||
+    (activeOrganization as any)?.myRole ||
+    'member';
+
+  const normalizedRole = typeof orgRole === 'string' ? orgRole.toLowerCase() : orgRole;
+  const canDeleteDocuments = normalizedRole === 'owner' || normalizedRole === 'admin';
+
   const fetchDocuments = useCallback(() => {
     if (!organizationId) return;
     execute({
@@ -96,7 +106,11 @@ const Dashboard: React.FC = () => {
             {documents.documents.length > 0 ? (
               documents.documents.map((doc, index) => (
                 <Col key={index} xs={12} sm={6} md={4} lg={3}>
-                  <DocumentCard document={doc} onDeleted={handleDocumentDeleted} />
+                  <DocumentCard
+                    document={doc}
+                    onDeleted={handleDocumentDeleted}
+                    canDelete={canDeleteDocuments}
+                  />
                 </Col>
               ))
             ) : (

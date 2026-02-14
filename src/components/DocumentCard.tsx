@@ -11,9 +11,10 @@ import styles from './DocumentCard.module.css';
 interface DocumentCardProps {
   document: Document;
   onDeleted?: () => void;
+  canDelete?: boolean;
 }
 
-const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
+const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDelete = false }) => {
   const { moveToTrash, loading } = useDocumentDeletion();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -168,8 +169,8 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
         {/* Botones de opciones (aparecen en hover) */}
         <div className={styles.cardOptions}>
           {canPreview && (
-            <button 
-              className={styles.optionBtn} 
+            <button
+              className={styles.optionBtn}
               title="Vista previa"
               onClick={(e) => {
                 e.stopPropagation();
@@ -193,50 +194,52 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
               <line x1="12" y1="15" x2="12" y2="3" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
-          <button 
-            className={styles.optionBtn} 
-            title="Mover a papelera"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowDeleteModal(true);
-            }}
-            disabled={loading}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </button>
+
+          {canDelete && (
+            <button
+              className={styles.optionBtn}
+              title="Mover a papelera"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteModal(true);
+              }}
+              disabled={loading}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          )}
         </div>
       </Card>
 
       {/* Modal de confirmación de eliminación */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Mover a papelera</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>¿Deseas mover este documento a la papelera?</p>
-          <p className="text-muted">
-            <strong>{document.originalname || document.filename}</strong>
-          </p>
-          <p className="text-muted small">
-            El documento se eliminará automáticamente después de 30 días. Puedes restaurarlo desde la papelera antes de ese tiempo.
-          </p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Cancelar
-          </Button>
-          <Button 
-            variant="danger" 
-            onClick={handleMoveToTrash}
-            disabled={loading}
-          >
-            {loading ? 'Moviendo...' : 'Mover a papelera'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {canDelete && (
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Mover a papelera</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <p>¿Deseas mover este documento a la papelera?</p>
+            <p className="text-muted">
+              <strong>{document.originalname || document.filename}</strong>
+            </p>
+            <p className="text-muted small">
+              El documento se eliminará automáticamente después de 30 días. Puedes restaurarlo desde la papelera antes de
+              ese tiempo.
+            </p>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={handleMoveToTrash} disabled={loading}>
+              {loading ? 'Moviendo...' : 'Mover a papelera'}
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
 
       {/* Modal de preview */}
       <DocumentPreviewModal

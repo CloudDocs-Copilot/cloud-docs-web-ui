@@ -291,8 +291,8 @@ describe('useFileUpload Hook', () => {
         ({ signal }) =>
           new Promise((resolve, reject) => {
             const onAbort = () => {
-              const abortErr = new Error('Aborted');
-              (abortErr as any).name = 'AbortError';
+              const abortErr = new Error('Aborted') as Error & { name: string };
+              abortErr.name = 'AbortError';
               reject(abortErr);
             };
 
@@ -344,8 +344,8 @@ describe('useFileUpload Hook', () => {
         ({ signal }) =>
           new Promise((resolve, reject) => {
             const onAbort = () => {
-              const abortErr = new Error('Aborted');
-              (abortErr as any).name = 'AbortError';
+              const abortErr = new Error('Aborted') as Error & { name: string };
+              abortErr.name = 'AbortError';
               reject(abortErr);
             };
 

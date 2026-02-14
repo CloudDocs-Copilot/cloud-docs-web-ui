@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { Modal, Alert } from 'react-bootstrap';
+import React, { useMemo, useState } from 'react';
+import { Modal, Alert, Button } from 'react-bootstrap';
 import type { DocumentPreviewModalProps } from '../../types/preview.types';
 import { DocumentPreviewType } from '../../types/preview.types';
 import { previewService } from '../../services/preview.service';
@@ -13,6 +13,9 @@ import styles from './DocumentPreviewModal.module.css';
 import DocumentCommentsPanel from '../Comments/DocumentCommentsPanel';
 import useOrganization from '../../hooks/useOrganization';
 import { useAuth } from '../../hooks/useAuth';
+import { apiClient } from '../../api';
+import type { Document } from '../../types/document.types';
+import FileUploader from '../FileUploader';
 
 /**
  * Modal principal para preview de documentos
@@ -21,38 +24,95 @@ import { useAuth } from '../../hooks/useAuth';
 export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   show,
   onHide,
-  document
+  document,
 }) => {
+  const [showReplace, setShowReplace] = useState(false);
+  const [localDoc, setLocalDoc] = useState<any>(document);
+  const [previewNonce, setPreviewNonce] = useState(0);
+
+  React.useEffect(() => {
+    setLocalDoc(document);
+    setPreviewNonce(0);
+    setShowReplace(false);
+  }, [document, show]);
+
   // Determinar tipo de preview y URL
   const previewType = useMemo(() => {
-    return previewService.getPreviewType(document);
-  }, [document]);
+    return previewService.getPreviewType(localDoc);
+  }, [localDoc]);
+
+  const rawPreviewUrl = useMemo(() => {
+    return previewService.getPreviewUrl(localDoc);
+  }, [localDoc]);
 
   const previewUrl = useMemo(() => {
-    return previewService.getPreviewUrl(document);
-  }, [document]);
+    const sep = rawPreviewUrl.includes('?') ? '&' : '?';
+    return `${rawPreviewUrl}${sep}_v=${previewNonce}`;
+  }, [rawPreviewUrl, previewNonce]);
 
   const canPreview = useMemo(() => {
-    return previewService.canPreview(document);
-  }, [document]);
+    return previewService.canPreview(localDoc);
+  }, [localDoc]);
 
   const fileSize = useMemo(() => {
-    return previewService.formatFileSize(document.size);
-  }, [document.size]);
+    return previewService.formatFileSize(localDoc.size);
+  }, [localDoc.size]);
 
   const { activeOrganization } = useOrganization();
   const { user } = useAuth();
 
-  const orgRole: string =
-    (activeOrganization as any)?.role || 'member';
+  const orgRole: string = (activeOrganization as any)?.role || 'member';
 
   const canModerateComments = orgRole === 'owner' || orgRole === 'admin';
 
-  const documentId = (document as any)?.id || (document as any)?._id || '';
+  const documentId = (localDoc as any)?.id || (localDoc as any)?._id || '';
   const canComment = orgRole !== 'viewer';
 
   const currentUserId =
     (user as any)?.id || (user as any)?._id || (user as any)?.userId || '';
+
+  const uploadedById =
+    (localDoc as any)?.uploadedBy?.id ||
+    (localDoc as any)?.uploadedBy?._id ||
+    (localDoc as any)?.uploadedBy ||
+    '';
+
+  const canReplaceFile =
+    orgRole === 'owner' ||
+    orgRole === 'admin' ||
+    String(uploadedById) === String(currentUserId);
+
+  const handleReplaceUpload = async (files: File[]): Promise<Document[]> => {
+    const file = files[0];
+    if (!file || !documentId) {
+      throw new Error('Missing file or document id');
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await apiClient.post(
+      `/documents/${documentId}/replace`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
+    );
+
+    const updated = (res as any)?.data?.document;
+    if (!updated) {
+      throw new Error(
+        (res as any)?.data?.message || 'Failed to replace document',
+      );
+    }
+
+    setLocalDoc(updated);
+    setPreviewNonce((n) => n + 1);
+
+    return [updated];
+  };
 
   /**
    * Renderizar el viewer apropiado según el tipo de documento
@@ -70,9 +130,10 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
           <hr />
           <div className="d-flex justify-content-between align-items-center">
             <div>
-              <strong>File:</strong> {document.filename || document.originalname}
+              <strong>File:</strong>{' '}
+              {localDoc.filename || localDoc.originalname}
               <br />
-              <strong>Type:</strong> {document.mimeType}
+              <strong>Type:</strong> {localDoc.mimeType}
               <br />
               <strong>Size:</strong> {fileSize}
             </div>
@@ -93,9 +154,9 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         return (
           <PDFViewer
             url={previewUrl}
-            filename={document.originalname || document.filename || 'document.pdf'}
+            filename={localDoc.originalname || localDoc.filename || 'document.pdf'}
             onBack={onHide}
-            fileSize={document.size}
+            fileSize={localDoc.size}
           />
         );
 
@@ -103,10 +164,10 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         return (
           <ImageViewer
             url={previewUrl}
-            filename={document.originalname || document.filename || 'image'}
-            alt={document.originalname}
+            filename={localDoc.originalname || localDoc.filename || 'image'}
+            alt={localDoc.originalname}
             onBack={onHide}
-            fileSize={document.size}
+            fileSize={localDoc.size}
           />
         );
 
@@ -114,10 +175,10 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         return (
           <VideoPlayer
             url={previewUrl}
-            mimeType={document.mimeType}
-            filename={document.originalname || document.filename || 'video'}
+            mimeType={localDoc.mimeType}
+            filename={localDoc.originalname || localDoc.filename || 'video'}
             onBack={onHide}
-            fileSize={document.size}
+            fileSize={localDoc.size}
           />
         );
 
@@ -128,7 +189,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             <audio controls src={previewUrl} className={styles.audioPlayer}>
               Your browser does not support the audio element.
             </audio>
-            <p className="text-muted mt-3">{document.originalname || document.filename}</p>
+            <p className="text-muted mt-3">{localDoc.originalname || localDoc.filename}</p>
           </div>
         );
 
@@ -137,10 +198,10 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         return (
           <TextViewer
             url={previewUrl}
-            filename={document.originalname || document.filename || 'file.txt'}
-            mimeType={document.mimeType}
+            filename={localDoc.originalname || localDoc.filename || 'file.txt'}
+            mimeType={localDoc.mimeType}
             onBack={onHide}
-            fileSize={document.size}
+            fileSize={localDoc.size}
           />
         );
 
@@ -148,9 +209,9 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
         return (
           <OfficeViewer
             url={previewUrl}
-            filename={document.originalname || document.filename || 'document'}
+            filename={localDoc.originalname || localDoc.filename || 'document'}
             onBack={onHide}
-            fileSize={document.size}
+            fileSize={localDoc.size}
           />
         );
 
@@ -187,41 +248,73 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   const shouldShowModalHeader = !viewersWithOwnHeader.some((type) => type === previewType);
 
   return (
-    <Modal
-      show={show}
-      onHide={onHide}
-      fullscreen
-      className={styles.previewModal}
-    >
-      {shouldShowModalHeader && (
-        <Modal.Header closeButton className={styles.modalHeader}>
-          <Modal.Title>
-            <i className="bi bi-eye"></i>{' '}
-            {document.originalname || document.filename || 'Document Preview'}
-          </Modal.Title>
-        </Modal.Header>
-      )}
+    <>
+      <Modal
+        show={show}
+        onHide={onHide}
+        fullscreen
+        className={styles.previewModal}
+      >
+        {shouldShowModalHeader && (
+          <Modal.Header closeButton className={styles.modalHeader}>
+            <Modal.Title>
+              <i className="bi bi-eye"></i>{' '}
+              {localDoc.originalname || localDoc.filename || 'Document Preview'}
+            </Modal.Title>
+          </Modal.Header>
+        )}
 
-      <Modal.Body className={styles.modalBody}>
-        <Sidebar activeItem="" />
+        <Modal.Body className={styles.modalBody}>
+          <Sidebar activeItem="" />
 
-        <div className={styles.contentRow}>
-          <div className={styles.viewerWrapper}>
-            {renderViewer()}
+          <div className={styles.contentRow}>
+            <div className={styles.viewerWrapper}>
+              <div className='d-flex justify-content-end gap-2 mb-2'>
+                {canReplaceFile && (
+                  <Button
+                    variant='outline-primary'
+                    size='sm'
+                    onClick={() => setShowReplace(true)}
+                  >
+                    Reemplazar archivo
+                  </Button>
+                )}
+              </div>
+
+              {renderViewer()}
+            </div>
+
+            {/* Comments panel */}
+            <div className={styles.commentsWrapper}>
+              <DocumentCommentsPanel
+                documentId={documentId}
+                currentUserId={currentUserId}
+                canComment={canComment}
+                canModerateComments={canModerateComments}
+              />
+            </div>
           </div>
+        </Modal.Body>
+      </Modal>
 
-          {/* Comments panel */}
-          <div className={styles.commentsWrapper}>
-            <DocumentCommentsPanel
-              documentId={documentId}
-              currentUserId={currentUserId}
-              canComment={canComment}
-              canModerateComments={canModerateComments}
-            />
-          </div>
-        </div>
-      </Modal.Body>
-    </Modal>
+      <Modal
+        show={showReplace}
+        onHide={() => setShowReplace(false)}
+        size='lg'
+        centered
+        backdrop='static'
+        keyboard={false}
+      >
+        <FileUploader
+          allowMultiple={false}
+          title='Reemplazar Documento'
+          uploadHandler={handleReplaceUpload}
+          onUploadSuccess={() => {
+            setShowReplace(false);
+          }}
+        />
+      </Modal>
+    </>
   );
 };
 

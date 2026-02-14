@@ -110,6 +110,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
 
     setLocalDoc(updated);
     setPreviewNonce((n) => n + 1);
+    setShowReplace(false);
 
     return [updated];
   };
@@ -130,8 +131,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
           <hr />
           <div className="d-flex justify-content-between align-items-center">
             <div>
-              <strong>File:</strong>{' '}
-              {localDoc.filename || localDoc.originalname}
+              <strong>File:</strong> {localDoc.filename || localDoc.originalname}
               <br />
               <strong>Type:</strong> {localDoc.mimeType}
               <br />
@@ -248,73 +248,64 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   const shouldShowModalHeader = !viewersWithOwnHeader.some((type) => type === previewType);
 
   return (
-    <>
-      <Modal
-        show={show}
-        onHide={onHide}
-        fullscreen
-        className={styles.previewModal}
-      >
-        {shouldShowModalHeader && (
-          <Modal.Header closeButton className={styles.modalHeader}>
-            <Modal.Title>
-              <i className="bi bi-eye"></i>{' '}
-              {localDoc.originalname || localDoc.filename || 'Document Preview'}
-            </Modal.Title>
-          </Modal.Header>
-        )}
+    <Modal show={show} onHide={onHide} fullscreen className={styles.previewModal}>
+      {shouldShowModalHeader && (
+        <Modal.Header closeButton className={styles.modalHeader}>
+          <Modal.Title>
+            <i className="bi bi-eye"></i>{' '}
+            {localDoc.originalname || localDoc.filename || 'Document Preview'}
+          </Modal.Title>
+        </Modal.Header>
+      )}
 
-        <Modal.Body className={styles.modalBody}>
-          <Sidebar activeItem="" />
+      <Modal.Body className={styles.modalBody}>
+        <Sidebar activeItem="" />
 
-          <div className={styles.contentRow}>
-            <div className={styles.viewerWrapper}>
-              <div className='d-flex justify-content-end gap-2 mb-2'>
-                {canReplaceFile && (
-                  <Button
-                    variant='outline-primary'
-                    size='sm'
-                    onClick={() => setShowReplace(true)}
-                  >
-                    Reemplazar archivo
-                  </Button>
-                )}
+        <div className={styles.contentRow}>
+          <div className={styles.viewerWrapper}>
+            {canReplaceFile && !showReplace && (
+              <div className={styles.floatingActions}>
+                <Button
+                  variant="light"
+                  size="sm"
+                  className={styles.replaceBtn}
+                  onClick={() => setShowReplace(true)}
+                >
+                  <span className={styles.replaceBtnText}>Reemplazar</span>
+                </Button>
               </div>
+            )}
 
-              {renderViewer()}
-            </div>
-
-            {/* Comments panel */}
-            <div className={styles.commentsWrapper}>
-              <DocumentCommentsPanel
-                documentId={documentId}
-                currentUserId={currentUserId}
-                canComment={canComment}
-                canModerateComments={canModerateComments}
-              />
-            </div>
+            {!showReplace ? (
+              renderViewer()
+            ) : (
+              <div className={styles.replaceInline}>
+                <FileUploader
+                  allowMultiple={false}
+                  title="Reemplazar Documento"
+                  uploadHandler={handleReplaceUpload}
+                  onUploadSuccess={() => {
+                    setShowReplace(false);
+                  }}
+                  onClose={() => {
+                    setShowReplace(false);
+                  }}
+                />
+              </div>
+            )}
           </div>
-        </Modal.Body>
-      </Modal>
 
-      <Modal
-        show={showReplace}
-        onHide={() => setShowReplace(false)}
-        size='lg'
-        centered
-        backdrop='static'
-        keyboard={false}
-      >
-        <FileUploader
-          allowMultiple={false}
-          title='Reemplazar Documento'
-          uploadHandler={handleReplaceUpload}
-          onUploadSuccess={() => {
-            setShowReplace(false);
-          }}
-        />
-      </Modal>
-    </>
+          <div className={styles.commentsWrapper}>
+            <DocumentCommentsPanel
+              documentId={documentId}
+              currentUserId={currentUserId}
+              canComment={canComment}
+              canModerateComments={canModerateComments}
+            />
+          </div>
+        </div>
+      </Modal.Body>
+    </Modal>
   );
 };
 

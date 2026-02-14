@@ -53,13 +53,56 @@
   height: 100%;
 }
 
+.contentRow {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
 .viewerWrapper {
   flex: 1;
   min-width: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.floatingActions {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  z-index: 40;
+  display: flex;
+  gap: 10px;
+}
+
+.replaceBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 22px rgba(0,0,0,0.08);
+}
+
+.replaceBtnText {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* Inline replace area (no overlay/backdrop) */
+.replaceInline {
+  height: 100%;
+  overflow: auto;
+  padding: 14px;
 }
 
 /* right panel for comments */
 .commentsWrapper {
+  width: 380px;
   border-left: 1px solid rgba(0, 0, 0, 0.08);
   background: #fff;
   display: flex;

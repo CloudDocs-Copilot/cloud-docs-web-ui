@@ -37,10 +37,7 @@ const Dashboard: React.FC = () => {
   // Permission: delete only for owner/admin
   const orgRole: MembershipRole =
     membership?.role ||
-    membership?.membershipRole ||
-    (activeOrganization as any)?.membershipRole ||
     (activeOrganization as any)?.role ||
-    (activeOrganization as any)?.myRole ||
     'member';
 
   const normalizedRole = typeof orgRole === 'string' ? orgRole.toLowerCase() : orgRole;

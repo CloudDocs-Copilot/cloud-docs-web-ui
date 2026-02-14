@@ -110,24 +110,31 @@ export const DocumentCommentsPanel: React.FC<Props> = ({ documentId }) => {
           variant="outline-secondary"
           onClick={fetchComments}
           disabled={loading || saving}
+          className={styles.iconBtn}
         >
           ↻
         </Button>
       </div>
 
       <div className={styles.newComment}>
-        <Form.Control
-          as="textarea"
-          rows={3}
-          placeholder="Escribe un comentario..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          disabled={saving}
-        />
-        <div className={styles.newActions}>
-          <Button variant="primary" onClick={handleCreate} disabled={!canSubmit}>
-            {saving ? 'Guardando...' : 'Comentar'}
-          </Button>
+        <div className={styles.inputWrap}>
+          <Form.Control
+            as="textarea"
+            rows={3}
+            placeholder="Escribe un comentario..."
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            disabled={saving}
+            className={styles.textarea}
+          />
+          <div className={styles.composerFooter}>
+            <div className={styles.hint}>
+              {content.trim().length === 0 ? 'Sé claro y breve.' : `${content.trim().length} caracteres`}
+            </div>
+            <Button variant="primary" onClick={handleCreate} disabled={!canSubmit} className={styles.primaryBtn}>
+              {saving ? 'Guardando...' : 'Comentar'}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -153,47 +160,64 @@ export const DocumentCommentsPanel: React.FC<Props> = ({ documentId }) => {
 
             return (
               <div key={cid} className={styles.item}>
-                <div className={styles.meta}>
-                  <div className={styles.author}>{authorName}</div>
-                  <div className={styles.date}>{formatDate(c.createdAt)}</div>
+                <div className={styles.avatar} aria-hidden="true">
+                  {(authorName || 'U').trim().charAt(0).toUpperCase()}
                 </div>
 
-                {!isEditing ? (
-                  <div className={styles.content}>{c.content}</div>
-                ) : (
-                  <Form.Control
-                    as="textarea"
-                    rows={3}
-                    value={editingValue}
-                    onChange={(e) => setEditingValue(e.target.value)}
-                    disabled={saving}
-                  />
-                )}
+                <div className={styles.body}>
+                  <div className={styles.meta}>
+                    <div className={styles.authorRow}>
+                      <div className={styles.author}>{authorName}</div>
+                      <div className={styles.dot} />
+                      <div className={styles.date}>{formatDate(c.createdAt)}</div>
+                    </div>
 
-                <div className={styles.actions}>
-                  {!isEditing ? (
-                    <Button
-                      size="sm"
-                      variant="outline-primary"
-                      onClick={() => startEdit(c)}
-                      disabled={saving}
-                    >
-                      Editar
-                    </Button>
-                  ) : (
-                    <>
+                    {!isEditing ? (
                       <Button
                         size="sm"
-                        variant="primary"
-                        onClick={saveEdit}
-                        disabled={saving || !editingValue.trim()}
+                        variant="outline-secondary"
+                        onClick={() => startEdit(c)}
+                        disabled={saving}
+                        className={styles.ghostBtn}
                       >
-                        Guardar
+                        Editar
                       </Button>
-                      <Button size="sm" variant="outline-secondary" onClick={cancelEdit} disabled={saving}>
-                        Cancelar
-                      </Button>
-                    </>
+                    ) : null}
+                  </div>
+
+                  {!isEditing ? (
+                    <div className={styles.content}>{c.content}</div>
+                  ) : (
+                    <div className={styles.editWrap}>
+                      <Form.Control
+                        as="textarea"
+                        rows={3}
+                        value={editingValue}
+                        onChange={(e) => setEditingValue(e.target.value)}
+                        disabled={saving}
+                        className={styles.textarea}
+                      />
+                      <div className={styles.editActions}>
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          onClick={saveEdit}
+                          disabled={saving || !editingValue.trim()}
+                          className={styles.primaryBtnSm}
+                        >
+                          Guardar
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline-secondary"
+                          onClick={cancelEdit}
+                          disabled={saving}
+                          className={styles.ghostBtn}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

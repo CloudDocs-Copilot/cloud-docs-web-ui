@@ -10,6 +10,7 @@ import { TextViewer } from './TextViewer';
 import { OfficeViewer } from './OfficeViewer';
 import Sidebar from '../Sidebar';
 import styles from './DocumentPreviewModal.module.css';
+import DocumentCommentsPanel from '../Comments/DocumentCommentsPanel';
 
 /**
  * Modal principal para preview de documentos
@@ -159,15 +160,16 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
 
   // Determinar si debe mostrar el header del modal
   const viewersWithOwnHeader = [
-    DocumentPreviewType.PDF, 
-    DocumentPreviewType.IMAGE, 
-    DocumentPreviewType.VIDEO, 
-    DocumentPreviewType.TEXT, 
+    DocumentPreviewType.PDF,
+    DocumentPreviewType.IMAGE,
+    DocumentPreviewType.VIDEO,
+    DocumentPreviewType.TEXT,
     DocumentPreviewType.CODE,
-    DocumentPreviewType.OFFICE
+    DocumentPreviewType.OFFICE,
   ] as const;
   
-  const shouldShowModalHeader = !viewersWithOwnHeader.some(type => type === previewType);
+  const shouldShowModalHeader = !viewersWithOwnHeader.some((type) => type === previewType);
+  const documentId = document.id;
 
   return (
     <Modal
@@ -187,8 +189,16 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
 
       <Modal.Body className={styles.modalBody}>
         <Sidebar activeItem="" />
-        <div className={styles.viewerWrapper}>
-          {renderViewer()}
+
+        <div className={styles.contentRow}>
+          <div className={styles.viewerWrapper}>
+            {renderViewer()}
+          </div>
+
+          {/* Comments panel */}
+          <div className={styles.commentsWrapper}>
+            <DocumentCommentsPanel documentId={documentId} />
+          </div>
         </div>
       </Modal.Body>
     </Modal>

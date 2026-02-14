@@ -5,9 +5,6 @@ import { DocumentPreviewType } from '../../../types/preview.types';
 import type { PreviewDocument } from '../../../types/preview.types';
 import * as previewServiceModule from '../../../services/preview.service';
 
-// Declarar tipos para global
-declare const global: typeof globalThis;
-
 // Mock de los viewers
 jest.mock('../../../components/DocumentPreview/PDFViewer', () => ({
   PDFViewer: ({ filename }: { filename: string }) => <div>PDFViewer: {filename}</div>,

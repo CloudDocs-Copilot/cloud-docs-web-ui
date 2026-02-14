@@ -90,8 +90,8 @@ export interface OrgContextValue {
   refreshOrganization: (orgId?: ID) => Promise<void>;
   clearOrganization: () => void;
   hasRole: (roles: string | string[]) => boolean;
-  isAdmin: () => boolean;
-  isOwner: () => boolean;
+  isAdmin: boolean;
+  isOwner: boolean;
 }
 
 export const ACTIVE_ORG_STORAGE_KEY = 'clouddocs:activeOrgId';

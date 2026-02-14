@@ -238,7 +238,7 @@ const OrganizationSettings: React.FC = () => {
         <Col>
           <p>Organización activa: <strong>{activeOrganization?.name ?? 'Ninguna'}</strong></p>
           <div className="mt-2">
-            {(isAdmin() || isOwner()) ? (
+            {(isAdmin || isOwner) ? (
               <Button size="sm" variant="outline-primary" onClick={() => setShowInvite(true)}>
                 Invitar miembro
               </Button>
@@ -314,7 +314,7 @@ const OrganizationSettings: React.FC = () => {
                               </td>
                               <td>{(typeof m.user === 'string') ? (m.user) : (m.user?.email ?? '—')}</td>
                               <td>
-                                {(isAdmin() || isOwner()) ? (
+                                {(isAdmin || isOwner) ? (
                                   (m.role === 'owner') ? (
                                     <strong>owner</strong>
                                   ) : (
@@ -343,7 +343,7 @@ const OrganizationSettings: React.FC = () => {
                               </td>
                               <td>{m.status ?? '—'}</td>
                         <td className="text-end">
-                          {(isAdmin() || isOwner()) && (
+                          {(isAdmin || isOwner) && (
                             <>
                               <Button
                                 size="sm"

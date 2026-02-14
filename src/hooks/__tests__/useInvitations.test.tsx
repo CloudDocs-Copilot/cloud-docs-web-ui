@@ -15,6 +15,8 @@ jest.mock('../../services/invitation.service', () => ({
 
 jest.mock('../useToast', () => ({ useToast: () => ({ showToast: showToastMock }) }));
 
+jest.mock('../useAuth', () => ({ useAuth: () => ({ isAuthenticated: true }) }));
+
 import { useInvitations } from '../useInvitations';
 
 function Consumer() {

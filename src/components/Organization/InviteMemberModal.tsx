@@ -15,7 +15,7 @@ interface Props {
 
 const InviteMemberModal: React.FC<Props> = ({ show, onHide, onSuccess }) => {
   const { activeOrganization, isAdmin, isOwner } = useOrganization();
-  const canInvite = isAdmin() || isOwner();
+  const canInvite = isAdmin || isOwner;
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('member');
   const [loading, setLoading] = useState(false);

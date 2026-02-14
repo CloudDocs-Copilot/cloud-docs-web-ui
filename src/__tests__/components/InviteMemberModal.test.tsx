@@ -22,15 +22,15 @@ jest.mock('../../hooks/useToast', () => ({
 }));
 
 const mockActiveOrganization = { id: 'org-123', name: 'Test Organization' };
-const mockIsAdmin = jest.fn();
-const mockIsOwner = jest.fn();
+let mockIsAdmin = true;
+let mockIsOwner = false;
 
 jest.mock('../../hooks/useOrganization', () => ({
   __esModule: true,
   default: () => ({
     activeOrganization: mockActiveOrganization,
-    isAdmin: mockIsAdmin,
-    isOwner: mockIsOwner,
+    get isAdmin() { return mockIsAdmin; },
+    get isOwner() { return mockIsOwner; },
   }),
 }));
 
@@ -40,8 +40,8 @@ describe('InviteMemberModal', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockIsAdmin.mockReturnValue(true);
-    mockIsOwner.mockReturnValue(false);
+    mockIsAdmin = true;
+    mockIsOwner = false;
   });
 
   describe('Renderizado básico', () => {
@@ -64,8 +64,8 @@ describe('InviteMemberModal', () => {
     });
 
     it('muestra advertencia si el usuario no tiene permisos de admin/owner', () => {
-      mockIsAdmin.mockReturnValue(false);
-      mockIsOwner.mockReturnValue(false);
+      mockIsAdmin = false;
+      mockIsOwner = false;
 
       render(
         <InviteMemberModal show={true} onHide={mockOnHide} onSuccess={mockOnSuccess} />
@@ -296,8 +296,8 @@ describe('InviteMemberModal', () => {
 
   describe('Permisos', () => {
     it('deshabilita campos si el usuario no tiene permisos', () => {
-      mockIsAdmin.mockReturnValue(false);
-      mockIsOwner.mockReturnValue(false);
+      mockIsAdmin = false;
+      mockIsOwner = false;
 
       render(
         <InviteMemberModal show={true} onHide={mockOnHide} onSuccess={mockOnSuccess} />
@@ -313,8 +313,8 @@ describe('InviteMemberModal', () => {
     });
 
     it('permite owner enviar invitaciones', async () => {
-      mockIsAdmin.mockReturnValue(false);
-      mockIsOwner.mockReturnValue(true);
+      mockIsAdmin = false;
+      mockIsOwner = true;
 
       render(
         <InviteMemberModal show={true} onHide={mockOnHide} onSuccess={mockOnSuccess} />

@@ -55,6 +55,7 @@ function normalizeError(err: unknown): Error {
 }
 
 export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+
   const { isAuthenticated, user } = useAuth();
   const { showToast } = useToast();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -384,8 +385,15 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return r.includes(String(membership.role));
   }, [membership]);
 
-  const isAdmin = useCallback(() => hasRole(['admin', 'owner']), [hasRole]);
-  const isOwner = useCallback(() => hasRole(['owner']), [hasRole]);
+  const isAdmin = useMemo(() => {
+    if (!membership) return false;
+    return ['admin', 'owner'].includes(String(membership.role));
+  }, [membership]);
+  
+  const isOwner = useMemo(() => {
+    if (!membership) return false;
+    return membership.role === 'owner';
+  }, [membership]);
 
   // Initialize when user authenticates
   useEffect(() => {

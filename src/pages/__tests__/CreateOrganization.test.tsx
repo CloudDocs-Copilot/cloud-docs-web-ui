@@ -33,8 +33,8 @@ describe('CreateOrganization', () => {
       refreshOrganization: async () => {},
       clearOrganization: () => {},
       hasRole: () => false,
-      isAdmin: () => false,
-      isOwner: () => false,
+      isAdmin: false,
+      isOwner: false,
     };
     (OrgHook.useOrganization as jest.Mock).mockImplementation(() => fakeCtx);
     
@@ -59,8 +59,8 @@ describe('CreateOrganization', () => {
       refreshOrganization: async () => {},
       clearOrganization: () => {},
       hasRole: () => false,
-      isAdmin: () => false,
-      isOwner: () => false,
+      isAdmin: false,
+      isOwner: false,
     };
     (OrgHook.useOrganization as jest.Mock).mockImplementation(() => fakeCtx);
 
@@ -98,8 +98,8 @@ describe('CreateOrganization', () => {
       refreshOrganization: async () => {},
       clearOrganization: () => {},
       hasRole: () => false,
-      isAdmin: () => false,
-      isOwner: () => false,
+      isAdmin: false,
+      isOwner: false,
     };
     (OrgHook.useOrganization as jest.Mock).mockImplementation(() => fakeCtx2);
 
@@ -129,8 +129,8 @@ describe('CreateOrganization', () => {
       refreshOrganization: async () => {},
       clearOrganization: () => {},
       hasRole: () => false,
-      isAdmin: () => false,
-      isOwner: () => false,
+      isAdmin: false,
+      isOwner: false,
     };
     (OrgHook.useOrganization as jest.Mock).mockImplementation(() => fakeCtx3);
 
@@ -159,8 +159,8 @@ describe('CreateOrganization', () => {
       refreshOrganization: async () => {},
       clearOrganization: () => {},
       hasRole: () => false,
-      isAdmin: () => false,
-      isOwner: () => false,
+      isAdmin: false,
+      isOwner: false,
     };
     (OrgHook.useOrganization as jest.Mock).mockImplementation(() => fakeCtx4);
 
@@ -194,8 +194,8 @@ describe('CreateOrganization', () => {
       refreshOrganization: async () => {},
       clearOrganization: () => {},
       hasRole: () => false,
-      isAdmin: () => false,
-      isOwner: () => false,
+      isAdmin: false,
+      isOwner: false,
     };
     (OrgHook.useOrganization as jest.Mock).mockImplementation(() => fakeCtx);
 
@@ -223,8 +223,8 @@ describe('CreateOrganization', () => {
       refreshOrganization: async () => {},
       clearOrganization: () => {},
       hasRole: () => false,
-      isAdmin: () => false,
-      isOwner: () => false,
+      isAdmin: false,
+      isOwner: false,
     };
     (OrgHook.useOrganization as jest.Mock).mockImplementation(() => fakeCtx);
 

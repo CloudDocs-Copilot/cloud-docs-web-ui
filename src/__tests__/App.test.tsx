@@ -24,8 +24,8 @@ const TestOrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     refreshOrganization: async () => {},
     clearOrganization: () => {},
     hasRole: () => false,
-    isAdmin: () => false,
-    isOwner: () => false,
+    isAdmin: false,
+    isOwner: false,
   };
 
   return <OrganizationContext.Provider value={value}>{children}</OrganizationContext.Provider>;

@@ -25,6 +25,7 @@ export interface PreviewDocument {
   size: number;
   url?: string;
   path?: string;
+  uploadedBy?: string;
 }
 
 /**

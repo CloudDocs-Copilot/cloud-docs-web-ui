@@ -80,10 +80,12 @@ describe('useFileUpload Hook', () => {
     it('debe rechazar archivos que exceden el tamaño máximo', () => {
       const { result } = renderHook(() => useFileUpload());
 
-      // Crear un archivo simulado que excede 50MB
-      const largeContent = new Array(51 * 1024 * 1024).fill('a').join('');
-      const largeFile = new File([largeContent], 'huge.pdf', {
+      // Simular un archivo grande sin asignar memoria real
+      const largeFile = new File(['x'], 'huge.pdf', {
         type: 'application/pdf',
+      });
+      Object.defineProperty(largeFile, 'size', {
+        value: 51 * 1024 * 1024, // 51MB
       });
 
       act(() => {
@@ -284,9 +286,25 @@ describe('useFileUpload Hook', () => {
 
   describe('cancelUpload', () => {
     it('debe cancelar una subida en progreso', async () => {
-      // Simular subida lenta que puede ser cancelada
+      // Mock que respeta AbortController.signal
       (documentService.uploadDocument as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 5000))
+        ({ signal }) =>
+          new Promise((resolve, reject) => {
+            const onAbort = () => {
+              const abortErr = new Error('Aborted') as Error & { name: string };
+              abortErr.name = 'AbortError';
+              reject(abortErr);
+            };
+
+            if (signal?.aborted) return onAbort();
+            signal?.addEventListener('abort', onAbort, { once: true });
+
+            // mantener pendiente (no resolver) salvo abort
+            setTimeout(() => {
+              // Si no fue abortado, resolvemos (pero con delay suficiente para que el test cancele)
+              resolve({ success: true, document: { id: 'doc-123', filename: 'test.pdf' } });
+            }, 5000);
+          })
       );
 
       const { result } = renderHook(() => useFileUpload());
@@ -304,7 +322,12 @@ describe('useFileUpload Hook', () => {
         result.current.uploadAll();
       });
 
-      // Cancelar inmediatamente
+      // Esperar a que cambie a uploading (para asegurar que el AbortController exista)
+      await waitFor(() => {
+        expect(result.current.files[0].status).toBe('uploading');
+      });
+
+      // Cancelar
       act(() => {
         result.current.cancelUpload(fileId);
       });
@@ -318,7 +341,21 @@ describe('useFileUpload Hook', () => {
   describe('cancelAll', () => {
     it('debe cancelar todas las subidas en progreso', async () => {
       (documentService.uploadDocument as jest.Mock).mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 5000))
+        ({ signal }) =>
+          new Promise((resolve, reject) => {
+            const onAbort = () => {
+              const abortErr = new Error('Aborted') as Error & { name: string };
+              abortErr.name = 'AbortError';
+              reject(abortErr);
+            };
+
+            if (signal?.aborted) return onAbort();
+            signal?.addEventListener('abort', onAbort, { once: true });
+
+            setTimeout(() => {
+              resolve({ success: true, document: { id: 'doc-123', filename: 'test.pdf' } });
+            }, 5000);
+          })
       );
 
       const { result } = renderHook(() => useFileUpload());
@@ -334,6 +371,11 @@ describe('useFileUpload Hook', () => {
 
       act(() => {
         result.current.uploadAll();
+      });
+
+      // Esperar a que al menos uno esté subiendo
+      await waitFor(() => {
+        expect(result.current.files.some((f) => f.status === 'uploading')).toBe(true);
       });
 
       act(() => {

@@ -8,20 +8,24 @@ import useOrganization from '../hooks/useOrganization';
 import type { Document } from '../types/document.types';
 import type { MembershipRole } from '../types/organization.types';
 
-
 interface DocumentsApiResponse {
   success: boolean;
   count: number;
   documents: Document[];
-};
+}
+
+interface UseOrganizationReturn {
+  activeOrganization: { role?: MembershipRole } | null;
+  membership: { role?: MembershipRole } | null;
+}
 
 const Dashboard: React.FC = () => {
     
   usePageTitle({
-    title: 'Mis Documentos',
-    subtitle: 'Organizado automáticamente con IA',
-    documentTitle: 'Mis Documentos',
-    metaDescription: 'Gestiona y organiza tus documentos con inteligencia artificial',
+    title: 'Documentos Compartidos',
+    subtitle: 'Documentos compartidos contigo por tu equipo',
+    documentTitle: 'Documentos Compartidos',
+    metaDescription: 'Gestiona y accede a los documentos que tus compañeros han compartido contigo',
   });
 
   
@@ -31,24 +35,23 @@ const Dashboard: React.FC = () => {
   
 
   // Obtener ID de la organización activa desde el contexto
-  const { activeOrganization, membership } = useOrganization();
-  const organizationId = activeOrganization?.id ?? '';
+  const { activeOrganization, membership } = useOrganization() as UseOrganizationReturn;
 
   // Permission: delete only for owner/admin
-  const orgRole = (membership?.role ||
+  const orgRole: MembershipRole =
+    membership?.role ||
     activeOrganization?.role ||
-    'member') as MembershipRole;
+    'member';
 
   const normalizedRole = typeof orgRole === 'string' ? orgRole.toLowerCase() : orgRole;
   const canDeleteDocuments = normalizedRole === 'owner' || normalizedRole === 'admin';
 
   const fetchDocuments = useCallback(() => {
-    if (!organizationId) return;
     execute({
       method: 'GET',
-      url: `/documents/recent/${organizationId}`,
+      url: `/documents/shared`,
     });
-  }, [execute, organizationId]);
+  }, [execute]);
 
   /**
    * Callback cuando se suben documentos exitosamente
@@ -112,7 +115,7 @@ const Dashboard: React.FC = () => {
             ) : (
               <Col xs={12}>
                 <Alert variant="info">
-                  No documents found. Upload your first document to get started!
+                  Sin documentos compartidos contigo aún. Cuando tus compañeros compartan documentos contigo, aparecerán aquí.
                 </Alert>
               </Col>
             )}

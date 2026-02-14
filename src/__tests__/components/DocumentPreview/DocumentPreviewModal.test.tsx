@@ -41,6 +41,37 @@ jest.mock('../../../services/preview.service', () => ({
   },
 }));
 
+jest.mock('../../../hooks/useOrganization', () => ({
+  __esModule: true,
+  default: () => ({
+    activeOrganization: { id: 'org-1', name: 'Org One', role: 'admin' },
+    organizations: [],
+    membership: null,
+    loading: false,
+    error: null,
+    fetchOrganizations: jest.fn(),
+    fetchActiveOrganization: jest.fn(),
+    setActiveOrganization: jest.fn(),
+    createOrganization: jest.fn(),
+    refreshOrganization: jest.fn(),
+    clearOrganization: jest.fn(),
+    hasRole: jest.fn(() => false),
+    isAdmin: true,
+    isOwner: false,
+  }),
+}));
+
+jest.mock('../../../hooks/useAuth', () => ({
+  __esModule: true,
+  useAuth: () => ({
+    user: { id: 'u1', name: 'User', email: 'user@example.com' },
+    isAuthenticated: true,
+    loading: false,
+    login: jest.fn(),
+    logout: jest.fn(),
+  }),
+}));
+
 describe('DocumentPreviewModal', () => {
   const mockOnHide = jest.fn();
   
@@ -242,7 +273,7 @@ describe('DocumentPreviewModal', () => {
     render(<DocumentPreviewModal show={true} onHide={mockOnHide} document={document} />);
     
     const downloadLink = screen.getByRole('link', { name: /download file/i });
-    expect(downloadLink).toHaveAttribute('href', 'https://example.com/file.zip');
+    expect(downloadLink.getAttribute('href')).toMatch(/^https:\/\/example\.com\/file\.zip\?_v=\d+$/);
     expect(downloadLink).toHaveAttribute('download');
   });
 

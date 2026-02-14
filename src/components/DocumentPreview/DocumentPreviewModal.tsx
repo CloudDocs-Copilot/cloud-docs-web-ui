@@ -11,6 +11,8 @@ import { OfficeViewer } from './OfficeViewer';
 import Sidebar from '../Sidebar';
 import styles from './DocumentPreviewModal.module.css';
 import DocumentCommentsPanel from '../Comments/DocumentCommentsPanel';
+import useOrganization from '../../hooks/useOrganization';
+import { useAuth } from '../../hooks/useAuth';
 
 /**
  * Modal principal para preview de documentos
@@ -37,6 +39,20 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   const fileSize = useMemo(() => {
     return previewService.formatFileSize(document.size);
   }, [document.size]);
+
+  const { activeOrganization } = useOrganization();
+  const { user } = useAuth();
+
+  const orgRole: string =
+    (activeOrganization as any)?.role || 'member';
+
+  const canModerateComments = orgRole === 'owner' || orgRole === 'admin';
+
+  const documentId = (document as any)?.id || (document as any)?._id || '';
+  const canComment = orgRole !== 'viewer';
+
+  const currentUserId =
+    (user as any)?.id || (user as any)?._id || (user as any)?.userId || '';
 
   /**
    * Renderizar el viewer apropiado según el tipo de documento
@@ -169,7 +185,6 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   ] as const;
   
   const shouldShowModalHeader = !viewersWithOwnHeader.some((type) => type === previewType);
-  const documentId = document.id;
 
   return (
     <Modal
@@ -197,7 +212,12 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
 
           {/* Comments panel */}
           <div className={styles.commentsWrapper}>
-            <DocumentCommentsPanel documentId={documentId} />
+            <DocumentCommentsPanel
+              documentId={documentId}
+              currentUserId={currentUserId}
+              canComment={canComment}
+              canModerateComments={canModerateComments}
+            />
           </div>
         </div>
       </Modal.Body>

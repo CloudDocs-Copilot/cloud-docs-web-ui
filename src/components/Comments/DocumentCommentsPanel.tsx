@@ -6,9 +6,17 @@ import styles from './DocumentCommentsPanel.module.css';
 
 interface Props {
   documentId: string;
+  currentUserId: string;
+  canComment: boolean;
+  canModerateComments?: boolean;
 }
 
-export const DocumentCommentsPanel: React.FC<Props> = ({ documentId }) => {
+export const DocumentCommentsPanel: React.FC<Props> = ({
+  documentId,
+  currentUserId,
+  canComment,
+  canModerateComments = false,
+}) => {
   const [items, setItems] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -18,7 +26,10 @@ export const DocumentCommentsPanel: React.FC<Props> = ({ documentId }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingValue, setEditingValue] = useState('');
 
-  const canSubmit = useMemo(() => content.trim().length > 0 && !saving, [content, saving]);
+  const canSubmit = useMemo(
+    () => canComment && content.trim().length > 0 && !saving,
+    [canComment, content, saving]
+  );
 
   const fetchComments = async () => {
     if (!documentId) return;
@@ -54,7 +65,18 @@ export const DocumentCommentsPanel: React.FC<Props> = ({ documentId }) => {
     }
   };
 
+  const canEditComment = (comment: Comment) => {
+    const createdById =
+      (comment as any)?.createdBy?._id ||
+      (comment as any)?.createdBy?.id ||
+      (comment as any)?.createdBy;
+
+    const isOwner = String(createdById || '') === String(currentUserId || '');
+    return isOwner || canModerateComments;
+  };
+
   const startEdit = (comment: Comment) => {
+    if (!canEditComment(comment)) return;
     const cid = comment.id || (comment as any)._id;
     setEditingId(cid);
     setEditingValue(comment.content);
@@ -68,6 +90,13 @@ export const DocumentCommentsPanel: React.FC<Props> = ({ documentId }) => {
   const saveEdit = async () => {
     if (!editingId) return;
     if (!editingValue.trim()) return;
+
+    const target = items.find((c) => (c.id || (c as any)._id) === editingId);
+    if (!target || !canEditComment(target)) {
+      setError('No tienes permisos para editar este comentario');
+      cancelEdit();
+      return;
+    }
 
     setSaving(true);
     setError(null);
@@ -121,17 +150,26 @@ export const DocumentCommentsPanel: React.FC<Props> = ({ documentId }) => {
           <Form.Control
             as="textarea"
             rows={3}
-            placeholder="Escribe un comentario..."
+            placeholder={canComment ? 'Escribe un comentario...' : 'No tienes permisos para comentar'}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            disabled={saving}
+            disabled={saving || !canComment}
             className={styles.textarea}
           />
           <div className={styles.composerFooter}>
             <div className={styles.hint}>
-              {content.trim().length === 0 ? 'Sé claro y breve.' : `${content.trim().length} caracteres`}
+              {!canComment
+                ? 'Solo editores o usuarios con permiso de comentar pueden escribir.'
+                : content.trim().length === 0
+                ? 'Sé claro y breve.'
+                : `${content.trim().length} caracteres`}
             </div>
-            <Button variant="primary" onClick={handleCreate} disabled={!canSubmit} className={styles.primaryBtn}>
+            <Button
+              variant="primary"
+              onClick={handleCreate}
+              disabled={!canSubmit}
+              className={styles.primaryBtn}
+            >
               {saving ? 'Guardando...' : 'Comentar'}
             </Button>
           </div>
@@ -157,6 +195,7 @@ export const DocumentCommentsPanel: React.FC<Props> = ({ documentId }) => {
             const cid = c.id || (c as any)._id;
             const authorName = c.createdBy?.name || c.createdBy?.email || 'Usuario';
             const isEditing = editingId === cid;
+            const canEdit = canEditComment(c);
 
             return (
               <div key={cid} className={styles.item}>
@@ -177,7 +216,7 @@ export const DocumentCommentsPanel: React.FC<Props> = ({ documentId }) => {
                         size="sm"
                         variant="outline-secondary"
                         onClick={() => startEdit(c)}
-                        disabled={saving}
+                        disabled={saving || !canEdit}
                         className={styles.ghostBtn}
                       >
                         Editar

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Container, Row, Col, Card, Button, Spinner, Form, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Button, Spinner, Form, Modal } from 'react-bootstrap';
 import { FolderPlus, FileEarmarkPlus } from 'react-bootstrap-icons';
 import { FolderTree } from './FolderTree';
+import { FolderCard } from './FolderCard';
 import { FolderBreadcrumbs } from './FolderBreadcrumbs';
 import DocumentCard from '../DocumentCard';
 import { folderService } from '../../services/folder.service';
@@ -26,6 +27,18 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [creatingFolder, setCreatingFolder] = useState(false);
+
+  // Rename Folder Modal State
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [folderToRename, setFolderToRename] = useState<Folder | null>(null);
+  const [renameFolderValue, setRenameFolderValue] = useState('');
+  const [renamingFolder, setRenamingFolder] = useState(false);
+
+  // Rename Document Modal State
+  const [showRenameDocModal, setShowRenameDocModal] = useState(false);
+  const [documentToRename, setDocumentToRename] = useState<Document | null>(null);
+  const [renameDocValue, setRenameDocValue] = useState('');
+  const [renamingDoc, setRenamingDoc] = useState(false);
 
   // File Upload State
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -109,6 +122,70 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
     }
   };
 
+  const handleRenameFolder = (folder: Folder) => {
+    setFolderToRename(folder);
+    setRenameFolderValue(folder.displayName || folder.name);
+    setShowRenameModal(true);
+  };
+
+  const handleConfirmRenameFolder = async () => {
+    if (!folderToRename || !renameFolderValue.trim()) {
+      return;
+    }
+    
+    setRenamingFolder(true);
+    try {
+      await folderService.rename(folderToRename.id, { 
+        displayName: renameFolderValue.trim() 
+      });
+      setShowRenameModal(false);
+      setFolderToRename(null);
+      setRenameFolderValue('');
+      // Refresh content and tree
+      if (currentFolder) {
+        fetchContents(currentFolder.id);
+      }
+      setRefreshTree(prev => prev + 1);
+    } catch (error: any) {
+      console.error('Failed to rename folder:', error);
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Error renaming folder';
+      alert(`Error al renombrar carpeta: ${errorMessage}`);
+    } finally {
+      setRenamingFolder(false);
+    }
+  };
+
+  const handleRenameDocument = (doc: Document) => {
+    setDocumentToRename(doc);
+    // Mantener la extensión, solo editar el nombre
+    setRenameDocValue(doc.filename || doc.originalname || '');
+    setShowRenameDocModal(true);
+  };
+
+  const handleConfirmRenameDocument = async () => {
+    if (!documentToRename || !renameDocValue.trim()) {
+      return;
+    }
+    
+    setRenamingDoc(true);
+    try {
+      await documentService.renameDocument(documentToRename.id, renameDocValue.trim());
+      setShowRenameDocModal(false);
+      setDocumentToRename(null);
+      setRenameDocValue('');
+      // Refresh content
+      if (currentFolder) {
+        fetchContents(currentFolder.id);
+      }
+    } catch (error: any) {
+      console.error('Failed to rename document:', error);
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Error renaming document';
+      alert(`Error al renombrar documento: ${errorMessage}`);
+    } finally {
+      setRenamingDoc(false);
+    }
+  };
+
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
@@ -177,6 +254,27 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
     } catch (error) {
       console.error('Failed to move document', error);
       // alert('Error moving document'); // Optional: replace with Toast
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Maneja el movimiento de carpetas desde Drag & Drop
+   */
+  const handleMoveFolder = async (sourceFolderId: string, targetFolderId: string) => {
+    try {
+      setLoading(true);
+      await folderService.move(sourceFolderId, { targetFolderId });
+      // Refresh current folder view
+      if (currentFolder) {
+        fetchContents(currentFolder.id);
+      }
+      // Refresh tree to show new structure
+      setRefreshTree(prev => prev + 1);
+    } catch (error: any) {
+      console.error('Failed to move folder', error);
+      alert('Error al mover carpeta: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
@@ -254,16 +352,13 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
                      <Row className="g-3">
                        {items.subfolders.map(subfolder => (
                          <Col key={subfolder.id} xs={6} sm={4} md={3} lg={2}>
-                           <Card 
-                              className="h-100 shadow-sm border-0 bg-light text-center p-3"
-                              style={{cursor: 'pointer'}}
-                              onClick={() => handleSelectFolder(subfolder)}
-                            >
-                             <div className="fs-1 text-warning mb-2">📁</div>
-                             <div className="text-truncate small fw-bold" title={subfolder.displayName || subfolder.name}>
-                               {subfolder.displayName || subfolder.name}
-                             </div>
-                           </Card>
+                           <FolderCard 
+                              folder={subfolder}
+                              onSelect={handleSelectFolder}
+                              onMoveDocument={handleMoveDocument}
+                              onMoveFolder={handleMoveFolder}
+                              onRename={handleRenameFolder}
+                           />
                          </Col>
                        ))}
                      </Row>
@@ -276,7 +371,10 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
                     <Row className="g-3">
                       {items.documents.map(doc => (
                         <Col key={doc.id} xs={12} sm={6} md={4} lg={3}>
-                          <DocumentCard document={doc} />
+                          <DocumentCard 
+                            document={doc} 
+                            onRename={handleRenameDocument}
+                          />
                         </Col>
                       ))}
                       {items.documents.length === 0 && items.subfolders.length === 0 && (
@@ -318,6 +416,79 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
             disabled={!newFolderName.trim() || creatingFolder}
           >
             {creatingFolder ? <Spinner size="sm" animation="border" /> : 'Crear Carpeta'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal de renombrar carpeta */}
+      <Modal show={showRenameModal} onHide={() => setShowRenameModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Renombrar Carpeta</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group>
+            <Form.Label>Nombre</Form.Label>
+            <Form.Control 
+              type="text" 
+              placeholder="Nuevo nombre" 
+              value={renameFolderValue}
+              onChange={e => setRenameFolderValue(e.target.value)}
+              autoFocus
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleConfirmRenameFolder();
+                }
+              }}
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowRenameModal(false)}>Cancelar</Button>
+          <Button 
+            variant="primary" 
+            onClick={handleConfirmRenameFolder}
+            disabled={!renameFolderValue.trim() || renamingFolder}
+          >
+            {renamingFolder ? <Spinner size="sm" animation="border" /> : 'Renombrar'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal de renombrar documento */}
+      <Modal show={showRenameDocModal} onHide={() => setShowRenameDocModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Renombrar Documento</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group>
+            <Form.Label>Nombre del archivo</Form.Label>
+            <Form.Control 
+              type="text" 
+              placeholder="Nuevo nombre con extensión" 
+              value={renameDocValue}
+              onChange={e => setRenameDocValue(e.target.value)}
+              autoFocus
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleConfirmRenameDocument();
+                }
+              }}
+            />
+            <Form.Text className="text-muted">
+              Incluye la extensión del archivo (ej: documento.pdf)
+            </Form.Text>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowRenameDocModal(false)}>Cancelar</Button>
+          <Button 
+            variant="primary" 
+            onClick={handleConfirmRenameDocument}
+            disabled={!renameDocValue.trim() || renamingDoc}
+          >
+            {renamingDoc ? <Spinner size="sm" animation="border" /> : 'Renombrar'}
           </Button>
         </Modal.Footer>
       </Modal>

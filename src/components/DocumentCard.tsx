@@ -11,9 +11,10 @@ import styles from './DocumentCard.module.css';
 interface DocumentCardProps {
   document: Document;
   onDeleted?: () => void;
+  onRename?: (document: Document) => void;
 }
 
-const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
+const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRename }) => {
   const { moveToTrash, loading } = useDocumentDeletion();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -199,6 +200,21 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
               <line x1="12" y1="15" x2="12" y2="3" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
+          {onRename && (
+            <button 
+              className={styles.optionBtn} 
+              title="Renombrar"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRename(document);
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          )}
           <button 
             className={styles.optionBtn} 
             title="Mover a papelera"

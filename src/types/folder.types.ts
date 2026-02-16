@@ -73,6 +73,6 @@ export interface MoveFolderDto {
  * DTO para renombrar carpeta
  */
 export interface RenameFolderDto {
-  name: string;
+  name?: string;
   displayName?: string;
 }

@@ -4,16 +4,12 @@ import { Button, Spinner, Alert } from 'react-bootstrap';
 import type { PDFViewerProps } from '../../types/preview.types';
 import { previewService } from '../../services/preview.service';
 import { PreviewHeader } from './PreviewHeader';
+import { apiClient } from '../../api/httpClient.config';
 import styles from './PDFViewer.module.css';
 
-// Configurar worker de PDF.js usando el paquete npm
-try {
-  // Use a public CDN worker to avoid `import.meta.url` parsing issues
-  // during tests/coverage collection where TS may use CommonJS.
-  pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@2.16.105/build/pdf.worker.min.js';
-} catch {
-  // Best-effort: ignore if setting the worker fails in some envs
-}
+// Configurar worker de PDF.js usando CDN alternativo (jsDelivr es más confiable que unpkg)
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+console.log('[PDFViewer] PDF.js version:', pdfjs.version);
 
 /**
  * Componente para visualizar documentos PDF con navegación de páginas
@@ -39,25 +35,19 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ url, filename, onBack, fil
 
         console.log('[PDFViewer] Loading PDF from URL:', url);
         
-        // Usar credentials: 'include' para enviar cookies de autenticación
-        const response = await fetch(url, {
-          credentials: 'include'
+        // Usar apiClient que ya tiene configuradas las cookies y CSRF
+        const response = await apiClient.get(url, {
+          responseType: 'blob' // Importante: recibir como blob
         });
 
         console.log('[PDFViewer] Response status:', response.status);
-        console.log('[PDFViewer] Response headers:', Object.fromEntries(response.headers.entries()));
+        console.log('[PDFViewer] Response headers:', response.headers);
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('[PDFViewer] Error response:', errorText);
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const blob = await response.blob();
+        const blob = response.data;
         console.log('[PDFViewer] Blob created, size:', blob.size, 'type:', blob.type);
         
         // Verificar que es realmente un PDF
-        if (!blob.type.includes('pdf')) {
+        if (blob.type && !blob.type.includes('pdf')) {
           console.error('[PDFViewer] Invalid blob type:', blob.type);
           throw new Error(`Expected PDF but got ${blob.type}`);
         }

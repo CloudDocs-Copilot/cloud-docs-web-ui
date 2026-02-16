@@ -24,8 +24,8 @@ const TestOrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     refreshOrganization: async () => {},
     clearOrganization: () => {},
     hasRole: () => false,
-    isAdmin: () => false,
-    isOwner: () => false,
+    isAdmin: false,
+    isOwner: false,
   };
 
   return <OrganizationContext.Provider value={value}>{children}</OrganizationContext.Provider>;
@@ -48,6 +48,11 @@ jest.mock('../hooks/useAuth', () => ({
     login: jest.fn(),
     logout: jest.fn(),
   }),
+}));
+
+jest.mock('../pages/SharedDocs', () => ({
+  __esModule: true,
+  default: () => <div>SharedDocs Page</div>,
 }));
 
 // Mock child components to isolate App test from page complexity

@@ -47,8 +47,8 @@ const renderWithProviders = (ui: React.ReactElement) => {
     refreshOrganization: async () => {},
     clearOrganization: () => {},
     hasRole: () => false,
-    isAdmin: () => false,
-    isOwner: () => false,
+    isAdmin: false,
+    isOwner: false,
   };
 
   return render(

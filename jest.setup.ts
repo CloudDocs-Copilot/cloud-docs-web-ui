@@ -35,8 +35,17 @@ if (!globalThis.__CONSOLE_ERROR_ORIG__) {
 import '@testing-library/jest-dom';
 
 // Mock simple de import.meta para evitar errores de TS
-// Usamos (globalThis as any) para evitar errores de tipado estricto
-(globalThis as any).import = {
+interface ImportMeta {
+  env: Record<string, string>;
+}
+
+interface GlobalThisWithImport {
+  import?: {
+    meta: ImportMeta;
+  };
+}
+
+(globalThis as unknown as GlobalThisWithImport).import = {
   meta: {
     env: {
       VITE_API_BASE_URL: 'http://localhost:3000/api',

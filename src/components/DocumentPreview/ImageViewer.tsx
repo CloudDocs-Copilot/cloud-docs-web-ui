@@ -49,6 +49,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ url, filename, alt, on
         URL.revokeObjectURL(blobUrl);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
   /**

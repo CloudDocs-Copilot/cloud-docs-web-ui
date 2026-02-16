@@ -8,7 +8,7 @@ declare const global: typeof globalThis;
 
 // Mock de PreviewHeader
 jest.mock('../../../components/DocumentPreview/PreviewHeader', () => ({
-  PreviewHeader: ({ filename, onBack, children }: any) => (
+  PreviewHeader: ({ filename, onBack, children }: { filename: string; onBack?: () => void; children?: React.ReactNode }) => (
     <div data-testid="preview-header">
       <button onClick={onBack}>Back</button>
       <span>{filename}</span>
@@ -51,10 +51,10 @@ describe('VideoPlayer', () => {
     jest.restoreAllMocks();
   });
 
-  it('renders video player with header', () => {
+  it('renders video player with header', async () => {
     render(<VideoPlayer {...defaultProps} />);
-    
-    expect(screen.getByTestId('preview-header')).toBeInTheDocument();
+
+    await waitFor(() => expect(screen.getByTestId('preview-header')).toBeInTheDocument());
     expect(screen.getByText('sample-video.mp4')).toBeInTheDocument();
   });
 
@@ -86,7 +86,7 @@ describe('VideoPlayer', () => {
       container = result.container;
     });
     await waitFor(() => {
-      const video = container.querySelector('video');
+      const video = container!.querySelector('video');
       expect(video).toBeInTheDocument();
     });
   });
@@ -136,32 +136,35 @@ describe('VideoPlayer', () => {
     });
   });
 
-  it('renders playback controls in header', () => {
+  it('renders playback controls in header', async () => {
     render(<VideoPlayer {...defaultProps} />);
-    
-    const header = screen.getByTestId('preview-header');
-    expect(header).toBeInTheDocument();
+
+    await waitFor(() => expect(screen.getByTestId('preview-header')).toBeInTheDocument());
   });
 
   it('supports different video MIME types', async () => {
-    const { container } = render(
-      <VideoPlayer {...defaultProps} mimeType="video/webm" />
-    );
-    
+    let container: HTMLElement | undefined;
+    await act(async () => {
+      const result = render(
+        <VideoPlayer {...defaultProps} mimeType="video/webm" />
+      );
+      container = result.container;
+    });
+
     await waitFor(() => {
-      const video = container.querySelector('video');
+      const video = container!.querySelector('video');
       expect(video).toBeInTheDocument();
     });
   });
 
-  it('displays loading state initially', () => {
+  it('displays loading state initially', async () => {
     (global.fetch as jest.Mock).mockImplementation(
       () => new Promise(() => {}) // Never resolves
     );
-    
+
     render(<VideoPlayer {...defaultProps} />);
-    
+
     // El componente debería mostrar estado de carga
-    expect(screen.getByTestId('preview-header')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('preview-header')).toBeInTheDocument());
   });
 });

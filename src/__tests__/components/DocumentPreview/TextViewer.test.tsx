@@ -8,7 +8,7 @@ declare const global: typeof globalThis;
 
 // Mock de react-syntax-highlighter
 jest.mock('react-syntax-highlighter', () => ({
-  Prism: ({ children, language }: any) => (
+  Prism: ({ children, language }: { children?: React.ReactNode; language?: string }) => (
     <pre data-testid="syntax-highlighter" data-language={language}>
       {children}
     </pre>
@@ -21,7 +21,7 @@ jest.mock('react-syntax-highlighter/dist/esm/styles/prism', () => ({
 
 // Mock de PreviewHeader
 jest.mock('../../../components/DocumentPreview/PreviewHeader', () => ({
-  PreviewHeader: ({ filename, onBack, children }: any) => (
+  PreviewHeader: ({ filename, onBack, children }: { filename: string; onBack?: () => void; children?: React.ReactNode }) => (
     <div data-testid="preview-header">
       <button onClick={onBack}>Back</button>
       <span>{filename}</span>
@@ -41,6 +41,8 @@ jest.mock('../../../services/preview.service', () => ({
     }),
   },
 }));
+
+import * as previewServiceModule from '../../../services/preview.service';
 
 // Mock global fetch
 global.fetch = jest.fn();
@@ -67,10 +69,10 @@ describe('TextViewer', () => {
     jest.restoreAllMocks();
   });
 
-  it('renders text viewer with header', () => {
+  it('renders text viewer with header', async () => {
     render(<TextViewer {...defaultProps} />);
-    
-    expect(screen.getByTestId('preview-header')).toBeInTheDocument();
+
+    await waitFor(() => expect(screen.getByTestId('preview-header')).toBeInTheDocument());
     expect(screen.getByText('readme.txt')).toBeInTheDocument();
   });
 
@@ -131,7 +133,6 @@ describe('TextViewer', () => {
   });
 
   it('uses syntax highlighter for JavaScript files', async () => {
-    const previewServiceModule = await import('../../../services/preview.service');
     (previewServiceModule.previewService.getCodeLanguage as jest.Mock).mockReturnValue('javascript');
     await act(async () => {
       render(<TextViewer {...defaultProps} filename="app.js" />);
@@ -144,7 +145,6 @@ describe('TextViewer', () => {
   });
 
   it('uses syntax highlighter for TypeScript files', async () => {
-    const previewServiceModule = await import('../../../services/preview.service');
     (previewServiceModule.previewService.getCodeLanguage as jest.Mock).mockReturnValue('typescript');
     await act(async () => {
       render(<TextViewer {...defaultProps} filename="app.ts" />);
@@ -157,11 +157,11 @@ describe('TextViewer', () => {
   });
 
   it('uses plain text for .txt files', async () => {
-    const previewServiceModule = await import('../../../services/preview.service');
     (previewServiceModule.previewService.getCodeLanguage as jest.Mock).mockReturnValue('text');
-    
-    render(<TextViewer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<TextViewer {...defaultProps} />);
+    });
+
     await waitFor(() => {
       // Debería mostrar texto plano sin syntax highlighter
       expect(screen.getByText(/This is the file content/)).toBeInTheDocument();
@@ -169,29 +169,30 @@ describe('TextViewer', () => {
   });
 
   it('accepts custom language prop', async () => {
-    render(<TextViewer {...defaultProps} language="python" />);
-    
+    await act(async () => {
+      render(<TextViewer {...defaultProps} language="python" />);
+    });
+
     await waitFor(() => {
       const highlighter = screen.getByTestId('syntax-highlighter');
       expect(highlighter).toHaveAttribute('data-language', 'python');
     });
   });
 
-  it('renders controls in header', () => {
+  it('renders controls in header', async () => {
     render(<TextViewer {...defaultProps} />);
-    
-    const header = screen.getByTestId('preview-header');
-    expect(header).toBeInTheDocument();
+
+    await waitFor(() => expect(screen.getByTestId('preview-header')).toBeInTheDocument());
   });
 
-  it('displays loading state initially', () => {
+  it('displays loading state initially', async () => {
     (global.fetch as jest.Mock).mockImplementation(
       () => new Promise(() => {}) // Never resolves
     );
-    
+
     render(<TextViewer {...defaultProps} />);
-    
+
     // El componente debería mostrar un spinner o estado de carga
-    expect(screen.getByTestId('preview-header')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByTestId('preview-header')).toBeInTheDocument());
   });
 });

@@ -8,7 +8,7 @@ declare const global: typeof globalThis;
 
 // Mock de PreviewHeader
 jest.mock('../../../components/DocumentPreview/PreviewHeader', () => ({
-  PreviewHeader: ({ filename, onBack, children }: any) => (
+  PreviewHeader: ({ filename, onBack, children }: { filename: string; onBack?: () => void; children?: React.ReactNode }) => (
     <div data-testid="preview-header">
       <button onClick={onBack}>Back</button>
       <span>{filename}</span>
@@ -46,10 +46,10 @@ describe('ImageViewer', () => {
     jest.restoreAllMocks();
   });
 
-  it('renders image viewer with header', () => {
+  it('renders image viewer with header', async () => {
     render(<ImageViewer {...defaultProps} />);
-    
-    expect(screen.getByTestId('preview-header')).toBeInTheDocument();
+
+    await waitFor(() => expect(screen.getByTestId('preview-header')).toBeInTheDocument());
     expect(screen.getByText('photo.jpg')).toBeInTheDocument();
   });
 
@@ -140,7 +140,7 @@ describe('ImageViewer', () => {
     });
   });
 
-  it('renders zoom controls in header', () => {
+  it('renders zoom controls in header', async () => {
     render(<ImageViewer {...defaultProps} />);
     const header = screen.getByTestId('preview-header');
     expect(header).toBeInTheDocument();

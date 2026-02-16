@@ -11,6 +11,7 @@ import styles from './DocumentCard.module.css';
 interface DocumentCardProps {
   document: Document;
   onDeleted?: () => void;
+  canDelete?: boolean;
 }
 
 const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
@@ -22,13 +23,10 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
   /**
    * Elimina el documento directamente
    */
-  const handleDelete = async () => {
-    const documentId = document.id || (document as any)._id;
-    
-    try {
-      setLoading(true);
-      setError(null);
-      await apiClient.delete(`/documents/${documentId}`);
+  const handleMoveToTrash = async () => {
+    const documentId = document.id ?? document._id ?? '';
+    const deleted = await moveToTrash(documentId);
+    if (deleted) {
       setShowDeleteModal(false);
       onDeleted?.();
     } catch (err: any) {
@@ -92,7 +90,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
    * Convertir Document a PreviewDocument para el modal de preview
    */
   const previewDocument: PreviewDocument = {
-    id: document.id || (document as any)._id, // Usar _id si id no existe (MongoDB)
+    id: document.id ?? document._id ?? '', // Usar _id si id no existe (MongoDB)
     filename: document.filename || document.originalname || 'unknown',
     originalname: document.originalname,
     mimeType: document.mimeType,
@@ -100,13 +98,6 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
     url: document.url,
     path: document.path
   };
-
-  console.log('[DocumentCard] Preview document:', {
-    originalId: document.id,
-    mongoId: (document as any)._id,
-    finalId: previewDocument.id,
-    filename: previewDocument.filename
-  });
 
   /**
    * Verificar si el documento puede tener preview
@@ -134,7 +125,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
    */
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const downloadUrl = previewService.getPreviewUrl(previewDocument);
+    const downloadUrl = previewService.getDownloadUrl(previewDocument);
     window.open(downloadUrl, '_blank');
   };
 
@@ -177,8 +168,8 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
         {/* Botones de opciones (aparecen en hover) */}
         <div className={styles.cardOptions}>
           {canPreview && (
-            <button 
-              className={styles.optionBtn} 
+            <button
+              className={styles.optionBtn}
               title="Vista previa"
               onClick={(e) => {
                 e.stopPropagation();
@@ -202,59 +193,52 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
               <line x1="12" y1="15" x2="12" y2="3" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
-          <button 
-            className={styles.optionBtn} 
-            title="Eliminar documento"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowDeleteModal(true);
-            }}
-            disabled={loading}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </button>
+
+          {canDelete && (
+            <button
+              className={styles.optionBtn}
+              title="Mover a papelera"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteModal(true);
+              }}
+              disabled={loading}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          )}
         </div>
       </Card>
 
       {/* Modal de confirmación de eliminación */}
-      <Modal show={showDeleteModal} onHide={() => !loading && setShowDeleteModal(false)}>
-        <Modal.Header closeButton={!loading}>
-          <Modal.Title>Eliminar documento</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>¿Estás seguro de que deseas eliminar este documento?</p>
-          <p className="fw-bold">
-            {document.originalname || document.filename}
-          </p>
-          <p className="text-danger small">
-            Esta acción no se puede deshacer.
-          </p>
-          {error && (
-            <div className="alert alert-danger mt-2">
-              {error}
-            </div>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button 
-            variant="secondary" 
-            onClick={() => setShowDeleteModal(false)}
-            disabled={loading}
-          >
-            Cancelar
-          </Button>
-          <Button 
-            variant="danger" 
-            onClick={handleDelete}
-            disabled={loading}
-          >
-            {loading ? 'Eliminando...' : 'Eliminar'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {canDelete && (
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Mover a papelera</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <p>¿Deseas mover este documento a la papelera?</p>
+            <p className="text-muted">
+              <strong>{document.originalname || document.filename}</strong>
+            </p>
+            <p className="text-muted small">
+              El documento se eliminará automáticamente después de 30 días. Puedes restaurarlo desde la papelera antes de
+              ese tiempo.
+            </p>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={handleMoveToTrash} disabled={loading}>
+              {loading ? 'Moviendo...' : 'Mover a papelera'}
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
 
       {/* Modal de preview */}
       <DocumentPreviewModal

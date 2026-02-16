@@ -1,0 +1,203 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 12px;
+  gap: 12px;
+  min-height: 0;
+  background: transparent;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.title {
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+}
+
+.iconBtn {
+  border-radius: 10px;
+}
+
+.newComment {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inputWrap {
+  border: 1px solid rgba(0,0,0,0.08);
+  background: #fff;
+  border-radius: 14px;
+  padding: 10px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+}
+
+.textarea {
+  border: 1px solid rgba(0,0,0,0.08) !important;
+  border-radius: 12px !important;
+  resize: none;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px 12px;
+}
+
+.textarea:focus {
+  box-shadow: none !important;
+  border-color: rgba(0,0,0,0.18) !important;
+}
+
+.composerFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  gap: 10px;
+}
+
+.hint {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.primaryBtn {
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+.primaryBtnSm {
+  border-radius: 12px;
+  padding: 6px 10px;
+}
+
+.alert {
+  margin: 0;
+  border-radius: 12px;
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
+}
+
+.item {
+  display: flex;
+  gap: 10px;
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 14px;
+  padding: 10px;
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 12px;
+  background: rgba(0,0,0,0.05);
+  color: rgba(0,0,0,0.7);
+  flex: 0 0 auto;
+  user-select: none;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+.meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.authorRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.author {
+  font-weight: 650;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+.dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.25);
+  flex: 0 0 auto;
+}
+
+.date {
+  font-size: 12px;
+  opacity: 0.65;
+  white-space: nowrap;
+}
+
+.content {
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(0,0,0,0.85);
+}
+
+.ghostBtn {
+  border-radius: 12px;
+}
+
+.editWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.editActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px 0;
+}
+
+.centerText {
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.empty {
+  padding: 18px 0;
+  text-align: center;
+  opacity: 0.7;
+  font-size: 13px;
+}

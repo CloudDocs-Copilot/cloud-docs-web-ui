@@ -193,7 +193,7 @@ export async function moveDocument(
   documentId: string,
   targetFolderId: string
 ): Promise<{ success: boolean; message: string; document: Document }> {
-  const response = await apiClient.patch<{ success: boolean; message: string; document: Document }>(
+  const response = await apiClient.post<{ success: boolean; message: string; document: Document }>(
     `/documents/${documentId}/move`,
     { targetFolderId }
   );

@@ -22,8 +22,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
    * Maneja el movimiento a papelera
    */
   const handleMoveToTrash = async () => {
-    const documentId = document.id ?? document._id ?? '';
-    const deleted = await moveToTrash(documentId);
+    const deleted = await moveToTrash(document.id);
     if (deleted) {
       setShowDeleteModal(false);
       onDeleted?.();
@@ -79,11 +78,19 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
   const fileType = getFileTypeFromMime(document.mimeType);
   const folderName = getFolderName(document.folder);
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      type: 'document',
+      id: document.id
+    }));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
   /**
    * Convertir Document a PreviewDocument para el modal de preview
    */
   const previewDocument: PreviewDocument = {
-    id: document.id ?? document._id ?? '', // Usar _id si id no existe (MongoDB)
+    id: document.id,
     filename: document.filename || document.originalname || 'unknown',
     originalname: document.originalname,
     mimeType: document.mimeType,
@@ -91,13 +98,6 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
     url: document.url,
     path: document.path
   };
-
-  console.log('[DocumentCard] Preview document:', {
-    originalId: document.id,
-    mongoId: document._id,
-    finalId: previewDocument.id,
-    filename: previewDocument.filename
-  });
 
   /**
    * Verificar si el documento puede tener preview
@@ -131,7 +131,13 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
 
   return (
     <>
-      <Card className={styles.documentCard} onClick={handlePreviewClick} style={{ cursor: canPreview ? 'pointer' : 'default' }}>
+      <Card 
+        className={styles.documentCard} 
+        onClick={handlePreviewClick} 
+        style={{ cursor: 'grab' }}
+        draggable={true}
+        onDragStart={handleDragStart}
+      >
         <Card.Body className={styles.cardBody}>
           {/* Ícono del documento */}
           <div className={styles.iconWrapper}>

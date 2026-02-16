@@ -10,7 +10,7 @@ jest.mock('../../hooks/useDocumentDeletion', () => ({
 jest.mock('../../services/preview.service', () => ({
   previewService: {
     canPreview: jest.fn(() => true),
-    getPreviewUrl: jest.fn((doc: Document) => '/preview/' + (doc.id || doc._id || 'unknown'))
+    getPreviewUrl: jest.fn((doc: Document) => '/preview/' + doc.id)
   }
 }));
 

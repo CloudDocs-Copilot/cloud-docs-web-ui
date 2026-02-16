@@ -23,6 +23,7 @@ export interface Organization {
   active?: boolean;
   createdAt?: string;
   updatedAt?: string;
+  role?: MembershipRole;
 }
 
 export interface Membership {

@@ -50,6 +50,11 @@ jest.mock('../hooks/useAuth', () => ({
   }),
 }));
 
+jest.mock('../pages/SharedDocs', () => ({
+  __esModule: true,
+  default: () => <div>SharedDocs Page</div>,
+}));
+
 // Mock child components to isolate App test from page complexity
 jest.mock('../pages/Home', () => ({
   __esModule: true,

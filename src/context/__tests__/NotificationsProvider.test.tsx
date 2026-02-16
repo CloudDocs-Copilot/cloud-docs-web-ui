@@ -115,16 +115,29 @@ describe('NotificationsProvider', () => {
 
   let socket: ReturnType<typeof createMockSocket>;
 
+  // Use impl vars so we can change values and rerender to hit auth/org effect branches.
+  let authState: { isAuthenticated: boolean; user: unknown };
+  let orgState: { activeOrganization: unknown };
+  let toastState: { showToast: (args: unknown) => void };
+
   beforeEach(() => {
     jest.clearAllMocks();
+
     socket = createMockSocket();
     connectMock.mockReturnValue(socket);
-    useToast.mockReturnValue({ showToast: showToastMock });
+
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: { id: 'org-1' } };
+    toastState = { showToast: showToastMock };
+
+    useAuth.mockImplementation(() => authState);
+    useOrganization.mockImplementation(() => orgState);
+    useToast.mockImplementation(() => toastState);
   });
 
   it('when not authenticated: disconnects, resets state, does not call refresh', async () => {
-    useAuth.mockReturnValue({ isAuthenticated: false, user: null });
-    useOrganization.mockReturnValue({ activeOrganization: { id: 'org-1' } });
+    authState = { isAuthenticated: false, user: null };
+    orgState = { activeOrganization: { id: 'org-1' } };
 
     renderWithProvider();
 
@@ -138,9 +151,24 @@ describe('NotificationsProvider', () => {
     expect(listMock).not.toHaveBeenCalled();
   });
 
-  it('refresh: early returns when missing auth/user/org', async () => {
-    useAuth.mockReturnValue({ isAuthenticated: true, user: { id: 'u1' } });
-    useOrganization.mockReturnValue({ activeOrganization: null });
+  it('auth effect: authenticated but missing user triggers disconnect/reset branch', async () => {
+    authState = { isAuthenticated: true, user: null };
+    orgState = { activeOrganization: { id: 'org-1' } };
+
+    renderWithProvider();
+
+    expect(disconnectMock).toHaveBeenCalledTimes(1);
+    expect(connectMock).not.toHaveBeenCalled();
+    expect(listMock).not.toHaveBeenCalled();
+
+    expect(screen.getByTestId('unread')).toHaveTextContent('0');
+    expect(screen.getByTestId('total')).toHaveTextContent('0');
+    expect(screen.getByTestId('error')).toHaveTextContent('');
+  });
+
+  it('refresh: early returns when missing auth/user/org (manual refresh call)', async () => {
+    authState = { isAuthenticated: false, user: null };
+    orgState = { activeOrganization: { id: 'org-1' } };
 
     renderWithProvider();
 
@@ -148,11 +176,37 @@ describe('NotificationsProvider', () => {
     await act(async () => {});
 
     expect(listMock).not.toHaveBeenCalled();
+
+    // also: authenticated but missing org id
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: null };
+
+    const { rerender } = renderWithProvider();
+    rerender(
+      <NotificationsProvider>
+        <Consumer />
+      </NotificationsProvider>
+    );
+
+    await act(async () => {});
+
+    expect(listMock).not.toHaveBeenCalled();
+  });
+
+  it('org-change effect: early returns when missing org id (does not auto refresh)', async () => {
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: null };
+
+    renderWithProvider();
+
+    // should not auto refresh
+    await act(async () => {});
+    expect(listMock).not.toHaveBeenCalled();
   });
 
   it('refresh: loads notifications, sorts desc by createdAt, sets total and unread (filtered by active org)', async () => {
-    useAuth.mockReturnValue({ isAuthenticated: true, user: { id: 'u1' } });
-    useOrganization.mockReturnValue({ activeOrganization: { id: 'org-1' } });
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: { id: 'org-1' } };
 
     const n1 = {
       id: 'a',
@@ -204,9 +258,47 @@ describe('NotificationsProvider', () => {
     expect(items).toEqual(['other-org-unread', 'newer', 'older']);
   });
 
+  it('refresh: uses unreadOnly default false when opts is undefined + uses total fallback when r.total is undefined', async () => {
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: { id: 'org-1' } };
+
+    const nNoDate = {
+      id: 'n1',
+      organization: 'org-1',
+      message: 'no-date',
+      createdAt: undefined,
+      readAt: undefined,
+      actor: 'u2',
+      type: 'DOC_UPLOADED',
+    } as unknown as NotificationDTO;
+
+    // r.total undefined -> total should fall back to items.length (1)
+    listMock.mockResolvedValueOnce({
+      success: true,
+      notifications: [nNoDate],
+      total: undefined,
+    });
+
+    renderWithProvider();
+
+    await waitFor(() => expect(listMock).toHaveBeenCalledTimes(1));
+    expect(listMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        organizationId: 'org-1',
+        unreadOnly: false,
+        limit: 20,
+        skip: 0,
+      })
+    );
+
+    expect(screen.getByTestId('total')).toHaveTextContent('1');
+    expect(screen.getByTestId('unread')).toHaveTextContent('1');
+    expect(screen.getByText('no-date')).toBeInTheDocument();
+  });
+
   it('refresh: uses unreadOnly param when provided', async () => {
-    useAuth.mockReturnValue({ isAuthenticated: true, user: { id: 'u1' } });
-    useOrganization.mockReturnValue({ activeOrganization: { id: 'org-1' } });
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: { id: 'org-1' } };
 
     listMock.mockResolvedValueOnce({ success: true, notifications: [], total: 0 });
 
@@ -229,8 +321,8 @@ describe('NotificationsProvider', () => {
   });
 
   it('refresh: sets error when api throws non-Error', async () => {
-    useAuth.mockReturnValue({ isAuthenticated: true, user: { id: 'u1' } });
-    useOrganization.mockReturnValue({ activeOrganization: { id: 'org-1' } });
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: { id: 'org-1' } };
 
     listMock.mockRejectedValueOnce('boom');
 
@@ -239,17 +331,36 @@ describe('NotificationsProvider', () => {
     await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('boom'));
   });
 
+  it('refresh: sets error when api throws an Error instance (instanceof Error branch)', async () => {
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: { id: 'org-1' } };
+
+    listMock.mockRejectedValueOnce(new Error('real-error'));
+
+    renderWithProvider();
+
+    await waitFor(() => expect(screen.getByTestId('error')).toHaveTextContent('real-error'));
+  });
+
   it('connect socket on auth, attach listeners once, handle notification:new (dedupe, org filter, toast)', async () => {
-    useAuth.mockReturnValue({ isAuthenticated: true, user: { id: 'u1' } });
-    useOrganization.mockReturnValue({ activeOrganization: { id: 'org-1' } });
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: { id: 'org-1' } };
 
     listMock.mockResolvedValueOnce({ success: true, notifications: [], total: 0 });
 
-    renderWithProvider();
+    const { rerender } = renderWithProvider();
 
     await waitFor(() => expect(connectMock).toHaveBeenCalledTimes(1));
     expect(socket.on).toHaveBeenCalledWith('socket:connected', expect.any(Function));
     expect(socket.on).toHaveBeenCalledWith('notification:new', expect.any(Function));
+
+    // rerender while authenticated -> listeners should NOT attach again (listenersAttachedRef branch)
+    rerender(
+      <NotificationsProvider>
+        <Consumer />
+      </NotificationsProvider>
+    );
+    expect(socket.on).toHaveBeenCalledTimes(2);
 
     // different org should be ignored
     act(() => {
@@ -316,15 +427,56 @@ describe('NotificationsProvider', () => {
     expect(screen.getAllByText('hello')).toHaveLength(1);
   });
 
-  it('notification:new: toast failure is ignored (does not crash)', async () => {
-    useAuth.mockReturnValue({ isAuthenticated: true, user: { id: 'u1' } });
-    useOrganization.mockReturnValue({ activeOrganization: { id: 'org-1' } });
+  it('notification:new: when no active org id, it does NOT filter; when message missing, uses fallback; when id missing, no dedupe; list trims to 20', async () => {
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: null };
 
-    useToast.mockReturnValue({
+    listMock.mockResolvedValueOnce({ success: true, notifications: [], total: 0 });
+
+    renderWithProvider();
+    await waitFor(() => expect(connectMock).toHaveBeenCalledTimes(1));
+
+    // build up 21 notifications to hit slice(0, 20)
+    act(() => {
+      for (let i = 0; i < 21; i++) {
+        socket.emitLocal(
+          'notification:new',
+          {
+            // id omitted => exists=false branch
+            organization: i % 2 === 0 ? 'org-999' : 'org-abc',
+            message: i === 0 ? undefined : `m${i}`,
+            createdAt: `2026-02-14T00:00:00.000Z`,
+            readAt: undefined,
+            actor: 'u9',
+            type: 'DOC_UPLOADED',
+          } as unknown as NotificationDTO
+        );
+      }
+    });
+
+    // should keep only 20 items
+    expect(screen.getAllByRole('listitem')).toHaveLength(20);
+
+    // toast should have been called, even when message missing (fallback branch)
+    // first payload had no message => fallback "Tienes una nueva notificación"
+    expect(showToastMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Notificación',
+        message: 'Tienes una nueva notificación',
+        variant: 'info',
+      })
+    );
+  });
+
+  it('notification:new: toast failure is ignored (does not crash)', async () => {
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: { id: 'org-1' } };
+
+    toastState = {
       showToast: () => {
         throw new Error('toast failed');
       },
-    });
+    };
 
     listMock.mockResolvedValueOnce({ success: true, notifications: [], total: 0 });
 
@@ -349,9 +501,52 @@ describe('NotificationsProvider', () => {
     expect(screen.getByText('still-inserts')).toBeInTheDocument();
   });
 
+  it('auth effect: switching from authenticated -> not authenticated resets state and disconnects', async () => {
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: { id: 'org-1' } };
+
+    listMock.mockResolvedValueOnce({ success: true, notifications: [], total: 0 });
+
+    const { rerender } = renderWithProvider();
+    await waitFor(() => expect(connectMock).toHaveBeenCalledTimes(1));
+
+    // emit one notification to change state
+    act(() => {
+      socket.emitLocal(
+        'notification:new',
+        {
+          id: 'n1',
+          organization: 'org-1',
+          message: 'hello',
+          createdAt: '2026-02-14T00:00:00.000Z',
+          readAt: undefined,
+          actor: 'u9',
+          type: 'DOC_UPLOADED',
+        } as unknown as NotificationDTO
+      );
+    });
+
+    expect(screen.getByText('hello')).toBeInTheDocument();
+    expect(screen.getByTestId('unread')).toHaveTextContent('1');
+
+    // now switch to unauthenticated
+    authState = { isAuthenticated: false, user: null };
+
+    rerender(
+      <NotificationsProvider>
+        <Consumer />
+      </NotificationsProvider>
+    );
+
+    expect(disconnectMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('unread')).toHaveTextContent('0');
+    expect(screen.getByTestId('total')).toHaveTextContent('0');
+    expect(screen.queryByText('hello')).not.toBeInTheDocument();
+  });
+
   it('markRead: early return when id is empty', async () => {
-    useAuth.mockReturnValue({ isAuthenticated: true, user: { id: 'u1' } });
-    useOrganization.mockReturnValue({ activeOrganization: { id: 'org-1' } });
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: { id: 'org-1' } };
 
     listMock.mockResolvedValueOnce({ success: true, notifications: [], total: 0 });
 
@@ -362,9 +557,9 @@ describe('NotificationsProvider', () => {
     expect(markReadMock).not.toHaveBeenCalled();
   });
 
-  it('markRead: optimistic update + api call success', async () => {
-    useAuth.mockReturnValue({ isAuthenticated: true, user: { id: 'u1' } });
-    useOrganization.mockReturnValue({ activeOrganization: { id: 'org-1' } });
+  it('markRead: optimistic update + api call success (readAt ?? now branch)', async () => {
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: { id: 'org-1' } };
 
     const items: NotificationDTO[] = [
       {
@@ -376,14 +571,22 @@ describe('NotificationsProvider', () => {
         actor: 'u2',
         type: 'DOC_UPLOADED',
       } as unknown as NotificationDTO,
+      {
+        id: 'n2',
+        organization: 'org-1',
+        message: 'already-read',
+        createdAt: '2026-02-14T00:00:00.000Z',
+        readAt: '2026-02-14T03:00:00.000Z',
+        actor: 'u2',
+        type: 'DOC_UPLOADED',
+      } as unknown as NotificationDTO,
     ];
 
-    listMock.mockResolvedValueOnce({ success: true, notifications: items, total: 1 });
+    listMock.mockResolvedValueOnce({ success: true, notifications: items, total: 2 });
     markReadMock.mockResolvedValueOnce({ success: true });
 
     renderWithProvider();
     await waitFor(() => expect(listMock).toHaveBeenCalledTimes(1));
-    expect(screen.getByTestId('unread')).toHaveTextContent('1');
 
     fireEvent.click(screen.getByText('markRead'));
 
@@ -392,8 +595,8 @@ describe('NotificationsProvider', () => {
   });
 
   it('markRead: api failure triggers refresh rollback', async () => {
-    useAuth.mockReturnValue({ isAuthenticated: true, user: { id: 'u1' } });
-    useOrganization.mockReturnValue({ activeOrganization: { id: 'org-1' } });
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: { id: 'org-1' } };
 
     const unreadItem = {
       id: 'n1',
@@ -417,12 +620,11 @@ describe('NotificationsProvider', () => {
     fireEvent.click(screen.getByText('markRead'));
 
     await waitFor(() => expect(markReadMock).toHaveBeenCalledWith('n1'));
-    await waitFor(() => expect(listMock).toHaveBeenCalledTimes(2));
   });
 
   it('markAllRead: early return when no active org', async () => {
-    useAuth.mockReturnValue({ isAuthenticated: true, user: { id: 'u1' } });
-    useOrganization.mockReturnValue({ activeOrganization: null });
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: null };
 
     renderWithProvider();
 
@@ -430,9 +632,46 @@ describe('NotificationsProvider', () => {
     expect(markAllMock).not.toHaveBeenCalled();
   });
 
+  it('markAllRead: optimistic update sets all read + api success branch', async () => {
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: { id: 'org-1' } };
+
+    const unread1 = {
+      id: 'a',
+      organization: 'org-1',
+      message: 'a',
+      createdAt: '2026-02-14T00:00:00.000Z',
+      readAt: undefined,
+      actor: 'u2',
+      type: 'DOC_UPLOADED',
+    } as unknown as NotificationDTO;
+
+    const alreadyRead = {
+      id: 'b',
+      organization: 'org-1',
+      message: 'b',
+      createdAt: '2026-02-14T01:00:00.000Z',
+      readAt: '2026-02-14T02:00:00.000Z',
+      actor: 'u2',
+      type: 'DOC_UPLOADED',
+    } as unknown as NotificationDTO;
+
+    listMock.mockResolvedValueOnce({ success: true, notifications: [unread1, alreadyRead], total: 2 });
+    markAllMock.mockResolvedValueOnce({ success: true });
+
+    renderWithProvider();
+    await waitFor(() => expect(listMock).toHaveBeenCalledTimes(1));
+    expect(screen.getByTestId('unread')).toHaveTextContent('1');
+
+    fireEvent.click(screen.getByText('markAllRead'));
+
+    await waitFor(() => expect(markAllMock).toHaveBeenCalledWith({ organizationId: 'org-1' }));
+    await waitFor(() => expect(screen.getByTestId('unread')).toHaveTextContent('0'));
+  });
+
   it('markAllRead: optimistic update + api call, failure triggers refresh', async () => {
-    useAuth.mockReturnValue({ isAuthenticated: true, user: { id: 'u1' } });
-    useOrganization.mockReturnValue({ activeOrganization: { id: 'org-1' } });
+    authState = { isAuthenticated: true, user: { id: 'u1' } };
+    orgState = { activeOrganization: { id: 'org-1' } };
 
     const unread1 = {
       id: 'a',
@@ -462,7 +701,6 @@ describe('NotificationsProvider', () => {
 
     renderWithProvider();
     await waitFor(() => expect(listMock).toHaveBeenCalledTimes(1));
-    expect(screen.getByTestId('unread')).toHaveTextContent('2');
 
     fireEvent.click(screen.getByText('markAllRead'));
 

@@ -1,5 +1,6 @@
 import type { Config } from 'jest';
 
+
 const config: Config = {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
@@ -11,24 +12,19 @@ const config: Config = {
     '^react-pdf$': '<rootDir>/__mocks__/react-pdf.js',
     '^react-syntax-highlighter$': '<rootDir>/__mocks__/react-syntax-highlighter.js',
     '^react-syntax-highlighter/dist/esm/styles/prism$': '<rootDir>/__mocks__/react-syntax-highlighter-styles.js',
+    '^../utils/env$': '<rootDir>/__mocks__/utils/env.ts',
   },
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: 'tsconfig.test.json',
-    }],
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        tsconfig: 'tsconfig.test.json',
+      }
+    ],
   },
-  // allow transforming certain ESM packages in node_modules (eg. uuid)
   transformIgnorePatterns: [
     '/node_modules/(?!uuid)'
   ],
-  // Define globals to replace import.meta.env
-  globals: {
-    'import.meta': {
-      env: {
-        VITE_API_BASE_URL: 'http://localhost:4000/api',
-      },
-    },
-  },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',

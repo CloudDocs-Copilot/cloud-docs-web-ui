@@ -1,5 +1,6 @@
 import { DocumentPreviewType } from '../types/preview.types';
 import type { PreviewConfig, PreviewDocument } from '../types/preview.types';
+import { getViteEnvVar } from '../utils/env';
 
 /**
  * Configuración por defecto del sistema de preview
@@ -182,9 +183,9 @@ export class PreviewService {
   /**
    * Genera la URL de preview para un documento
    */
-  getPreviewUrl(document: PreviewDocument): string {
+  public getPreviewUrl(document: PreviewDocument): string {
     // Siempre usar el endpoint de preview del API para asegurar autenticación correcta
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+    const baseUrl = getViteEnvVar('VITE_API_BASE_URL') || 'http://localhost:4000/api';
     const url = `${baseUrl}/documents/preview/${document.id}`;
     
     console.log('[PreviewService] Generating preview URL:', {
@@ -199,7 +200,7 @@ export class PreviewService {
   /**
    * Formatea el tamaño de archivo para mostrar
    */
-  formatFileSize(bytes: number): string {
+  public formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
 
     const k = 1024;

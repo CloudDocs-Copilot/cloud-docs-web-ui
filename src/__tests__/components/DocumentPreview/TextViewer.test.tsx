@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TextViewer } from '../../../components/DocumentPreview/TextViewer';
 
@@ -75,8 +75,9 @@ describe('TextViewer', () => {
   });
 
   it('fetches text content with authentication credentials', async () => {
-    render(<TextViewer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<TextViewer {...defaultProps} />);
+    });
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
         defaultProps.url,
@@ -86,8 +87,9 @@ describe('TextViewer', () => {
   });
 
   it('loads and displays text content', async () => {
-    render(<TextViewer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<TextViewer {...defaultProps} />);
+    });
     await waitFor(() => {
       expect(screen.getByText(/This is the file content/)).toBeInTheDocument();
     });
@@ -96,20 +98,19 @@ describe('TextViewer', () => {
   it('calls onBack when back button is clicked', async () => {
     const onBack = jest.fn();
     const user = userEvent.setup();
-    
-    render(<TextViewer {...defaultProps} onBack={onBack} />);
-    
+    await act(async () => {
+      render(<TextViewer {...defaultProps} onBack={onBack} />);
+    });
     const backButton = screen.getByRole('button', { name: /back/i });
     await user.click(backButton);
-    
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
   it('handles fetch error gracefully', async () => {
     (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
-    
-    render(<TextViewer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<TextViewer {...defaultProps} />);
+    });
     await waitFor(() => {
       // El texto de contenido no debería aparecer
       expect(screen.queryByText(/This is the file content/)).not.toBeInTheDocument();
@@ -121,9 +122,9 @@ describe('TextViewer', () => {
       ok: false,
       status: 404,
     });
-    
-    render(<TextViewer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<TextViewer {...defaultProps} />);
+    });
     await waitFor(() => {
       expect(screen.queryByText(/This is the file content/)).not.toBeInTheDocument();
     });
@@ -132,9 +133,9 @@ describe('TextViewer', () => {
   it('uses syntax highlighter for JavaScript files', async () => {
     const previewServiceModule = await import('../../../services/preview.service');
     (previewServiceModule.previewService.getCodeLanguage as jest.Mock).mockReturnValue('javascript');
-    
-    render(<TextViewer {...defaultProps} filename="app.js" />);
-    
+    await act(async () => {
+      render(<TextViewer {...defaultProps} filename="app.js" />);
+    });
     await waitFor(() => {
       const highlighter = screen.getByTestId('syntax-highlighter');
       expect(highlighter).toBeInTheDocument();
@@ -145,8 +146,9 @@ describe('TextViewer', () => {
   it('uses syntax highlighter for TypeScript files', async () => {
     const previewServiceModule = await import('../../../services/preview.service');
     (previewServiceModule.previewService.getCodeLanguage as jest.Mock).mockReturnValue('typescript');
-    
-    render(<TextViewer {...defaultProps} filename="app.ts" />);
+    await act(async () => {
+      render(<TextViewer {...defaultProps} filename="app.ts" />);
+    });
     
     await waitFor(() => {
       const highlighter = screen.getByTestId('syntax-highlighter');

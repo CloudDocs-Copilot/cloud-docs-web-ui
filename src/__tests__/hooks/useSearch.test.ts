@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { useSearch } from '../../hooks/useSearch';
 import searchService from '../../services/search.service';
 
@@ -35,7 +35,9 @@ describe('useSearch hook', () => {
 
     const { result } = renderHook(() => useSearch());
 
-    await result.current.search({ query: 'test' });
+    await act(async () => {
+      await result.current.search({ query: 'test' });
+    });
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -50,13 +52,19 @@ describe('useSearch hook', () => {
 
     const { result } = renderHook(() => useSearch());
 
-    await result.current.search({ query: 'test' });
+    await act(async () => {
+      try {
+        await result.current.search({ query: 'test' });
+      } catch (_) {
+        // El error es manejado por el hook, no debe propagarse
+      }
+    });
 
     await waitFor(() => {
-      expect(result.current.loading).toBe(false);
-      expect(result.current.error).toBeTruthy();
-      expect(result.current.results).toEqual([]);
+      expect(result.current.error).toBe('Error al buscar documentos');
     });
+    expect(result.current.loading).toBe(false);
+    expect(result.current.results).toEqual([]);
   });
 
   it('debe guardar historial de búsquedas', async () => {
@@ -73,8 +81,18 @@ describe('useSearch hook', () => {
 
     const { result } = renderHook(() => useSearch());
 
-    await result.current.search({ query: 'test1' });
-    await result.current.search({ query: 'test2' });
+    // Limpiar historial antes de empezar
+    await act(async () => {
+      result.current.clearHistory();
+    });
+    await waitFor(() => {
+      expect(result.current.searchHistory).toEqual([]);
+    });
+
+    await act(async () => {
+      await result.current.search({ query: 'test1' });
+      await result.current.search({ query: 'test2' });
+    });
 
     await waitFor(() => {
       expect(result.current.searchHistory.length).toBe(2);
@@ -97,7 +115,9 @@ describe('useSearch hook', () => {
 
     const { result } = renderHook(() => useSearch());
 
-    await result.current.search({ query: 'test' });
+    await act(async () => {
+      await result.current.search({ query: 'test' });
+    });
 
     await waitFor(() => {
       expect(result.current.results.length).toBeGreaterThan(0);
@@ -105,8 +125,10 @@ describe('useSearch hook', () => {
 
     result.current.clearResults();
 
-    expect(result.current.results).toEqual([]);
-    expect(result.current.total).toBe(0);
+    await waitFor(() => {
+      expect(result.current.results).toEqual([]);
+      expect(result.current.total).toBe(0);
+    });
   });
 
   it('debe limpiar errores', async () => {
@@ -114,15 +136,34 @@ describe('useSearch hook', () => {
 
     const { result } = renderHook(() => useSearch());
 
-    await result.current.search({ query: 'test' });
+    // Limpiar error antes de empezar
+    await act(async () => {
+      result.current.clearError();
+    });
+    await waitFor(() => {
+      expect(result.current.error).toBeNull();
+    });
+
+    await act(async () => {
+      try {
+        await result.current.search({ query: 'test' });
+      } catch (_) {
+        // El error es manejado por el hook, no debe propagarse
+      }
+    });
 
     await waitFor(() => {
       expect(result.current.error).toBeTruthy();
     });
 
-    result.current.clearError();
+    await act(async () => {
+      result.current.clearError();
+    });
 
-    expect(result.current.error).toBeNull();
+    await waitFor(() => {
+      expect(result.current.error).toBeNull();
+    });
+    expect(result.current.results).toEqual([]);
   });
 
   it('debe limpiar historial', async () => {
@@ -139,15 +180,28 @@ describe('useSearch hook', () => {
 
     const { result } = renderHook(() => useSearch());
 
-    await result.current.search({ query: 'test1' });
-    await result.current.search({ query: 'test2' });
+    // Limpiar historial antes de empezar
+    await act(async () => {
+      result.current.clearHistory();
+    });
+    await waitFor(() => {
+      expect(result.current.searchHistory).toEqual([]);
+    });
+
+    await act(async () => {
+      await result.current.search({ query: 'test1' });
+      await result.current.search({ query: 'test2' });
+    });
 
     await waitFor(() => {
       expect(result.current.searchHistory.length).toBe(2);
     });
 
-    result.current.clearHistory();
-
-    expect(result.current.searchHistory).toEqual([]);
+    await act(async () => {
+      result.current.clearHistory();
+    });
+    await waitFor(() => {
+      expect(result.current.searchHistory).toEqual([]);
+    });
   });
 });

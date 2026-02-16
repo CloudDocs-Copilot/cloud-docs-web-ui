@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ImageViewer } from '../../../components/DocumentPreview/ImageViewer';
 
@@ -54,8 +54,9 @@ describe('ImageViewer', () => {
   });
 
   it('fetches image with authentication credentials', async () => {
-    render(<ImageViewer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<ImageViewer {...defaultProps} />);
+    });
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
         defaultProps.url,
@@ -65,8 +66,9 @@ describe('ImageViewer', () => {
   });
 
   it('loads image successfully', async () => {
-    render(<ImageViewer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<ImageViewer {...defaultProps} />);
+    });
     await waitFor(() => {
       expect(global.URL.createObjectURL).toHaveBeenCalled();
     });
@@ -75,20 +77,19 @@ describe('ImageViewer', () => {
   it('calls onBack when back button is clicked', async () => {
     const onBack = jest.fn();
     const user = userEvent.setup();
-    
-    render(<ImageViewer {...defaultProps} onBack={onBack} />);
-    
+    await act(async () => {
+      render(<ImageViewer {...defaultProps} onBack={onBack} />);
+    });
     const backButton = screen.getByRole('button', { name: /back/i });
     await user.click(backButton);
-    
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
   it('handles fetch error gracefully', async () => {
     (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
-    
-    render(<ImageViewer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<ImageViewer {...defaultProps} />);
+    });
     await waitFor(() => {
       // El componente debería mostrar estado de error
       expect(global.URL.createObjectURL).not.toHaveBeenCalled();
@@ -100,17 +101,18 @@ describe('ImageViewer', () => {
       ok: false,
       status: 404,
     });
-    
-    render(<ImageViewer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<ImageViewer {...defaultProps} />);
+    });
     await waitFor(() => {
       expect(global.URL.createObjectURL).not.toHaveBeenCalled();
     });
   });
 
   it('creates blob URL from fetched image', async () => {
-    render(<ImageViewer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<ImageViewer {...defaultProps} />);
+    });
     await waitFor(() => {
       expect(global.URL.createObjectURL).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'image/jpeg' })
@@ -119,8 +121,9 @@ describe('ImageViewer', () => {
   });
 
   it('displays image with correct alt text', async () => {
-    render(<ImageViewer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<ImageViewer {...defaultProps} />);
+    });
     await waitFor(() => {
       const image = screen.getByAltText('Test photo');
       expect(image).toBeInTheDocument();
@@ -128,8 +131,9 @@ describe('ImageViewer', () => {
   });
 
   it('uses filename as alt text when alt prop is not provided', async () => {
-    render(<ImageViewer {...defaultProps} alt={undefined} />);
-    
+    await act(async () => {
+      render(<ImageViewer {...defaultProps} alt={undefined} />);
+    });
     await waitFor(() => {
       const image = screen.getByAltText('photo.jpg');
       expect(image).toBeInTheDocument();
@@ -138,14 +142,14 @@ describe('ImageViewer', () => {
 
   it('renders zoom controls in header', () => {
     render(<ImageViewer {...defaultProps} />);
-    
     const header = screen.getByTestId('preview-header');
     expect(header).toBeInTheDocument();
   });
 
   it('creates blob URL from fetched image', async () => {
-    render(<ImageViewer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<ImageViewer {...defaultProps} />);
+    });
     await waitFor(() => {
       expect(global.URL.createObjectURL).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'image/jpeg' })

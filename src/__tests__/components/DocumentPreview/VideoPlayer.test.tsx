@@ -1,5 +1,5 @@
 /// <reference types="jest" />
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { VideoPlayer } from '../../../components/DocumentPreview/VideoPlayer';
 
@@ -59,8 +59,9 @@ describe('VideoPlayer', () => {
   });
 
   it('fetches video with authentication credentials', async () => {
-    render(<VideoPlayer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} />);
+    });
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
         defaultProps.url,
@@ -70,16 +71,20 @@ describe('VideoPlayer', () => {
   });
 
   it('loads video successfully', async () => {
-    render(<VideoPlayer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} />);
+    });
     await waitFor(() => {
       expect(global.URL.createObjectURL).toHaveBeenCalled();
     });
   });
 
   it('renders video element with correct MIME type', async () => {
-    const { container } = render(<VideoPlayer {...defaultProps} />);
-    
+    let container;
+    await act(async () => {
+      const result = render(<VideoPlayer {...defaultProps} />);
+      container = result.container;
+    });
     await waitFor(() => {
       const video = container.querySelector('video');
       expect(video).toBeInTheDocument();
@@ -89,20 +94,19 @@ describe('VideoPlayer', () => {
   it('calls onBack when back button is clicked', async () => {
     const onBack = jest.fn();
     const user = userEvent.setup();
-    
-    render(<VideoPlayer {...defaultProps} onBack={onBack} />);
-    
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} onBack={onBack} />);
+    });
     const backButton = screen.getByRole('button', { name: /back/i });
     await user.click(backButton);
-    
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
   it('handles fetch error gracefully', async () => {
     (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
-    
-    render(<VideoPlayer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} />);
+    });
     await waitFor(() => {
       expect(global.URL.createObjectURL).not.toHaveBeenCalled();
     });
@@ -113,17 +117,18 @@ describe('VideoPlayer', () => {
       ok: false,
       status: 404,
     });
-    
-    render(<VideoPlayer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} />);
+    });
     await waitFor(() => {
       expect(global.URL.createObjectURL).not.toHaveBeenCalled();
     });
   });
 
   it('creates blob URL from fetched video', async () => {
-    render(<VideoPlayer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<VideoPlayer {...defaultProps} />);
+    });
     await waitFor(() => {
       expect(global.URL.createObjectURL).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'video/mp4' })

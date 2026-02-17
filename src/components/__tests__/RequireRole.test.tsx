@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import RequireRole from '../../components/RequireRole';
+import type { MembershipRole } from '../../types/organization.types';
 
 const mockRole = jest.fn();
 
@@ -14,7 +15,7 @@ jest.mock('../../hooks/usePermissions', () => ({
   }),
 }));
 
-function renderWithRouter(initialRoute: string, roles: Array<'owner' | 'admin' | 'member' | 'viewer'>, redirectTo?: string) {
+function renderWithRouter(initialRoute: string, roles: MembershipRole[], redirectTo?: string) {
   return render(
     <MemoryRouter initialEntries={[initialRoute]}>
       <Routes>

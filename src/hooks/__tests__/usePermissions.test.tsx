@@ -4,6 +4,7 @@ import '@testing-library/jest-dom';
 import { OrganizationContext } from '../../context/OrganizationContext';
 import { usePermissions } from '../../hooks/usePermissions';
 import type { OrgContextValue } from '../../types/organization.types';
+import type { PermissionAction } from '../../constants/permissions';
 
 const baseContextValue: OrgContextValue = {
   organizations: [],
@@ -23,8 +24,8 @@ const baseContextValue: OrgContextValue = {
 };
 
 interface ConsumerProps {
-  action?: 'documents:create' | 'documents:delete' | 'documents:edit' | 'members:invite' | 'members:remove' | 'members:changeRole' | 'org:edit' | 'org:delete' | 'settings:view' | 'trash:manage';
-  actions?: Array<'documents:create' | 'documents:delete' | 'documents:edit' | 'members:invite' | 'members:remove' | 'members:changeRole' | 'org:edit' | 'org:delete' | 'settings:view' | 'trash:manage'>;
+  action?: PermissionAction;
+  actions?: PermissionAction[];
 }
 
 const Consumer: React.FC<ConsumerProps> = ({ action, actions }) => {

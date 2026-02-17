@@ -5,6 +5,7 @@ import MainLayout from '../components/MainLayout';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
 import { useTrash } from '../hooks/useTrash';
 import { useDocumentDeletion } from '../hooks/useDocumentDeletion';
+import { getDocumentDisplayName } from '../utils/documentHelper';
 import styles from './TrashPage.module.css';
 
 const TrashPage: React.FC = () => {
@@ -134,7 +135,7 @@ const TrashPage: React.FC = () => {
                   <Card.Body className={styles.cardBody}>
                     <div className={styles.cardHeader}>
                       <h5 className={styles.fileName}>
-                        {doc.filename}
+                        {getDocumentDisplayName(doc)}
                       </h5>
                       <span className={styles.deletedBadge}>Eliminado</span>
                     </div>
@@ -216,6 +217,11 @@ const TrashPage: React.FC = () => {
             <p>
               ¿Estás seguro de que deseas eliminar permanentemente este documento?
             </p>
+            {selectedDocId && (
+              <div className={styles.modalDocument}>
+                <strong>{getDocumentDisplayName(trashDocuments.find(doc => doc.id === selectedDocId)!)}</strong>
+              </div>
+            )}
             <div className={styles.modalWarning}>
               <strong>⚠️ Esta acción no se puede deshacer</strong>
             </div>

@@ -3,6 +3,7 @@ import { Card, Badge, Modal, Button } from 'react-bootstrap';
 import type { Document } from '../types/document.types';
 import { getFileTypeFromMime, formatFileSize } from '../types/document.types';
 import { useDocumentDeletion } from '../hooks/useDocumentDeletion';
+import { getDocumentDisplayName } from '../utils/documentHelper';
 import styles from './DocumentCard.module.css';
 
 interface DocumentCardProps {
@@ -109,7 +110,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
           <div className={styles.documentIconWrapper}>
             {getFileIcon(fileType)}
           </div>
-          <h6 className={styles.documentName}>{document.originalname || document.filename}</h6>
+          <h6 className={styles.documentName}>{getDocumentDisplayName(document)}</h6>
           <Badge 
             className={styles.documentBadge} 
             style={{ backgroundColor: getCategoryColor(folderName) }}
@@ -131,7 +132,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
         <Modal.Body>
           <p>¿Deseas mover este documento a la papelera?</p>
           <p className="text-muted">
-            <strong>{document.originalname || document.filename}</strong>
+            <strong>{getDocumentDisplayName(document)}</strong>
           </p>
           <p className="text-muted small">
             El documento se eliminará automáticamente después de 30 días. Puedes restaurarlo desde la papelera antes de ese tiempo.

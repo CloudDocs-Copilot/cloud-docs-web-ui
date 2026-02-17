@@ -46,8 +46,36 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
   const [uploadingFile, setUploadingFile] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Helper to find path in tree (would handle breadcrumbs)
-  // For now, simpler breadcrumbs: just Current Folder name, or we rely on Tree selection highlight
+  // Función recursiva para construir el path de breadcrumbs
+  const buildBreadcrumbPath = (folderId: string | undefined, tree: Folder | null): Folder[] => {
+    if (!folderId || !tree) return [];
+    
+    const path: Folder[] = [];
+    
+    const findPath = (node: Folder, targetId: string): boolean => {
+      // Si encontramos el nodo, agregarlo al path
+      if (node.id === targetId) {
+        path.push(node);
+        return true;
+      }
+      
+      // Si tiene hijos, buscar recursivamente
+      if (node.children && node.children.length > 0) {
+        for (const child of node.children) {
+          if (findPath(child, targetId)) {
+            // Si se encontró en un hijo, agregar este nodo al inicio del path
+            path.unshift(node);
+            return true;
+          }
+        }
+      }
+      
+      return false;
+    };
+    
+    findPath(tree, folderId);
+    return path;
+  };
   
   const fetchContents = useCallback(async (folderId: string) => {
     setLoading(true);
@@ -280,6 +308,9 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       setLoading(false);
     }
   };
+
+  // Calcular breadcrumb path basado en el árbol completo
+  const breadcrumbPath = buildBreadcrumbPath(currentFolder?.id, folderTree);
 
   return (
     <Container fluid className="vh-100 d-flex flex-column overflow-hidden p-0">

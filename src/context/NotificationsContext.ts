@@ -7,8 +7,10 @@ export type NotificationsContextValue = {
   unreadCount: number;
   loading: boolean;
   error: Error | null;
+  hasMore: boolean;
 
   refresh: (opts?: { unreadOnly?: boolean }) => Promise<void>;
+  loadMore: () => Promise<void>;
   markRead: (id: string) => Promise<void>;
   markAllRead: () => Promise<void>;
 };

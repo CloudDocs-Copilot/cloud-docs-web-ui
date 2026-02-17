@@ -27,6 +27,9 @@ export function getSocket(): Socket {
     transports: ['websocket', 'polling'],
     withCredentials: true,
     autoConnect: false,
+    reconnection: true,
+    reconnectionAttempts: 5,
+    reconnectionDelay: 1000,
   });
 
   return socketSingleton;

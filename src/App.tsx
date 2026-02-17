@@ -19,6 +19,7 @@ import TrashPage from './pages/TrashPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import SharedDocs from './pages/SharedDocs';
+import Notifications from './pages/Notifications';
 
 
 function App() {
@@ -64,6 +65,7 @@ function App() {
         <Route path="/organization/settings" element={<PrivateRoute><RequireOrganization><OrganizationSettings/></RequireOrganization></PrivateRoute>} />
         <Route path="/invitations" element={<PrivateRoute><PendingInvitations /></PrivateRoute>} />
         <Route path="/shared" element={<PrivateRoute><SharedDocs /></PrivateRoute>} />
+        <Route path="/notifications" element={<PrivateRoute><RequireOrganization><Notifications /></RequireOrganization></PrivateRoute>} />
       <Route path="/auth/confirmed" element={<ConfirmAccount />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

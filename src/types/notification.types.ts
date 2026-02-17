@@ -1,7 +1,14 @@
-export type NotificationType = 'DOC_UPLOADED' | 'DOC_EDITED' | 'DOC_COMMENTED';
+export type NotificationType =
+  | 'DOC_UPLOADED'
+  | 'DOC_EDITED'
+  | 'DOC_COMMENTED'
+  | 'MEMBER_INVITED'
+  | 'MEMBER_JOINED'
+  | 'ROLE_CHANGED'
+  | 'AI_PROCESSED';
 
 export type NotificationEntity = {
-  kind: 'document';
+  kind: 'document' | 'member' | 'organization';
   id: string;
 };
 

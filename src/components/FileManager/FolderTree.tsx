@@ -10,13 +10,15 @@ interface FolderTreeProps {
   selectedFolderId?: string;
   refreshTrigger?: number; // Prop to force refresh
   onMoveDocument?: (documentId: string, targetFolderId: string) => void;
+  onTreeLoaded?: (tree: Folder | null) => void;
 }
 
 export const FolderTree: React.FC<FolderTreeProps> = ({ 
   onSelectFolder, 
   selectedFolderId,
   refreshTrigger,
-  onMoveDocument
+  onMoveDocument,
+  onTreeLoaded
 }) => {
   const { activeOrganization } = useOrganization();
   const [tree, setTree] = useState<Folder | null>(null);
@@ -46,6 +48,9 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
       if (rootFolder) {
         const enhancedRoot = enhanceTreeWithLevels(rootFolder);
         setTree(enhancedRoot);
+        if (onTreeLoaded) {
+          onTreeLoaded(enhancedRoot);
+        }
         // If no folder selected, select root by default (only on initial load)
         if (!selectedFolderId) {
           onSelectFolder(enhancedRoot);

@@ -19,6 +19,7 @@ interface FileManagerViewProps {
 export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefresh = 0 }) => {
   const { activeOrganization } = useOrganization();
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
+  const [folderTree, setFolderTree] = useState<Folder | null>(null);
   const [items, setItems] = useState<{ subfolders: Folder[]; documents: Document[] }>({ subfolders: [], documents: [] });
   const [loading, setLoading] = useState(false);
   const [refreshTree, setRefreshTree] = useState(0);
@@ -323,6 +324,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
             selectedFolderId={currentFolder?.id}
             refreshTrigger={refreshTree}
             onMoveDocument={handleMoveDocument}
+            onTreeLoaded={setFolderTree}
           />
         </Col>
 

@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from 'react-bootstrap';
 import { 
   Folder as FolderIcon, 
   Folder2Open as FolderOpenIcon, 
   ChevronRight, 
-  ChevronDown 
+  ChevronDown,
+  FileEarmark 
 } from 'react-bootstrap-icons';
 import type { Folder } from '../../types/folder.types';
+import type { Document } from '../../types/document.types';
 import styles from './FolderTree.module.css';
 
 interface FolderTreeItemProps {
@@ -15,6 +17,9 @@ interface FolderTreeItemProps {
   onSelect: (folder: Folder) => void;
   onMoveFolder: (sourceId: string, targetId: string) => void;
   onMoveDocument?: (documentId: string, targetFolderId: string) => void;
+  onDocumentClick?: (document: Document) => void;
+  onRenameFolder?: (folder: Folder) => void;
+  onRenameDocument?: (document: Document) => void;
 }
 
 export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({ 
@@ -22,13 +27,32 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
   selectedFolderId, 
   onSelect,
   onMoveFolder,
-  onMoveDocument
+  onMoveDocument,
+  onDocumentClick,
+  onRenameFolder,
+  onRenameDocument
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  // Expandir por defecto para mostrar la estructura completa del directorio
+  const [isExpanded, setIsExpanded] = useState(true);
   const [isDragOver, setIsDragOver] = useState(false);
   
+  // Para manejar el delay entre click simple y doble click en documentos
+  const clickTimerRef = React.useRef<number | null>(null);
+  const clickPreventRef = React.useRef(false);
+  
   const hasChildren = folder.children && folder.children.length > 0;
+  const hasDocuments = folder.documents && folder.documents.length > 0;
+  const hasContent = hasChildren || hasDocuments;
   const isSelected = selectedFolderId === folder.id;
+
+  // Limpiar timer al desmontar el componente
+  useEffect(() => {
+    return () => {
+      if (clickTimerRef.current) {
+        clearTimeout(clickTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -38,6 +62,35 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onSelect(folder);
+  };
+  
+  const handleDocumentSingleClick = (doc: any) => {
+    // Esperar 250ms para ver si es un doble click
+    clickTimerRef.current = window.setTimeout(() => {
+      if (!clickPreventRef.current && onDocumentClick) {
+        onDocumentClick(doc);
+      }
+      clickPreventRef.current = false;
+    }, 250);
+  };
+  
+  const handleDocumentDoubleClick = (e: React.MouseEvent, doc: any) => {
+    e.stopPropagation();
+    // Cancelar el timer del click simple
+    if (clickTimerRef.current) {
+      clearTimeout(clickTimerRef.current);
+    }
+    clickPreventRef.current = true;
+    
+    // Ejecutar renombrado
+    if (onRenameDocument) {
+      onRenameDocument(doc);
+    }
+    
+    // Reset después de un momento
+    setTimeout(() => {
+      clickPreventRef.current = false;
+    }, 300);
   };
 
   /* --- Manejadores de Drag & Drop --- */
@@ -54,7 +107,7 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Allow drop only if not dragging over itself (handled by drop logic mostly)
+    // Permitir soltar solo si no se arrastra sobre sí mismo
     e.dataTransfer.dropEffect = 'move';
     if (!isDragOver) setIsDragOver(true);
   };
@@ -78,7 +131,7 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
         onMoveDocument(data.id, folder.id);
       }
     } catch (err) {
-      console.error('Drop error', err);
+      console.error('Error al soltar', err);
     }
   };
 
@@ -91,7 +144,7 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
           ${isDragOver ? styles.dragOver : ''}
         `}
         onClick={handleClick}
-        draggable={!folder.isRoot} // Root cannot be moved
+        draggable={!folder.isRoot} // La carpeta raíz no se puede mover
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -101,7 +154,7 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
         <span 
           className={styles.toggleIcon} 
           onClick={handleToggle}
-          style={{ visibility: hasChildren ? 'visible' : 'hidden' }}
+          style={{ visibility: hasContent ? 'visible' : 'hidden' }}
         >
           {isExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
         </span>
@@ -116,7 +169,16 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
           )}
         </span>
         
-        <span className={styles.folderName} style={{ fontWeight: folder.isRoot ? 600 : 400 }}>
+        <span 
+          className={styles.folderName} 
+          style={{ fontWeight: folder.isRoot ? 600 : 400 }}
+          onDoubleClick={(e) => {
+            e.stopPropagation();
+            if (!folder.isRoot && onRenameFolder) {
+              onRenameFolder(folder);
+            }
+          }}
+        >
           {folder.displayName || folder.name}
         </span>
 
@@ -127,9 +189,10 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
         )}
       </div>
 
-      {isExpanded && hasChildren && (
+      {isExpanded && hasContent && (
         <div className={styles.childrenContainer}>
-          {folder.children!.map(child => (
+          {/* Subcarpetas */}
+          {folder.children && folder.children.map(child => (
             <FolderTreeItem
               key={child.id}
               folder={child}
@@ -137,7 +200,46 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
               onSelect={onSelect}
               onMoveFolder={onMoveFolder}
               onMoveDocument={onMoveDocument}
+              onDocumentClick={onDocumentClick}
+              onRenameFolder={onRenameFolder}
+              onRenameDocument={onRenameDocument}
             />
+          ))}
+          
+          {/* Documentos */}
+          {folder.documents && folder.documents.map(doc => (
+            <div 
+              key={doc.id}
+              className={styles.treeItem}
+              style={{ 
+                paddingLeft: `${((folder.level || 0) + 1) * 12}px`,
+                cursor: onDocumentClick ? 'pointer' : 'default'
+              }}
+              onClick={() => handleDocumentSingleClick(doc)}
+              onDoubleClick={(e) => handleDocumentDoubleClick(e, doc)}
+              draggable={true}
+              onDragStart={(e) => {
+                e.stopPropagation();
+                e.dataTransfer.setData('application/json', JSON.stringify({
+                  type: 'document',
+                  id: doc.id
+                }));
+                e.dataTransfer.effectAllowed = 'move';
+              }}
+            >
+              <span 
+                className={styles.toggleIcon} 
+                style={{ visibility: 'hidden' }}
+              />
+              
+              <span className={`${styles.folderIcon} me-2`}>
+                <FileEarmark className="text-muted" size={14} />
+              </span>
+              
+              <span className={styles.folderName} style={{ fontSize: '0.85rem' }}>
+                {doc.originalname || doc.filename}
+              </span>
+            </div>
           ))}
         </div>
       )}

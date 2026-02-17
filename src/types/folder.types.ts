@@ -1,6 +1,9 @@
 /**
  * Interfaz de Carpeta para el Frontend
  */
+
+import type { Document } from './document.types';
+
 export interface Folder {
   /** ID único de la carpeta */
   id: string;
@@ -24,6 +27,8 @@ export interface Folder {
   // Virtuals o populados en frontend
   /** Hijos (subcarpetas) para estructura de árbol */
   children?: Folder[];
+  /** Documentos dentro de la carpeta */
+  documents?: Document[];
   /** Nivel de profundidad para indentación visual */
   level?: number;
   /** Cantidad de items dentro (opcional) */

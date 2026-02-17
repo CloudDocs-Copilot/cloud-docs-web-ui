@@ -4,12 +4,16 @@ import { FolderTreeItem } from './FolderTreeItem';
 import { folderService } from '../../services/folder.service';
 import useOrganization from '../../hooks/useOrganization';
 import type { Folder } from '../../types/folder.types';
+import type { Document } from '../../types/document.types';
 
 interface FolderTreeProps {
   onSelectFolder: (folder: Folder) => void;
   selectedFolderId?: string;
-  refreshTrigger?: number; // Prop to force refresh
+  refreshTrigger?: number; // Prop para forzar recarga
   onMoveDocument?: (documentId: string, targetFolderId: string) => void;
+  onDocumentClick?: (document: Document) => void;
+  onRenameFolder?: (folder: Folder) => void;
+  onRenameDocument?: (document: Document) => void;
   onTreeLoaded?: (tree: Folder | null) => void;
 }
 
@@ -18,6 +22,9 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
   selectedFolderId,
   refreshTrigger,
   onMoveDocument,
+  onDocumentClick,
+  onRenameFolder,
+  onRenameDocument,
   onTreeLoaded
 }) => {
   const { activeOrganization } = useOrganization();
@@ -48,17 +55,18 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
       if (rootFolder) {
         const enhancedRoot = enhanceTreeWithLevels(rootFolder);
         setTree(enhancedRoot);
+        // Notificar al componente padre que el árbol ha cargado
         if (onTreeLoaded) {
           onTreeLoaded(enhancedRoot);
         }
-        // If no folder selected, select root by default (only on initial load)
+        // Si no hay carpeta seleccionada, seleccionar raíz por defecto (solo en carga inicial)
         if (!selectedFolderId) {
           onSelectFolder(enhancedRoot);
         }
       }
     } catch (err) {
-      console.error('Failed to load folder tree', err);
-      setError('Failed to load folders');
+      console.error('Error al cargar árbol de carpetas', err);
+      setError('Error al cargar carpetas');
     } finally {
       setLoading(false);
     }
@@ -73,17 +81,17 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
     try {
       setLoading(true);
       await folderService.move(sourceId, { targetFolderId: targetId });
-      await fetchTree(); // Refresh after move
+      await fetchTree(); // Refrescar después de mover
     } catch (err: any) {
-      console.error('Move failed', err);
-      alert('Failed to move folder: ' + (err.response?.data?.message || err.message));
+      console.error('Error al mover carpeta', err);
+      alert('Error al mover carpeta: ' + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
   };
 
   if (!activeOrganization) {
-    return <Alert variant="warning">Please select an organization</Alert>;
+    return <Alert variant="warning">Por favor selecciona una organización</Alert>;
   }
 
   if (loading && !tree) {
@@ -95,7 +103,7 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
   }
 
   if (!tree) {
-    return <div className="p-3 text-muted">No folders found</div>;
+    return <div className="p-3 text-muted">No se encontraron carpetas</div>;
   }
 
   return (
@@ -107,6 +115,9 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
           onSelect={onSelectFolder}
           onMoveFolder={handleMoveFolder}
           onMoveDocument={onMoveDocument}
+          onDocumentClick={onDocumentClick}
+          onRenameFolder={onRenameFolder}
+          onRenameDocument={onRenameDocument}
         />
       )}
     </div>

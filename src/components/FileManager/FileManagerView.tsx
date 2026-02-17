@@ -5,11 +5,14 @@ import { FolderTree } from './FolderTree';
 import { FolderCard } from './FolderCard';
 import { FolderBreadcrumbs } from './FolderBreadcrumbs';
 import DocumentCard from '../DocumentCard';
+import { DocumentPreviewModal } from '../DocumentPreview';
 import { folderService } from '../../services/folder.service';
 import * as documentService from '../../services/document.service';
+import { previewService } from '../../services/preview.service';
 import useOrganization from '../../hooks/useOrganization';
 import type { Folder } from '../../types/folder.types';
 import type { Document } from '../../types/document.types';
+import type { PreviewDocument } from '../../types/preview.types';
 
 interface FileManagerViewProps {
   /** Trigger numérico para forzar la recarga del contenido desde fuera */
@@ -19,15 +22,19 @@ interface FileManagerViewProps {
 export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefresh = 0 }) => {
   const { activeOrganization } = useOrganization();
   const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
-  const [folderTree, setFolderTree] = useState<Folder | null>(null);
   const [items, setItems] = useState<{ subfolders: Folder[]; documents: Document[] }>({ subfolders: [], documents: [] });
   const [loading, setLoading] = useState(false);
   const [refreshTree, setRefreshTree] = useState(0);
+  const [folderTree, setFolderTree] = useState<Folder | null>(null);
 
   // New Folder Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [creatingFolder, setCreatingFolder] = useState(false);
+  
+  // Preview Modal State
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewDocument, setPreviewDocument] = useState<PreviewDocument | null>(null);
 
   // Rename Folder Modal State
   const [showRenameModal, setShowRenameModal] = useState(false);
@@ -46,36 +53,8 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
   const [uploadingFile, setUploadingFile] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Función recursiva para construir el path de breadcrumbs
-  const buildBreadcrumbPath = (folderId: string | undefined, tree: Folder | null): Folder[] => {
-    if (!folderId || !tree) return [];
-    
-    const path: Folder[] = [];
-    
-    const findPath = (node: Folder, targetId: string): boolean => {
-      // Si encontramos el nodo, agregarlo al path
-      if (node.id === targetId) {
-        path.push(node);
-        return true;
-      }
-      
-      // Si tiene hijos, buscar recursivamente
-      if (node.children && node.children.length > 0) {
-        for (const child of node.children) {
-          if (findPath(child, targetId)) {
-            // Si se encontró en un hijo, agregar este nodo al inicio del path
-            path.unshift(node);
-            return true;
-          }
-        }
-      }
-      
-      return false;
-    };
-    
-    findPath(tree, folderId);
-    return path;
-  };
+  // Helper to find path in tree (would handle breadcrumbs)
+  // For now, simpler breadcrumbs: just Current Folder name, or we rely on Tree selection highlight
   
   const fetchContents = useCallback(async (folderId: string) => {
     setLoading(true);
@@ -85,7 +64,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       // Update current folder details from response
       setCurrentFolder(data.folder);
     } catch (error: any) {
-      console.error('Error fetching contents:', error);
+      console.error('Error al cargar contenido:', error);
       alert(`Error al cargar carpeta: ${error.response?.data?.message || error.message}`);
       // Reset loading even on error
       setItems({ subfolders: [], documents: [] });
@@ -116,17 +95,17 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
 
   const handleCreateFolder = async () => {
     if (!newFolderName) {
-      alert('Folder name is required');
+      alert('El nombre de la carpeta es requerido');
       return;
     }
     
     if (!currentFolder?.id) {
-      alert('Please select a folder first');
+      alert('Por favor selecciona una carpeta primero');
       return;
     }
     
     if (!activeOrganization?.id) {
-      alert('No active organization');
+      alert('No hay organización activa');
       return;
     }
     
@@ -143,7 +122,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       fetchContents(currentFolder.id);
       setRefreshTree(prev => prev + 1);
     } catch (error: any) {
-      console.error('Failed to create folder:', error);
+      console.error('Error al crear carpeta:', error);
       const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Error creating folder';
       alert(`Error al crear carpeta: ${errorMessage}`);
     } finally {
@@ -176,7 +155,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       }
       setRefreshTree(prev => prev + 1);
     } catch (error: any) {
-      console.error('Failed to rename folder:', error);
+      console.error('Error al renombrar carpeta:', error);
       const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Error renaming folder';
       alert(`Error al renombrar carpeta: ${errorMessage}`);
     } finally {
@@ -186,8 +165,8 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
 
   const handleRenameDocument = (doc: Document) => {
     setDocumentToRename(doc);
-    // Mantener la extensión, solo editar el nombre
-    setRenameDocValue(doc.filename || doc.originalname || '');
+    // Mostrar el nombre original del archivo (no el ID del sistema)
+    setRenameDocValue(doc.originalname || doc.filename || '');
     setShowRenameDocModal(true);
   };
 
@@ -207,12 +186,36 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
         fetchContents(currentFolder.id);
       }
     } catch (error: any) {
-      console.error('Failed to rename document:', error);
+      console.error('Error al renombrar documento:', error);
       const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Error renaming document';
       alert(`Error al renombrar documento: ${errorMessage}`);
     } finally {
       setRenamingDoc(false);
     }
+  };
+
+  const handleDocumentClick = (doc: Document) => {
+    // Convertir Document a PreviewDocument
+    const docToPreview: PreviewDocument = {
+      id: doc.id,
+      filename: doc.filename || doc.originalname || 'unknown',
+      originalname: doc.originalname,
+      mimeType: doc.mimeType,
+      size: doc.size,
+      url: doc.url,
+      path: doc.path
+    };
+    
+    // Verificar si se puede previsualizar
+    if (previewService.canPreview(docToPreview)) {
+      setPreviewDocument(docToPreview);
+      setShowPreview(true);
+    }
+  };
+
+  const handleClosePreview = () => {
+    setShowPreview(false);
+    setPreviewDocument(null);
   };
 
   const handleUploadClick = () => {
@@ -224,11 +227,11 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
     if (!file) return;
 
     if (!currentFolder?.id) {
-      alert('Please select a folder first');
+      alert('Por favor selecciona una carpeta primero');
       return;
     }
 
-    console.log('[FileManagerView] Uploading file to folder:', currentFolder.id, 'Folder name:', currentFolder.name);
+    console.log('[FileManagerView] Subiendo archivo a carpeta:', currentFolder.id, 'Nombre de carpeta:', currentFolder.name);
 
     setUploadingFile(true);
     setUploadProgress(0);
@@ -242,19 +245,19 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
         },
       });
 
-      console.log('[FileManagerView] Upload successful, document:', response.document);
+      console.log('[FileManagerView] Carga exitosa, documento:', response.document);
 
-      // Refresh content
+      // Refrescar contenido
       fetchContents(currentFolder.id);
       setRefreshTree(prev => prev + 1);
       
-      // Reset file input
+      // Resetear input de archivo
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     } catch (error: any) {
-      console.error('Failed to upload file:', error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Error uploading file';
+      console.error('Error al subir archivo:', error);
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Error subiendo archivo';
       alert(`Error al subir archivo: ${errorMessage}`);
     } finally {
       setUploadingFile(false);
@@ -262,10 +265,38 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
     }
   };
 
-  // Build Breadcrumbs path (mock based on current folder for now, until we implement tree traversal or backend support)
-  // Since we rely on the tree for navigation, the breadcrumb is redundant unless deep linking.
-  // We can pass an array with [currentFolder] for now.
-  const breadcrumbPath = currentFolder ? [currentFolder] : []; // TODO: Implement full path traversal
+  // Construir el path completo del breadcrumb buscando en el árbol
+  const buildBreadcrumbPath = (folderId: string | undefined, tree: Folder | null): Folder[] => {
+    if (!folderId || !tree) return [];
+    
+    const path: Folder[] = [];
+    
+    const findPath = (node: Folder, targetId: string): boolean => {
+      // Si encontramos el nodo, agregarlo al path
+      if (node.id === targetId) {
+        path.push(node);
+        return true;
+      }
+      
+      // Si tiene hijos, buscar recursivamente
+      if (node.children && node.children.length > 0) {
+        for (const child of node.children) {
+          if (findPath(child, targetId)) {
+            // Si se encontró en un hijo, agregar este nodo al inicio del path
+            path.unshift(node);
+            return true;
+          }
+        }
+      }
+      
+      return false;
+    };
+    
+    findPath(tree, folderId);
+    return path;
+  };
+
+  const breadcrumbPath = buildBreadcrumbPath(currentFolder?.id, folderTree);
 
   /**
    * Maneja el movimiento de documentos desde Drag & Drop
@@ -281,8 +312,8 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       // Also refresh tree in case counts update (if we implement counts)
       setRefreshTree(prev => prev + 1);
     } catch (error) {
-      console.error('Failed to move document', error);
-      // alert('Error moving document'); // Optional: replace with Toast
+      console.error('Error al mover documento', error);
+      // alert('Error al mover documento'); // Opcional: reemplazar con Toast
     } finally {
       setLoading(false);
     }
@@ -302,15 +333,12 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       // Refresh tree to show new structure
       setRefreshTree(prev => prev + 1);
     } catch (error: any) {
-      console.error('Failed to move folder', error);
+      console.error('Error al mover carpeta', error);
       alert('Error al mover carpeta: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }
   };
-
-  // Calcular breadcrumb path basado en el árbol completo
-  const breadcrumbPath = buildBreadcrumbPath(currentFolder?.id, folderTree);
 
   return (
     <Container fluid className="vh-100 d-flex flex-column overflow-hidden p-0">
@@ -355,6 +383,9 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
             selectedFolderId={currentFolder?.id}
             refreshTrigger={refreshTree}
             onMoveDocument={handleMoveDocument}
+            onDocumentClick={handleDocumentClick}
+            onRenameFolder={handleRenameFolder}
+            onRenameDocument={handleRenameDocument}
             onTreeLoaded={setFolderTree}
           />
         </Col>
@@ -365,7 +396,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
           <div className="p-2 border-bottom bg-white">
             <FolderBreadcrumbs 
               currentFolder={currentFolder} 
-              path={breadcrumbPath} // TODO: Pass full path
+              path={breadcrumbPath}
               onNavigate={(id) => fetchContents(id)}
             />
           </div>
@@ -525,6 +556,15 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Modal de previsualización de documento */}
+      {previewDocument && (
+        <DocumentPreviewModal
+          document={previewDocument}
+          show={showPreview}
+          onHide={handleClosePreview}
+        />
+      )}
     </Container>
   );
 };

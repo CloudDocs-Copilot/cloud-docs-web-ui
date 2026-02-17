@@ -68,7 +68,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({
         onMoveFolder(data.id, folder.id);
       }
     } catch (err) {
-      console.error('Drop error', err);
+      console.error('Error al soltar', err);
     }
   };
 
@@ -133,9 +133,25 @@ export const FolderCard: React.FC<FolderCardProps> = ({
         className="text-truncate small fw-bold" 
         title={folder.displayName || folder.name}
         onClick={handleClick}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          if (onRename) {
+            onRename(folder);
+          }
+        }}
+        style={{ cursor: onRename ? 'text' : 'pointer' }}
       >
         {folder.displayName || folder.name}
       </div>
+      {folder.itemCount !== undefined && (
+        <div 
+          className="text-muted" 
+          style={{ fontSize: '0.75rem' }}
+          onClick={handleClick}
+        >
+          {folder.itemCount} {folder.itemCount === 1 ? 'archivo' : 'archivos'}
+        </div>
+      )}
     </Card>
   );
 };

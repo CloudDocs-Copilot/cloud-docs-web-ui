@@ -9,6 +9,14 @@ import * as useOrganizationHook from '../../hooks/useOrganization';
 // Mock hooks
 jest.mock('../../hooks/useHttpRequest');
 jest.mock('../../hooks/useOrganization');
+jest.mock('../../hooks/usePermissions', () => ({
+  usePermissions: () => ({
+    can: jest.fn().mockReturnValue(true),
+    canAny: jest.fn().mockReturnValue(true),
+    canAll: jest.fn().mockReturnValue(true),
+    role: 'admin',
+  }),
+}));
 jest.mock('../../hooks/usePageInfoTitle', () => ({
   usePageTitle: jest.fn(),
 }));

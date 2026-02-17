@@ -5,8 +5,8 @@ import DocumentCard from '../components/DocumentCard';
 import { useHttpRequest } from '../hooks/useHttpRequest';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
 import useOrganization from '../hooks/useOrganization';
+import { usePermissions } from '../hooks/usePermissions';
 import type { Document } from '../types/document.types';
-import type { MembershipRole } from '../types/organization.types';
 
 
 interface DocumentsApiResponse {
@@ -31,16 +31,12 @@ const Dashboard: React.FC = () => {
   
 
   // Obtener ID de la organización activa desde el contexto
-  const { activeOrganization, membership } = useOrganization();
+  const { activeOrganization } = useOrganization();
   const organizationId = activeOrganization?.id ?? '';
 
-  // Permission: delete only for owner/admin
-  const orgRole = (membership?.role ||
-    activeOrganization?.role ||
-    'member') as MembershipRole;
-
-  const normalizedRole = typeof orgRole === 'string' ? orgRole.toLowerCase() : orgRole;
-  const canDeleteDocuments = normalizedRole === 'owner' || normalizedRole === 'admin';
+  // Permission: delete only for roles with documents:delete permission
+  const { can } = usePermissions();
+  const canDeleteDocuments = can('documents:delete');
 
   const fetchDocuments = useCallback(() => {
     if (!organizationId) return;

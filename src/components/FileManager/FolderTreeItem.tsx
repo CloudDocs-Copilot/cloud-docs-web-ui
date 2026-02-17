@@ -5,7 +5,8 @@ import {
   Folder2Open as FolderOpenIcon, 
   ChevronRight, 
   ChevronDown,
-  FileEarmark 
+  FileEarmark,
+  GripVertical
 } from 'react-bootstrap-icons';
 import type { Folder } from '../../types/folder.types';
 import type { Document } from '../../types/document.types';
@@ -35,6 +36,7 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
   // Expandir por defecto para mostrar la estructura completa del directorio
   const [isExpanded, setIsExpanded] = useState(true);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   
   // Para manejar el delay entre click simple y doble click en documentos
   const clickTimerRef = React.useRef<number | null>(null);
@@ -97,11 +99,17 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
   
   const handleDragStart = (e: React.DragEvent) => {
     e.stopPropagation();
+    setIsDragging(true);
     e.dataTransfer.setData('application/json', JSON.stringify({
       type: 'folder',
       id: folder.id
     }));
     e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -142,15 +150,24 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
           ${styles.treeItem} 
           ${isSelected ? styles.selected : ''} 
           ${isDragOver ? styles.dragOver : ''}
+          ${isDragging ? styles.dragging : ''}
         `}
         onClick={handleClick}
         draggable={!folder.isRoot} // La carpeta raíz no se puede mover
         onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         style={{ paddingLeft: `${(folder.level || 0) * 12}px` }}
       >
+        {/* Indicador de arrastre - solo visible en hover si no es root */}
+        {!folder.isRoot && (
+          <span className={styles.dragHandle}>
+            <GripVertical size={12} className="text-muted" />
+          </span>
+        )}
+        
         <span 
           className={styles.toggleIcon} 
           onClick={handleToggle}
@@ -227,6 +244,11 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
                 e.dataTransfer.effectAllowed = 'move';
               }}
             >
+              {/* Indicador de arrastre para documentos */}
+              <span className={styles.dragHandle}>
+                <GripVertical size={10} className="text-muted" />
+              </span>
+              
               <span 
                 className={styles.toggleIcon} 
                 style={{ visibility: 'hidden' }}

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Card, Dropdown } from 'react-bootstrap';
-import { Folder as FolderIcon, Folder2Open as FolderOpenIcon, ThreeDotsVertical, PencilSquare } from 'react-bootstrap-icons';
+import { Folder as FolderIcon, Folder2Open as FolderOpenIcon, ThreeDotsVertical, PencilSquare, GripVertical } from 'react-bootstrap-icons';
 import type { Folder } from '../../types/folder.types';
+import styles from './FolderCard.module.css';
 
 interface FolderCardProps {
   folder: Folder;
@@ -19,12 +20,28 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   onRename
 }) => {
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const handleClick = () => {
     onSelect(folder);
   };
 
   /* --- Manejadores de Drag & Drop --- */
+  
+  const handleDragStart = (e: React.DragEvent) => {
+    e.stopPropagation();
+    setIsDragging(true);
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      type: 'folder',
+      id: folder.id
+    }));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
   
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -74,18 +91,21 @@ export const FolderCard: React.FC<FolderCardProps> = ({
 
   return (
     <Card 
-      className={`h-100 shadow-sm border-0 text-center p-3 ${isDragOver ? 'border-primary border-3' : 'bg-light'}`}
-      style={{
-        cursor: 'pointer',
-        backgroundColor: isDragOver ? '#e3f2fd' : undefined,
-        transition: 'all 0.2s ease',
-        position: 'relative'
-      }}
+      className={`h-100 shadow-sm border-0 text-center p-3 bg-light ${styles.folderCard} ${isDragOver ? styles.dragOver : ''} ${isDragging ? styles.dragging : ''}`}
+      draggable={!folder.isRoot}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       onDragOver={handleDragOver}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
+      {/* Indicador de arrastre */}
+      {!folder.isRoot && (
+        <div className={styles.dragHandle}>
+          <GripVertical size={14} className="text-muted" />
+        </div>
+      )}
       {/* Menú de opciones */}
       {onRename && (
         <Dropdown 

@@ -1,0 +1,35 @@
+.folderCard {
+  height: 100%;
+  transition: all 0.2s ease;
+  position: relative;
+  cursor: grab;
+}
+
+.folderCard:hover .dragHandle {
+  opacity: 1 !important;
+}
+
+.folderCard.dragging {
+  opacity: 0.5;
+  cursor: grabbing !important;
+}
+
+.folderCard.dragOver {
+  background-color: #e3f2fd;
+  border: 3px solid #0d6efd !important;
+}
+
+.dragHandle {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.2s;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

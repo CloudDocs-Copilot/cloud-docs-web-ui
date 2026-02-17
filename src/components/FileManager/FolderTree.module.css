@@ -15,6 +15,11 @@
   color: #495057;
 }
 
+/* Cursor grab para elementos draggable */
+.treeItem[draggable="true"] {
+  cursor: grab;
+}
+
 .treeItem:hover {
   background-color: #e9ecef;
 }
@@ -32,6 +37,27 @@
 .dragOver {
   background-color: #ffecd4; /* Highlight drop target */
   border: 2px dashed #ffc107;
+}
+
+.dragging {
+  opacity: 0.5;
+  cursor: grabbing !important;
+}
+
+/* Drag handle - oculto por defecto */
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  margin-right: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+/* Mostrar el handle en hover */
+.treeItem:hover .dragHandle {
+  opacity: 1;
 }
 
 .toggleIcon {

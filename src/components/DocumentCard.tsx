@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Card, Badge, Modal, Button } from 'react-bootstrap';
+import { GripVertical } from 'react-bootstrap-icons';
 import type { Document } from '../types/document.types';
 import { getFileTypeFromMime, formatFileSize } from '../types/document.types';
 import { useDocumentDeletion } from '../hooks/useDocumentDeletion';
@@ -18,6 +19,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
   const { moveToTrash, loading } = useDocumentDeletion();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   /**
    * Maneja el movimiento a papelera
@@ -80,11 +82,17 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
   const folderName = getFolderName(document.folder);
 
   const handleDragStart = (e: React.DragEvent) => {
+    setIsDragging(true);
     e.dataTransfer.setData('application/json', JSON.stringify({
       type: 'document',
       id: document.id
     }));
     e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
   };
 
   /**
@@ -133,12 +141,17 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
   return (
     <>
       <Card 
-        className={styles.documentCard} 
+        className={`${styles.documentCard} ${isDragging ? styles.dragging : ''}`}
         onClick={handlePreviewClick} 
         style={{ cursor: 'grab' }}
         draggable={true}
         onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
       >
+        {/* Indicador de arrastre */}
+        <div className={styles.dragHandle}>
+          <GripVertical size={14} className="text-muted" />
+        </div>
         <Card.Body className={styles.cardBody}>
           {/* Ícono del documento */}
           <div className={styles.iconWrapper}>

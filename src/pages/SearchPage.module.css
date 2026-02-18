@@ -165,9 +165,19 @@
 .actionButton {
   white-space: nowrap;
   font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 4px;
+  padding: 6px 12px;
+  border-radius: 6px;
   min-width: auto;
+  border: 1px solid #007bff;
+  color: #007bff;
+  background-color: transparent;
+  transition: all 0.2s ease;
+}
+
+.actionButton:hover {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
 }
 
 @media (max-width: 768px) {

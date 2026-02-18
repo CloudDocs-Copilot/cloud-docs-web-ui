@@ -196,41 +196,6 @@ const SearchPage: React.FC = () => {
   }, []);
 
   /**
-   * Maneja la descarga del documento
-   */
-  const handleDownload = useCallback(async (docId: string, filename: string) => {
-    try {
-      console.log('🔽 Iniciando descarga:', { docId, filename });
-      
-      // Usar window.open para descargas autenticadas
-      const downloadUrl = `/api/documents/download/${docId}`;
-      const fullUrl = `${apiClient.defaults.baseURL}${downloadUrl}`;
-      
-      console.log('📁 URL de descarga:', fullUrl);
-      
-      // Abrir en nueva ventana para descarga directa
-      const downloadWindow = window.open(fullUrl, '_blank');
-      
-      if (!downloadWindow) {
-        setError('No se pudo iniciar la descarga. Verifica que no estén bloqueadas las ventanas emergentes.');
-        return;
-      }
-      
-      // Cerrar la ventana después de un momento para limpiar
-      setTimeout(() => {
-        downloadWindow.close();
-      }, 3000);
-      
-      console.log('✅ Descarga iniciada correctamente para:', filename || 'archivo');
-      
-    } catch (error: any) {
-      console.error('❌ Error al descargar documento:', error);
-      const errorMsg = 'Error al descargar el documento. Inténtalo de nuevo.';
-      setError(errorMsg);
-    }
-  }, []);
-
-  /**
    * Limpia todos los filtros y resultados
    */
   const handleClear = useCallback(() => {
@@ -457,16 +422,7 @@ const SearchPage: React.FC = () => {
                             onClick={() => handlePreview(doc.id)}
                             title="Ver documento"
                           >
-                            👁️ Ver
-                          </Button>
-                          <Button
-                            variant="outline-secondary"
-                            size="sm"
-                            className={styles.actionButton}
-                            onClick={() => handleDownload(doc.id, doc.originalname || doc.filename)}
-                            title="Descargar documento"
-                          >
-                            📥 Descargar
+                            <span className="me-1">👁️</span> Ver
                           </Button>
                         </div>
                       </div>

@@ -4,7 +4,7 @@ import type { ApiErrorResponse } from '../types/api.types';
 /**
  * Configuración base de la instancia de axios
  */
-import { getViteEnvVar } from '../utils/env';
+import { API_BASE_URL as CONFIG_API_BASE_URL } from '../config/env';
 
 function resolveApiBaseUrl(): string {
   // Prefer any test-provided global process replacement
@@ -36,9 +36,8 @@ function resolveApiBaseUrl(): string {
     // ignore
   }
 
-  // Fallback to helper which checks import.meta/env and other sources
-  const helper = getViteEnvVar('VITE_API_BASE_URL');
-  if (helper) return helper;
+  // Fallback to canonical config which itself reads import.meta.env or defaults
+  if (CONFIG_API_BASE_URL) return CONFIG_API_BASE_URL;
 
   return 'http://localhost:4000/api';
 }

@@ -112,7 +112,7 @@ const Dashboard: React.FC = () => {
             ) : (
               <Col xs={12}>
                 <Alert variant="info">
-                  No documents found. Upload your first document to get started!
+                  No se encontraron documentos. ¡Sube tu primer documento para comenzar!
                 </Alert>
               </Col>
             )}

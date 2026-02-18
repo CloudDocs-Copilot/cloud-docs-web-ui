@@ -214,6 +214,20 @@
 }
 
 /* Modal Overrides */
+.modalDocument {
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.modalDocument strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
 .modalWarning {
   background-color: #fee2e2;
   border-left: 4px solid #dc2626;

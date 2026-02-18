@@ -34,7 +34,7 @@
   right: 12px;
   display: flex;
   gap: 4px;
-  opacity: 0;
+  opacity: 1; /* Siempre visible para mejor UX */
   transition: opacity 0.2s;
 }
 

@@ -1,6 +1,5 @@
 /// <reference types="jest" />
-import { render, screen, waitFor } from '@testing-library/react';
-import { act } from 'react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ImageViewer } from '../../../components/DocumentPreview/ImageViewer';
 
@@ -58,7 +57,6 @@ describe('ImageViewer', () => {
     await act(async () => {
       render(<ImageViewer {...defaultProps} />);
     });
-
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
         defaultProps.url,
@@ -71,7 +69,6 @@ describe('ImageViewer', () => {
     await act(async () => {
       render(<ImageViewer {...defaultProps} />);
     });
-
     await waitFor(() => {
       expect(global.URL.createObjectURL).toHaveBeenCalled();
     });
@@ -83,10 +80,8 @@ describe('ImageViewer', () => {
     await act(async () => {
       render(<ImageViewer {...defaultProps} onBack={onBack} />);
     });
-
     const backButton = screen.getByRole('button', { name: /back/i });
     await user.click(backButton);
-
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
@@ -95,7 +90,6 @@ describe('ImageViewer', () => {
     await act(async () => {
       render(<ImageViewer {...defaultProps} />);
     });
-
     await waitFor(() => {
       // El componente debería mostrar estado de error
       expect(global.URL.createObjectURL).not.toHaveBeenCalled();
@@ -110,7 +104,6 @@ describe('ImageViewer', () => {
     await act(async () => {
       render(<ImageViewer {...defaultProps} />);
     });
-
     await waitFor(() => {
       expect(global.URL.createObjectURL).not.toHaveBeenCalled();
     });
@@ -120,7 +113,6 @@ describe('ImageViewer', () => {
     await act(async () => {
       render(<ImageViewer {...defaultProps} />);
     });
-
     await waitFor(() => {
       expect(global.URL.createObjectURL).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'image/jpeg' })
@@ -132,7 +124,6 @@ describe('ImageViewer', () => {
     await act(async () => {
       render(<ImageViewer {...defaultProps} />);
     });
-
     await waitFor(() => {
       const image = screen.getByAltText('Test photo');
       expect(image).toBeInTheDocument();
@@ -143,7 +134,6 @@ describe('ImageViewer', () => {
     await act(async () => {
       render(<ImageViewer {...defaultProps} alt={undefined} />);
     });
-
     await waitFor(() => {
       const image = screen.getByAltText('photo.jpg');
       expect(image).toBeInTheDocument();
@@ -152,13 +142,14 @@ describe('ImageViewer', () => {
 
   it('renders zoom controls in header', async () => {
     render(<ImageViewer {...defaultProps} />);
-
-    await waitFor(() => expect(screen.getByTestId('preview-header')).toBeInTheDocument());
+    const header = screen.getByTestId('preview-header');
+    expect(header).toBeInTheDocument();
   });
 
   it('creates blob URL from fetched image', async () => {
-    render(<ImageViewer {...defaultProps} />);
-    
+    await act(async () => {
+      render(<ImageViewer {...defaultProps} />);
+    });
     await waitFor(() => {
       expect(global.URL.createObjectURL).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'image/jpeg' })

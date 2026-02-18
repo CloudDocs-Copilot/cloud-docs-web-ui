@@ -52,7 +52,7 @@ describe('Dashboard', () => {
       </BrowserRouter>
     );
 
-    const loadingTexts = screen.getAllByText('Loading documents...');
+    const loadingTexts = screen.getAllByText('Cargando documentos...');
     expect(loadingTexts.length).toBeGreaterThan(0);
   });
 
@@ -71,7 +71,7 @@ describe('Dashboard', () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByText('Error loading documents')).toBeInTheDocument();
+    expect(screen.getByText('Error al cargar documentos')).toBeInTheDocument();
     expect(screen.getByText('Network error')).toBeInTheDocument();
   });
 

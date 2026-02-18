@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { Card, Badge, Modal, Button } from 'react-bootstrap';
 import type { Document } from '../types/document.types';
 import { getFileTypeFromMime, formatFileSize } from '../types/document.types';
-import { useDocumentDeletion } from '../hooks/useDocumentDeletion';
+
 import { getDocumentDisplayName } from '../utils/documentHelper';
 import { DocumentPreviewModal } from './DocumentPreview';
 import type { PreviewDocument } from '../types/preview.types';
 import { previewService } from '../services/preview.service';
 import styles from './DocumentCard.module.css';
+import { useDocumentDeletion } from '../hooks/useDocumentDeletion';
 
 interface DocumentCardProps {
   document: Document;
@@ -15,20 +16,31 @@ interface DocumentCardProps {
   canDelete?: boolean;
 }
 
-const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDelete = false }) => {
-  const { moveToTrash, loading } = useDocumentDeletion();
+const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDelete = true }) => {
+  const [loading, setLoading] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const { moveToTrash} = useDocumentDeletion();
+  const [, setError] = useState<string | null>(null);
 
   /**
-   * Maneja el movimiento a papelera
+   * Elimina el documento directamente
    */
   const handleMoveToTrash = async () => {
+    try {
     const documentId = document.id ?? document._id ?? '';
     const deleted = await moveToTrash(documentId);
     if (deleted) {
       setShowDeleteModal(false);
       onDeleted?.();
+    } else {
+      setError('No se pudo mover el documento a la papelera');
+    }
+    } catch (err: unknown) {
+      console.error('Error deleting document:', err);
+      setError(err instanceof Error ? err.message : 'Error al eliminar el documento');
+    } finally {
+      setLoading(false);
     }
   };
 

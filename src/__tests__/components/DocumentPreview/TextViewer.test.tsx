@@ -1,6 +1,5 @@
 /// <reference types="jest" />
-import { render, screen, waitFor } from '@testing-library/react';
-import { act } from 'react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { TextViewer } from '../../../components/DocumentPreview/TextViewer';
 
@@ -81,7 +80,6 @@ describe('TextViewer', () => {
     await act(async () => {
       render(<TextViewer {...defaultProps} />);
     });
-
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
         defaultProps.url,
@@ -94,7 +92,6 @@ describe('TextViewer', () => {
     await act(async () => {
       render(<TextViewer {...defaultProps} />);
     });
-
     await waitFor(() => {
       expect(screen.getByText(/This is the file content/)).toBeInTheDocument();
     });
@@ -106,10 +103,8 @@ describe('TextViewer', () => {
     await act(async () => {
       render(<TextViewer {...defaultProps} onBack={onBack} />);
     });
-
     const backButton = screen.getByRole('button', { name: /back/i });
     await user.click(backButton);
-
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
@@ -118,7 +113,6 @@ describe('TextViewer', () => {
     await act(async () => {
       render(<TextViewer {...defaultProps} />);
     });
-
     await waitFor(() => {
       // El texto de contenido no debería aparecer
       expect(screen.queryByText(/This is the file content/)).not.toBeInTheDocument();
@@ -133,7 +127,6 @@ describe('TextViewer', () => {
     await act(async () => {
       render(<TextViewer {...defaultProps} />);
     });
-
     await waitFor(() => {
       expect(screen.queryByText(/This is the file content/)).not.toBeInTheDocument();
     });
@@ -144,7 +137,6 @@ describe('TextViewer', () => {
     await act(async () => {
       render(<TextViewer {...defaultProps} filename="app.js" />);
     });
-
     await waitFor(() => {
       const highlighter = screen.getByTestId('syntax-highlighter');
       expect(highlighter).toBeInTheDocument();
@@ -157,7 +149,7 @@ describe('TextViewer', () => {
     await act(async () => {
       render(<TextViewer {...defaultProps} filename="app.ts" />);
     });
-
+    
     await waitFor(() => {
       const highlighter = screen.getByTestId('syntax-highlighter');
       expect(highlighter).toHaveAttribute('data-language', 'typescript');

@@ -190,21 +190,20 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDel
           </button>
 
           {canDelete && (
-            <button
+            <><button
               className={styles.optionBtn}
               title="Mover a papelera"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowDeleteModal(true);
-              }}
+              } }
               disabled={loading}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="2" strokeLinecap="round"/>
+                <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="2" strokeLinecap="round" />
               </svg>
-            </button>
-          <h6 className={styles.documentName}>{document.originalname || document.filename}</h6>
+            </button><h6 className={styles.documentName}>{document.originalname || document.filename}</h6></>
           )}
         </div>
       </Card>

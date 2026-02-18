@@ -55,7 +55,7 @@ describe('useSearch hook', () => {
     await act(async () => {
       try {
         await result.current.search({ query: 'test' });
-      } catch (_) {
+      } catch {
         // El error es manejado por el hook, no debe propagarse
       }
     });
@@ -147,7 +147,7 @@ describe('useSearch hook', () => {
     await act(async () => {
       try {
         await result.current.search({ query: 'test' });
-      } catch (_) {
+      } catch {
         // El error es manejado por el hook, no debe propagarse
       }
     });

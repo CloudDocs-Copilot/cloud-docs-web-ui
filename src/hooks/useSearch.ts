@@ -18,6 +18,7 @@ export const useSearch = () => {
   const [took, setTook] = useState(0);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
+
   /**
    * Cargar historial de búsquedas desde localStorage
    */
@@ -76,9 +77,17 @@ export const useSearch = () => {
       saveToHistory(params.query);
 
       return response;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[useSearch] Search error:', err);
-      const errorMessage = err.response?.data?.message || 'Error al buscar documentos';
+      let errorMessage = 'Error al buscar documentos';
+
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosError = err as { response?: { data?: { message?: string } } };
+        if (axiosError.response?.data?.message) {
+          errorMessage = axiosError.response.data.message;
+        }
+      }
+
       setError(errorMessage);
       setResults([]);
       setTotal(0);

@@ -13,6 +13,10 @@ const config: Config = {
     '^react-syntax-highlighter$': '<rootDir>/__mocks__/react-syntax-highlighter.js',
     '^react-syntax-highlighter/dist/esm/styles/prism$': '<rootDir>/__mocks__/react-syntax-highlighter-styles.js',
     '^../utils/env$': '<rootDir>/__mocks__/utils/env.ts',
+    '^../config/env$': '<rootDir>/__mocks__/config/env.ts',
+    '^@/config/env$': '<rootDir>/__mocks__/config/env.ts',
+    '^../env$': '<rootDir>/__mocks__/config/env.ts',
+    '^src/config/env$': '<rootDir>/__mocks__/config/env.ts',
   },
   transform: {
     '^.+\\.tsx?$': [

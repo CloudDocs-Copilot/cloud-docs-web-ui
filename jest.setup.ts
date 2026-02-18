@@ -12,7 +12,7 @@ beforeAll(() => {
     ) {
       return;
     }
-    // @ts-ignore
+    // @ts-expect-error -- restore original console.error if previously saved
     return globalThis.__CONSOLE_ERROR_ORIG__
       ? globalThis.__CONSOLE_ERROR_ORIG__.call(console, msg, ...args)
       : undefined;
@@ -22,14 +22,14 @@ beforeAll(() => {
 afterAll(() => {
   // Restore original error if needed
   if (globalThis.__CONSOLE_ERROR_ORIG__) {
-    // @ts-ignore
+    // @ts-expect-error -- restore original console.error saved earlier
     console.error = globalThis.__CONSOLE_ERROR_ORIG__;
   }
 });
 
 // Save original error for restoration
 if (!globalThis.__CONSOLE_ERROR_ORIG__) {
-  // @ts-ignore
+  // @ts-expect-error -- save original console.error for later restoration
   globalThis.__CONSOLE_ERROR_ORIG__ = console.error;
 }
 import '@testing-library/jest-dom';
@@ -53,6 +53,21 @@ interface GlobalThisWithImport {
   },
 };
 
+// Definir `process.env` globalmente para tests (restaurado tras merge)
+interface GlobalThisWithProcess {
+  process?: {
+    env: Record<string, string | undefined>;
+  };
+}
+
+if (!(globalThis as GlobalThisWithProcess).process) {
+  (globalThis as GlobalThisWithProcess).process = {
+    env: {
+      VITE_API_BASE_URL: 'http://localhost:4000/api',
+      VITE_PREVIEW_WORKER_URL: '/pdf.worker.min.mjs',
+    },
+  };
+}
 // Silence React Router v7 future flag warnings in tests
 beforeAll(() => {
   jest.spyOn(console, 'warn').mockImplementation((msg, ...args) => {
@@ -63,7 +78,7 @@ beforeAll(() => {
     ) {
       return;
     }
-    // @ts-ignore
+    // @ts-expect-error -- restore original console.warn if previously saved
     return globalThis.__CONSOLE_WARN_ORIG__
       ? globalThis.__CONSOLE_WARN_ORIG__.call(console, msg, ...args)
       : undefined;
@@ -73,13 +88,13 @@ beforeAll(() => {
 afterAll(() => {
   // Restore original warn if needed
   if (globalThis.__CONSOLE_WARN_ORIG__) {
-    // @ts-ignore
+    // @ts-expect-error -- restore original console.warn saved earlier
     console.warn = globalThis.__CONSOLE_WARN_ORIG__;
   }
 });
 
 // Save original warn for restoration
 if (!globalThis.__CONSOLE_WARN_ORIG__) {
-  // @ts-ignore
+  // @ts-expect-error -- save original console.warn for later restoration
   globalThis.__CONSOLE_WARN_ORIG__ = console.warn;
 }

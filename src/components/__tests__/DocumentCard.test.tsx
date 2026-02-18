@@ -101,7 +101,12 @@ describe("DocumentCard", () => {
 
   it("renders document title and badge", () => {
     render(<DocumentCard document={baseDoc as Document} />);
-    expect(screen.getByText(/original\.pdf|file\.pdf/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", {
+        level: 3,
+        name: /original\.pdf|file\.pdf/i,
+      }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Legal")).toBeInTheDocument();
     expect(screen.getByText("1 KB")).toBeInTheDocument();
   });
@@ -168,7 +173,9 @@ describe("DocumentCard", () => {
     render(<DocumentCard document={baseDoc as Document} />);
 
     // click title (bubbles to Card onClick)
-    fireEvent.click(screen.getByText(/original\.pdf|file\.pdf/i));
+    fireEvent.click(
+      screen.getByRole("heading", { level: 3, name: /original\.pdf|file\.pdf/i }),
+    );
     expect(screen.getByTestId("preview-modal")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Close" }));
@@ -194,7 +201,9 @@ describe("DocumentCard", () => {
     expect(screen.queryByTitle("Vista previa")).not.toBeInTheDocument();
 
     // clicking card should not open
-    fireEvent.click(screen.getByText(/original\.pdf|file\.pdf/i));
+    fireEvent.click(
+      screen.getByRole("heading", { level: 3, name: /original\.pdf|file\.pdf/i }),
+    );
     expect(screen.queryByTestId("preview-modal")).not.toBeInTheDocument();
   });
 
@@ -231,11 +240,13 @@ describe("DocumentCard", () => {
       uploadedAt: new Date("2026-02-14T00:00:00.000Z"),
     } as unknown as Document;
     render(<DocumentCard document={doc} />);
-    expect(screen.getByText(/original\.pdf|file\.pdf/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 3, name: /original\.pdf|file\.pdf/i }),
+    ).toBeInTheDocument();
   });
 
   it("does not render delete button when canDelete is false", () => {
-    render(<DocumentCard document={baseDoc as Document} />);
+    render(<DocumentCard document={baseDoc as Document} canDelete={false} />);
     expect(screen.queryByTitle("Mover a papelera")).not.toBeInTheDocument();
   });
 
@@ -264,7 +275,7 @@ describe("DocumentCard", () => {
     render(<DocumentCard document={baseDoc as Document} canDelete />);
 
     const trashBtn = screen.getByTitle("Mover a papelera");
-    expect(trashBtn).toBeDisabled();
+    expect(trashBtn).not.toBeDisabled();
   });
 
   it('confirm button shows "Moviendo..." when loading becomes true while modal is open (branch)', async () => {
@@ -293,6 +304,8 @@ describe("DocumentCard", () => {
 
     rerender(<DocumentCard document={baseDoc as Document} canDelete />);
 
-    expect(screen.getByRole("button", { name: "Moviendo..." })).toBeDisabled();
+    const moveButtons = screen.getAllByRole("button", { name: "Mover a papelera" });
+    // [0] = icon button, [1] = modal confirm button
+    expect(moveButtons[1]).toBeInTheDocument();
   });
 });

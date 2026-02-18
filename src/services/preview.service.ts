@@ -1,7 +1,7 @@
 import { API_BASE_URL } from '../config/env';
 import { DocumentPreviewType } from '../types/preview.types';
 import type { PreviewConfig, PreviewDocument } from '../types/preview.types';
-import { getViteEnvVar } from '../utils/env';
+
 
 /**
  * Configuración por defecto del sistema de preview

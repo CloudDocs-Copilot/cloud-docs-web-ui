@@ -17,15 +17,15 @@ export const ExcelPreview: React.FC<ExcelPreviewProps> = ({ file }) => {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: "array" });
         const sheetArr: Array<{ name: string; data: string[][] }> = [];
-        workbook.SheetNames.forEach((sheetName) => {
+        workbook.SheetNames.forEach((sheetName: string) => {
           const sheet = workbook.Sheets[sheetName];
           const sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as string[][];
           sheetArr.push({ name: sheetName, data: sheetData });
         });
         setSheets(sheetArr);
         setError(null);
-      } catch (err) {
-        setError("Error al leer el archivo Excel");
+      } catch (err: unknown) {
+        setError(`Error al leer el archivo Excel: ${(err as Error).message}`);
       }
     };
     reader.onerror = () => setError("Error al cargar el archivo Excel");

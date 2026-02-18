@@ -168,16 +168,19 @@
   padding: 6px 12px;
   border-radius: 6px;
   min-width: auto;
+  background-color: #007bff;
   border: 1px solid #007bff;
-  color: #007bff;
-  background-color: transparent;
+  color: white;
   transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .actionButton:hover {
-  background-color: #007bff;
+  background-color: #0056b3;
+  border-color: #0056b3;
   color: white;
-  border-color: #007bff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,123,255,0.3);
 }
 
 @media (max-width: 768px) {

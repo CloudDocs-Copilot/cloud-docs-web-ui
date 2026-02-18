@@ -416,7 +416,7 @@ const SearchPage: React.FC = () => {
                         </div>
                         <div className={styles.resultActions}>
                           <Button
-                            variant="outline-primary"
+                            variant="primary"
                             size="sm"
                             className={styles.actionButton}
                             onClick={() => handlePreview(doc.id)}

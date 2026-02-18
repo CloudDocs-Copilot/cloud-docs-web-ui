@@ -22,25 +22,23 @@ beforeAll(() => {
     ) {
       return;
     }
-    // @ts-expect-error -- restore original console.error if previously saved
-    return globalThis.__CONSOLE_ERROR_ORIG__
-      ? globalThis.__CONSOLE_ERROR_ORIG__.call(console, msg, ...args)
-      : undefined;
+    const origError = (globalThis as unknown as GlobalThis).__CONSOLE_ERROR_ORIG__;
+    return origError ? origError.call(console, msg, ...args) : undefined;
   });
 });
 
 afterAll(() => {
   // Restore original error if needed
-  if (globalThis.__CONSOLE_ERROR_ORIG__) {
-    // @ts-expect-error -- restore original console.error saved earlier
-    console.error = globalThis.__CONSOLE_ERROR_ORIG__;
+  const origError = (globalThis as unknown as GlobalThis).__CONSOLE_ERROR_ORIG__;
+  if (origError) {
+    console.error = origError;
   }
 });
 
 // Save original error for restoration
-if (!globalThis.__CONSOLE_ERROR_ORIG__) {
-  // @ts-expect-error -- save original console.error for later restoration
-  globalThis.__CONSOLE_ERROR_ORIG__ = console.error;
+const globalThisTyped = globalThis as unknown as GlobalThis;
+if (!globalThisTyped.__CONSOLE_ERROR_ORIG__) {
+  globalThisTyped.__CONSOLE_ERROR_ORIG__ = console.error;
 }
 import '@testing-library/jest-dom';
 
@@ -88,23 +86,21 @@ beforeAll(() => {
     ) {
       return;
     }
-    // @ts-expect-error -- restore original console.warn if previously saved
-    return globalThis.__CONSOLE_WARN_ORIG__
-      ? globalThis.__CONSOLE_WARN_ORIG__.call(console, msg, ...args)
-      : undefined;
+    const origWarn = (globalThis as unknown as GlobalThis).__CONSOLE_WARN_ORIG__;
+    return origWarn ? origWarn.call(console, msg, ...args) : undefined;
   });
 });
 
 afterAll(() => {
   // Restore original warn if needed
-  if (globalThis.__CONSOLE_WARN_ORIG__) {
-    // @ts-expect-error -- restore original console.warn saved earlier
-    console.warn = globalThis.__CONSOLE_WARN_ORIG__;
+  const origWarn = (globalThis as unknown as GlobalThis).__CONSOLE_WARN_ORIG__;
+  if (origWarn) {
+    console.warn = origWarn;
   }
 });
 
 // Save original warn for restoration
-if (!globalThis.__CONSOLE_WARN_ORIG__) {
-  // @ts-expect-error -- save original console.warn for later restoration
-  globalThis.__CONSOLE_WARN_ORIG__ = console.warn;
+const globalThisTypedWarn = globalThis as unknown as GlobalThis;
+if (!globalThisTypedWarn.__CONSOLE_WARN_ORIG__) {
+  globalThisTypedWarn.__CONSOLE_WARN_ORIG__ = console.warn;
 }

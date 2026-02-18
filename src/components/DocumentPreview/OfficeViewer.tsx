@@ -62,7 +62,7 @@ export const OfficeViewer: React.FC<OfficeViewerProps> = ({ url, filename, onBac
       fetchExcel();
       return;
     }
-  }, [url]);
+  }, [url, filename]);
 
   /**
    * Aumentar zoom

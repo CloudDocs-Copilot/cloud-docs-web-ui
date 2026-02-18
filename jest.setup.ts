@@ -1,3 +1,13 @@
+// Provide typings for globals used in this test setup
+declare global {
+  interface GlobalThis {
+    __CONSOLE_ERROR_ORIG__?: typeof console.error;
+    __CONSOLE_WARN_ORIG__?: typeof console.warn;
+    import?: { meta: { env: Record<string, string> } };
+    process?: { env: Record<string, string | undefined> };
+  }
+}
+
 // Silence React act(...) and resource loading errors in tests
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation((msg, ...args) => {

@@ -1,68 +1,44 @@
-// Type declaration for global.importMetaEnv to fix implicit 'any' errors
-declare global {
-  // eslint-disable-next-line no-var
-  var importMetaEnv: { [key: string]: string } | undefined;
-}
-// src/utils/env.ts
+import { API_BASE_URL } from '../config/env';
 
 /**
  * Helper to safely access Vite env variables in any environment (Vite, Jest, Node).
- * Returns undefined if not available.
+ * Delegates the canonical API URL to `src/config/env.ts` and falls back to
+ * other sources for non-API keys.
  */
 export function getViteEnvVar(key: string): string | undefined {
-  // Acceso seguro a import.meta.env solo si el entorno lo permite
-  // Jest: mock import.meta.env
-  if (typeof process !== 'undefined' && process.env && process.env.JEST_WORKER_ID) {
-    if (typeof global !== 'undefined' && global.importMetaEnv && key in global.importMetaEnv) {
-      return global.importMetaEnv[key];
-    }
-    // Prefer explicit process.env overrides in Jest tests when provided
-    // Prefer explicit process.env overrides in Jest tests when provided
-    try {
-      // First try the real process.env
-      if (typeof process !== 'undefined' && process.env && key in process.env) {
-        return (process.env as Record<string, string>)[key];
-      }
-    } catch {
-      // ignore
-    }
+  if (key === 'VITE_API_BASE_URL') return API_BASE_URL;
 
-    // Then try any test-provided global process replacement (some tests replace globalThis.process)
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const maybeGlobalProcess = (globalThis as any).process as { env?: Record<string, string> } | undefined;
-      if (maybeGlobalProcess && maybeGlobalProcess.env && key in maybeGlobalProcess.env) {
-        return maybeGlobalProcess.env[key] as string;
-      }
-    } catch {
-      // ignore
+  // Jest / Node: prefer explicit process.env overrides
+  try {
+    if (typeof process !== 'undefined' && process.env && key in process.env) {
+      return (process.env as Record<string, string>)[key];
     }
-
-    if (key === 'VITE_API_BASE_URL') {
-      return 'http://localhost:4000/api';
-    }
-    return undefined;
+  } catch {
+    // ignore
   }
 
-  // Only reference import.meta inside a function, never at top level
-  function getViteEnv() {
-    // @ts-expect-error -- import.meta.env access allowed at runtime in Vite-built environment
-    if (typeof window !== 'undefined' && typeof import.meta !== 'undefined' && import.meta.env && key in import.meta.env) {
-      // @ts-expect-error -- import.meta.env access allowed at runtime in Vite-built environment
-      return import.meta.env[key];
+  // Some tests may expose a global import-like shim
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const maybeGlobal = (globalThis as any).importMetaEnv as Record<string, string> | undefined;
+    if (maybeGlobal && key in maybeGlobal) return maybeGlobal[key];
+  } catch {
+    // ignore
+  }
+
+  // Runtime Vite environment (only when built by Vite)
+  try {
+    // Access import.meta.env only at runtime inside the function
+    // @ts-expect-error -- runtime access to import.meta in Vite-built environment
+    const im = import.meta;
+    // @ts-expect-error -- import.meta.env is only available in Vite runtime
+    if (im && im.env && key in im.env) {
+      // @ts-expect-error -- import.meta.env is only available in Vite runtime
+      return im.env[key];
     }
-    return undefined;
+  } catch {
+    // ignore
   }
 
-  // Try to get from Vite env
-  const viteEnv = getViteEnv();
-  if (viteEnv !== undefined) {
-    return viteEnv;
-  }
-
-  // Node.js fallback (for tests or SSR)
-  if (typeof process !== 'undefined' && typeof process.env !== 'undefined' && key in process.env) {
-    return (process.env as Record<string, string>)[key];
-  }
   return undefined;
 }

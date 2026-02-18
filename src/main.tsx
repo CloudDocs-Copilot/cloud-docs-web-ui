@@ -1,4 +1,3 @@
-
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
@@ -9,7 +8,7 @@ import { PageProvider } from "./context/PageProvider.tsx";
 import { AuthProvider } from "./context/AuthProvider.tsx";
 import OrganizationProvider from "./context/OrganizationProvider";
 import { ToastProvider } from './context/ToastProvider';
-
+import NotificationsProvider from './context/NotificationsProvider';
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -17,9 +16,11 @@ createRoot(document.getElementById("root")!).render(
       <AuthProvider>
         <ToastProvider>
           <OrganizationProvider>
-            <PageProvider>
-              <App />
-            </PageProvider>
+            <NotificationsProvider>
+              <PageProvider>
+                <App />
+              </PageProvider>
+            </NotificationsProvider>
           </OrganizationProvider>
         </ToastProvider>
       </AuthProvider>

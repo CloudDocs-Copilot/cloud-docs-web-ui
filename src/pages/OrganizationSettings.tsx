@@ -1,33 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Table, Spinner, Form } from 'react-bootstrap';
 import useOrganization from '../hooks/useOrganization';
+import type { Membership } from '../types/membership.types';
 import MainLayout from '../components/MainLayout';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
 import { useAuth } from '../hooks/useAuth';
 import styles from './OrganizationSettings.module.css';
-import InviteMemberModal from '../components/InviteMemberModal';
+import InviteMemberModal from '../components/Organization/InviteMemberModal';
 import ConfirmActionModal from '../components/ConfirmActionModal';
 import { apiClient } from '../api';
 import { useToast } from '../hooks/useToast';
 
-interface OrgMemberUser {
-  id: string;
-  name?: string | null;
-  email?: string | null;
-  avatar?: string | null;
-}
-
-interface OrgMember {
-  id: string;
-  user?: OrgMemberUser | null;
-  organization?: string | null;
-  role?: string | null;
-  status?: string | null;
-  rootFolder?: string | null;
-  joinedAt?: string | null;
-  createdAt?: string | null;
-  updatedAt?: string | null;
-}
+// Use shared Membership type from types/membership.types.ts
 
 // Small MD5 implementation (public domain compact version)
 function md5(str: string): string {
@@ -176,7 +160,7 @@ function md5(str: string): string {
 }
 
 const OrganizationSettings: React.FC = () => {
-  const { activeOrganization, isAdmin, isOwner } = useOrganization();
+  const { activeOrganization, isAdmin, isOwner, fetchActiveOrganization, loading: contextLoading } = useOrganization();
   usePageTitle({
     title: 'Configuración de Organización',
     subtitle: 'Gestiona miembros y ajustes',
@@ -184,7 +168,7 @@ const OrganizationSettings: React.FC = () => {
     metaDescription: 'Ajustes y gestión de miembros de la organización activa'
   });
   const [showInvite, setShowInvite] = useState(false);
-  const [members, setMembers] = useState<OrgMember[]>([]);
+  const [members, setMembers] = useState<Membership[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const { showToast } = useToast();
   const { user } = useAuth();
@@ -192,11 +176,11 @@ const OrganizationSettings: React.FC = () => {
   // UI state for search & pagination
   const [query, setQuery] = useState('');
   // pagination removed — backend does not support paged listings
-  const [pendingRoleChange, setPendingRoleChange] = useState<{ member: OrgMember; newRole: string } | null>(null);
+  const [pendingRoleChange, setPendingRoleChange] = useState<{ member: Membership; newRole: string } | null>(null);
   const [processingRoleChange, setProcessingRoleChange] = useState(false);
-  const [pendingRevoke, setPendingRevoke] = useState<OrgMember | null>(null);
+  const [pendingRevoke, setPendingRevoke] = useState<Membership | null>(null);
   const [processingRevoke, setProcessingRevoke] = useState(false);
-  const [pendingResend, setPendingResend] = useState<OrgMember | null>(null);
+  const [pendingResend, setPendingResend] = useState<Membership | null>(null);
   const [processingResend, setProcessingResend] = useState(false);
 
   const fetchMembers = async () => {
@@ -206,9 +190,10 @@ const OrganizationSettings: React.FC = () => {
     }
     setLoadingMembers(true);
     try {
-      const res = await apiClient.get(`/organizations/${activeOrganization.id}/members`);
+      // Use the memberships endpoints which return membership models
+      const res = await apiClient.get(`/memberships/organization/${activeOrganization.id}/members`);
       const payload = res?.data;
-      let items: OrgMember[] = [];
+      let items: Membership[] = [];
      
       if (Array.isArray(payload)) {
         items = payload;
@@ -224,7 +209,6 @@ const OrganizationSettings: React.FC = () => {
       
       }
       setMembers(items);
-      // no server-side pagination; client handles filtering only
     } catch (err: unknown) {
       const msg = (err as Error)?.message ?? 'Error al cargar miembros';
       showToast({ message: msg, variant: 'danger', title: 'Organización' });
@@ -234,18 +218,27 @@ const OrganizationSettings: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchMembers();
+    if (!contextLoading) {
+      fetchMembers();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeOrganization]);
+  }, [activeOrganization, contextLoading]);
 
   return (
     <MainLayout>
       <Container fluid className={styles.container}>
+      {contextLoading ? (
+        <div className="text-center my-5">
+          <Spinner animation="border" />
+          <p className="mt-2 text-muted">Cargando contexto de organización...</p>
+        </div>
+      ) : (
+        <>
       <Row className="mb-2">
         <Col>
           <p>Organización activa: <strong>{activeOrganization?.name ?? 'Ninguna'}</strong></p>
           <div className="mt-2">
-            {(isAdmin() || isOwner()) ? (
+            {(isAdmin || isOwner) ? (
               <Button size="sm" variant="outline-primary" onClick={() => setShowInvite(true)}>
                 Invitar miembro
               </Button>
@@ -284,40 +277,44 @@ const OrganizationSettings: React.FC = () => {
                 const filtered = members.filter((m) => {
                   const q = query.trim().toLowerCase();
                   if (!q) return true;
-                  return ((m.user?.name ?? '') + ' ' + (m.user?.email ?? '')).toLowerCase().includes(q);
+                  const name = (typeof m.user === 'string' ? '' : m.user?.name ?? '') || '';
+                  const email = (typeof m.user === 'string' ? m.user : m.user?.email ?? '') || '';
+                  return (name + ' ' + email).toLowerCase().includes(q);
                 });
                 const pageMembers = filtered;
                 return (
                   <>
-                    {pageMembers.map((m) => (
-                      <tr key={m.id}>
+                    {pageMembers.map((m, idx) => (
+                      <tr key={m.id ?? (typeof m.user === 'string' ? m.user : m.user?.id) ?? idx}>
                               <td>
                                 <div style={{display: 'flex', alignItems: 'center', gap: 8}}>
                                   <div style={{width:32, height:32, borderRadius:16, overflow:'hidden', position:'relative'}}>
                                     {/* Image (photoUrl preferred, then Gravatar). Hidden on error to reveal initials fallback */}
                                     {(() => {
-                                      const email = (m.user?.email ?? '').trim().toLowerCase();
+                                      type UserObj = { id?: string; name?: string | null; email?: string | null; avatar?: string | null };
+                                      const userObj: UserObj = (typeof m.user === 'string') ? { id: m.user } : (m.user ?? {} as UserObj);
+                                      const email = (userObj.email ?? '').trim().toLowerCase();
                                       const gravatar = email ? `https://www.gravatar.com/avatar/${md5(email)}?d=404&s=64` : null;
-                                      const src = m.user?.avatar ?? gravatar ?? undefined;
+                                      const src = userObj.avatar ?? gravatar ?? undefined;
                                       return src ? (
                                         <img
                                           src={src}
-                                          alt={m.user?.name ?? m.user?.email ?? 'avatar'}
+                                          alt={userObj.name ?? userObj.email ?? 'avatar'}
                                           style={{width:32, height:32, objectFit:'cover', display:'block'}}
                                           onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                                         />
                                       ) : null;
                                     })()}
                                     <div style={{position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', backgroundColor:'#6366f1', color:'#fff', fontWeight:600}}>
-                                      {((m.user?.name ?? m.user?.email ?? 'U').trim()[0] || 'U').toUpperCase()}
+                                      {(((typeof m.user === 'string') ? '' : (m.user?.name ?? m.user?.email ?? 'U')) .trim()[0] || 'U').toUpperCase()}
                                     </div>
                                   </div>
-                                  <div>{m.user?.name ?? m.user?.email ?? '—'}</div>
+                                  <div>{(typeof m.user === 'string') ? (m.user) : (m.user?.name ?? m.user?.email ?? '—')}</div>
                                 </div>
                               </td>
-                              <td>{m.user?.email ?? '—'}</td>
+                              <td>{(typeof m.user === 'string') ? (m.user) : (m.user?.email ?? '—')}</td>
                               <td>
-                                {(isAdmin() || isOwner()) ? (
+                                {(isAdmin || isOwner) ? (
                                   (m.role === 'owner') ? (
                                     <strong>owner</strong>
                                   ) : (
@@ -327,7 +324,8 @@ const OrganizationSettings: React.FC = () => {
                                       onChange={(e) => {
                                         const newRole = e.target.value;
                                         if (!activeOrganization) return;
-                                        if (m.user?.id && user && m.user.id === user.id) {
+                                        const memberUserId = (typeof m.user === 'string') ? m.user : m.user?.id;
+                                        if (memberUserId && user && memberUserId === user.id) {
                                           showToast({ message: 'No puedes cambiar tu propio rol', variant: 'warning', title: 'Organización' });
                                           return;
                                         }
@@ -345,15 +343,16 @@ const OrganizationSettings: React.FC = () => {
                               </td>
                               <td>{m.status ?? '—'}</td>
                         <td className="text-end">
-                          {(isAdmin() || isOwner()) && (
+                          {(isAdmin || isOwner) && (
                             <>
                               <Button
                                 size="sm"
                                 variant="outline-danger"
-                                disabled={Boolean(m.user?.id && user && m.user.id === user.id)}
+                                disabled={Boolean(((typeof m.user === 'string') ? m.user : m.user?.id) && user && ((typeof m.user === 'string') ? m.user : m.user?.id) === user.id)}
                                 onClick={() => {
                                   if (!activeOrganization) return;
-                                  if (m.user?.id && user && m.user.id === user.id) {
+                                  const memberUserId = (typeof m.user === 'string') ? m.user : m.user?.id;
+                                  if (memberUserId && user && memberUserId === user.id) {
                                     showToast({ message: 'No puedes revocar tu propia membresía', variant: 'warning', title: 'Organización' });
                                     return;
                                   }
@@ -385,7 +384,7 @@ const OrganizationSettings: React.FC = () => {
           </Table>
         </Col>
       </Row>
-      <InviteMemberModal show={showInvite} onHide={() => setShowInvite(false)} onSuccess={() => fetchMembers()} />
+      <InviteMemberModal show={showInvite} onHide={() => setShowInvite(false)} onSuccess={async () => await fetchMembers()} />
 
       <ConfirmActionModal
         show={!!pendingRoleChange}
@@ -394,15 +393,18 @@ const OrganizationSettings: React.FC = () => {
         confirmVariant="primary"
         processing={processingRoleChange}
         onCancel={() => setPendingRoleChange(null)}
-        onConfirm={async () => {
+          onConfirm={async () => {
           const pending = pendingRoleChange;
           if (!pending || !activeOrganization) return;
           setProcessingRoleChange(true);
           try {
-            await apiClient.patch(`/organizations/${activeOrganization.id}/members/${pending.member.id}`, { role: pending.newRole });
+            await apiClient.patch(`/memberships/organization/${activeOrganization.id}/members/${pending.member.id}`, { role: pending.newRole });
             showToast({ message: 'Rol actualizado', variant: 'success', title: 'Organización' });
             setPendingRoleChange(null);
-            fetchMembers();
+            // Actualizar lista de miembros
+            await fetchMembers();
+            // Actualizar contexto solo si podría afectar permisos del usuario actual
+            await fetchActiveOrganization();
           } catch (err: unknown) {
             const msg = (err as Error)?.message ?? 'Error al actualizar rol';
             showToast({ message: msg, variant: 'danger', title: 'Organización' });
@@ -412,7 +414,7 @@ const OrganizationSettings: React.FC = () => {
         }}
       >
         <p>
-          ¿Confirmas cambiar el rol de <strong>{pendingRoleChange?.member.user?.name ?? pendingRoleChange?.member.user?.email}</strong> a <strong>{pendingRoleChange?.newRole}</strong>?
+          ¿Confirmas cambiar el rol de <strong>{(typeof pendingRoleChange?.member.user === 'string') ? pendingRoleChange?.member.user : (pendingRoleChange?.member.user?.name ?? pendingRoleChange?.member.user?.email)}</strong> a <strong>{pendingRoleChange?.newRole}</strong>?
         </p>
       </ConfirmActionModal>
 
@@ -428,10 +430,12 @@ const OrganizationSettings: React.FC = () => {
           if (!target || !activeOrganization) return;
           setProcessingRevoke(true);
           try {
-            await apiClient.delete(`/organizations/${activeOrganization.id}/members/${target.id}`);
+            // Endpoint correcto para revocar miembro
+            await apiClient.delete(`/memberships/organization/${activeOrganization.id}/members/${target.id}`);
             showToast({ message: 'Miembro revocado', variant: 'success', title: 'Organización' });
             setPendingRevoke(null);
-            fetchMembers();
+            // Solo actualizar lista de miembros, no el contexto (ya que no se puede revocar a uno mismo)
+            await fetchMembers();
           } catch (err: unknown) {
             const msg = (err as Error)?.message ?? 'Error al revocar';
             showToast({ message: msg, variant: 'danger', title: 'Organización' });
@@ -440,7 +444,7 @@ const OrganizationSettings: React.FC = () => {
           }
         }}
       >
-        <p>¿Confirmas revocar a <strong>{pendingRevoke?.user?.name ?? pendingRevoke?.user?.email}</strong> de la organización?</p>
+        <p>¿Confirmas revocar a <strong>{(typeof pendingRevoke?.user === 'string') ? pendingRevoke?.user : (pendingRevoke?.user?.name ?? pendingRevoke?.user?.email)}</strong> de la organización?</p>
       </ConfirmActionModal>
 
       <ConfirmActionModal
@@ -455,10 +459,11 @@ const OrganizationSettings: React.FC = () => {
           if (!target || !activeOrganization) return;
           setProcessingResend(true);
           try {
-            await apiClient.post(`/organizations/${activeOrganization.id}/members/${target.id}/resend`);
+            await apiClient.post(`/memberships/organization/${activeOrganization.id}/members/${target.id}/resend`);
             showToast({ message: 'Invitación reenviada', variant: 'success', title: 'Organización' });
             setPendingResend(null);
-            fetchMembers();
+            // Solo actualizar lista de miembros
+            await fetchMembers();
           } catch (err: unknown) {
             const msg = (err as Error)?.message ?? 'Error al reenviar invitación';
             showToast({ message: msg, variant: 'danger', title: 'Organización' });
@@ -467,8 +472,10 @@ const OrganizationSettings: React.FC = () => {
           }
         }}
       >
-        <p>¿Deseas reenviar la invitación a <strong>{pendingResend?.user?.name ?? pendingResend?.user?.email}</strong>?</p>
+        <p>¿Deseas reenviar la invitación a <strong>{(typeof pendingResend?.user === 'string') ? pendingResend.user : (pendingResend?.user?.name ?? pendingResend?.user?.email ?? '—')}</strong>?</p>
       </ConfirmActionModal>
+      </>
+      )}
       </Container>
     </MainLayout>
   );

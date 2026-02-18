@@ -1,0 +1,67 @@
+.textViewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background-color: #1e1e1e;
+}
+
+.iconButton {
+  color: #212529;
+  padding: 0.5rem;
+  text-decoration: none;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.iconButton:hover {
+  color: #000;
+  text-decoration: none;
+}
+
+.iconButton:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.contentContainer {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.codeBlock {
+  margin: 0 !important;
+  height: 100%;
+  overflow: auto;
+}
+
+.plainText {
+  margin: 0;
+  padding: 1rem;
+  color: #e0e0e0;
+  background-color: #1e1e1e;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  height: 100%;
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #e0e0e0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .plainText {
+    font-size: 0.75rem;
+  }
+}

@@ -1,9 +1,11 @@
 
 import React from 'react';
-import { Container, Row, Col, Button, Card, Navbar, Nav } from 'react-bootstrap';
+import { Container, Row, Col, Button, Card, Navbar, Nav, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
+import useOrganization from '../hooks/useOrganization';
+import { useInvitations } from '../hooks/useInvitations';
 import { HOME_FEATURES } from '../constants/homeFeatures';
 import { HOME_STATS } from '../constants/homeStats';
 import ContactForm, { type ContactFormData } from '../components/ContactForm';
@@ -12,6 +14,8 @@ import styles from './Home.module.css';
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout } = useAuth();
+  const { activeOrganization, organizations } = useOrganization();
+  const { pendingCount } = useInvitations();
 
   const handleLogout = async () => {
     try {
@@ -128,85 +132,203 @@ const Home: React.FC = () => {
       <Container fluid className={styles.mainContent}>
         {/* Hero Section */}
         <div className={styles.heroSection}>
-          <Row className="align-items-center">
-            <Col lg={6}>
-              <h1 className={styles.heroTitle}>
-                Gestiona tus Documentos con{' '}
-                <span className={styles.highlight}>Inteligencia Artificial</span>
-              </h1>
-              <p className={styles.heroSubtitle}>
-                CloudDocs Copilot organiza, clasifica y te ayuda a encontrar tus documentos 
-                de forma inteligente. Ahorra tiempo y mantén todo ordenado automáticamente.
-              </p>
-              <div className={styles.heroActions}>
-                <Button 
-                  variant="primary" 
-                  size="lg" 
-                  className={styles.btnPrimary}
-                  onClick={() => navigate('/register')}
-                >
-                  Comenzar Gratis
-                </Button>
-                <Button 
-                  variant="outline-secondary" 
-                  size="lg" 
-                  className={styles.btnSecondary}
-                  onClick={() => navigate('/login')}
-                >
-                  Iniciar Sesión
-                </Button>
-              </div>
-            </Col>
-            <Col lg={6} className="d-none d-lg-block">
-              <div className={styles.heroIllustration}>
-                <div className={styles.floatingCard}>📄</div>
-                <div className={styles.floatingCard}>📊</div>
-                <div className={styles.floatingCard}>📁</div>
-              </div>
-            </Col>
-          </Row>
-        </div>
-
-        {/* Stats Section */}
-        <div className={styles.statsSection}>
-          <Row className="g-4">
-            {HOME_STATS.map((stat, index) => (
-              <Col key={index} xs={6} lg={3}>
-                <div className={styles.statCard}>
-                  <div className={styles.statValue}>{stat.value}</div>
-                  <div className={styles.statLabel}>{stat.label}</div>
+          {!isAuthenticated ? (
+            // Hero para usuarios NO logueados
+            <Row className="align-items-center">
+              <Col lg={6}>
+                <h1 className={styles.heroTitle}>
+                  Gestiona tus Documentos con{' '}
+                  <span className={styles.highlight}>Inteligencia Artificial</span>
+                </h1>
+                <p className={styles.heroSubtitle}>
+                  CloudDocs Copilot organiza, clasifica y te ayuda a encontrar tus documentos 
+                  de forma inteligente. Ahorra tiempo y mantén todo ordenado automáticamente.
+                </p>
+                <div className={styles.heroActions}>
+                  <Button 
+                    variant="primary" 
+                    size="lg" 
+                    className={styles.btnPrimary}
+                    onClick={() => navigate('/register')}
+                  >
+                    Comenzar Gratis
+                  </Button>
+                  <Button 
+                    variant="outline-secondary" 
+                    size="lg" 
+                    className={styles.btnSecondary}
+                    onClick={() => navigate('/login')}
+                  >
+                    Iniciar Sesión
+                  </Button>
                 </div>
               </Col>
-            ))}
-          </Row>
+              <Col lg={6} className="d-none d-lg-block">
+                <div className={styles.heroIllustration}>
+                  <div className={styles.floatingCard}>📄</div>
+                  <div className={styles.floatingCard}>📊</div>
+                  <div className={styles.floatingCard}>📁</div>
+                </div>
+              </Col>
+            </Row>
+          ) : (
+            // Hero para usuarios LOGUEADOS
+            <Row className="align-items-center">
+              <Col lg={12}>
+                <div className="text-center mb-4">
+                  <h1 className={styles.heroTitle}>
+                    ¡Bienvenido de nuevo, <span className={styles.highlight}>{user?.name || 'Usuario'}!</span>
+                  </h1>
+                  <p className={styles.heroSubtitle}>
+                    {activeOrganization 
+                      ? `Trabajando en: ${activeOrganization.name}` 
+                      : organizations.length > 0 
+                        ? 'Selecciona una organización para comenzar' 
+                        : 'Crea o únete a una organización para empezar'}
+                  </p>
+                </div>
+
+                {/* Accesos Rápidos */}
+                <Row className="g-4 justify-content-center mt-4">
+                  <Col xs={12} sm={6} lg={3}>
+                    <Card 
+                      className={`${styles.quickAccessCard} h-100`}
+                      onClick={() => navigate('/dashboard')}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <Card.Body className="text-center p-4">
+                        <div className={styles.quickAccessIcon}>📊</div>
+                        <h5 className="mt-3 mb-2">Dashboard</h5>
+                        <p className="text-muted small mb-0">
+                          Ver tus documentos y actividad reciente
+                        </p>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+
+                  <Col xs={12} sm={6} lg={3}>
+                    <Card 
+                      className={`${styles.quickAccessCard} h-100`}
+                      onClick={() => navigate('/dashboard')}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <Card.Body className="text-center p-4">
+                        <div className={styles.quickAccessIcon}>📤</div>
+                        <h5 className="mt-3 mb-2">Subir Documentos</h5>
+                        <p className="text-muted small mb-0">
+                          Añade nuevos archivos a tu biblioteca
+                        </p>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+
+                  <Col xs={12} sm={6} lg={3}>
+                    <Card 
+                      className={`${styles.quickAccessCard} h-100`}
+                      onClick={() => navigate('/invitations')}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <Card.Body className="text-center p-4">
+                        <div className={styles.quickAccessIcon}>
+                          📨
+                          {pendingCount > 0 && (
+                            <Badge bg="danger" className="position-absolute top-0 start-100 translate-middle">
+                              {pendingCount}
+                            </Badge>
+                          )}
+                        </div>
+                        <h5 className="mt-3 mb-2">Invitaciones</h5>
+                        <p className="text-muted small mb-0">
+                          {pendingCount > 0 
+                            ? `${pendingCount} invitación${pendingCount !== 1 ? 'es' : ''} pendiente${pendingCount !== 1 ? 's' : ''}`
+                            : 'No tienes invitaciones'}
+                        </p>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+
+                  <Col xs={12} sm={6} lg={3}>
+                    <Card 
+                      className={`${styles.quickAccessCard} h-100`}
+                      onClick={() => navigate(activeOrganization ? '/organization/settings' : '/create-organization')}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <Card.Body className="text-center p-4">
+                        <div className={styles.quickAccessIcon}>⚙️</div>
+                        <h5 className="mt-3 mb-2">
+                          {activeOrganization ? 'Configuración' : 'Crear Organización'}
+                        </h5>
+                        <p className="text-muted small mb-0">
+                          {activeOrganization 
+                            ? 'Gestiona tu organización' 
+                            : 'Configura tu espacio de trabajo'}
+                        </p>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                </Row>
+
+                {/* Botón principal para ir al Dashboard */}
+                <div className="text-center mt-5">
+                  <Button 
+                    variant="primary" 
+                    size="lg" 
+                    className={styles.btnPrimary}
+                    onClick={() => navigate('/dashboard')}
+                  >
+                    Ir a Mi Dashboard →
+                  </Button>
+                </div>
+              </Col>
+            </Row>
+          )}
         </div>
+
+        {/* Stats Section - Solo para usuarios NO logueados */}
+        {!isAuthenticated && (
+          <div className={styles.statsSection}>
+            <Row className="g-4">
+              {HOME_STATS.map((stat, index) => (
+                <Col key={index} xs={6} lg={3}>
+                  <div className={styles.statCard}>
+                    <div className={styles.statValue}>{stat.value}</div>
+                    <div className={styles.statLabel}>{stat.label}</div>
+                  </div>
+                </Col>
+              ))}
+            </Row>
+          </div>
+        )}
 
         {/* Features Section */}
-        <div id="features" className={styles.featuresSection}>
-          <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>Características Principales</h2>
-            <p className={styles.sectionSubtitle}>
-              Todo lo que necesitas para gestionar tus documentos de forma eficiente
-            </p>
+        {!isAuthenticated && (
+          <div id="features" className={styles.featuresSection}>
+            <div className={styles.sectionHeader}>
+              <h2 className={styles.sectionTitle}>Características Principales</h2>
+              <p className={styles.sectionSubtitle}>
+                Todo lo que necesitas para gestionar tus documentos de forma eficiente
+              </p>
+            </div>
+            
+            <Row className="g-4">
+              {HOME_FEATURES.map((feature, index) => (
+                <Col key={index} xs={12} md={6} lg={4}>
+                  <Card className={styles.featureCard}>
+                    <Card.Body>
+                      <div className={styles.featureIcon}>{feature.icon}</div>
+                      <h3 className={styles.featureTitle}>{feature.title}</h3>
+                      <p className={styles.featureDescription}>{feature.description}</p>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
           </div>
-          
-          <Row className="g-4">
-            {HOME_FEATURES.map((feature, index) => (
-              <Col key={index} xs={12} md={6} lg={4}>
-                <Card className={styles.featureCard}>
-                  <Card.Body>
-                    <div className={styles.featureIcon}>{feature.icon}</div>
-                    <h3 className={styles.featureTitle}>{feature.title}</h3>
-                    <p className={styles.featureDescription}>{feature.description}</p>
-                  </Card.Body>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </div>
+        )}
 
-        {/* Pricing Section */}
-        <div id="pricing" className={styles.pricingSection}>
+        {/* Pricing Section - Solo para usuarios NO logueados */}
+        {!isAuthenticated && (
+          <div id="pricing" className={styles.pricingSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Planes y Precios</h2>
             <p className={styles.sectionSubtitle}>
@@ -310,6 +432,7 @@ const Home: React.FC = () => {
             </Col>
           </Row>
         </div>
+        )}
 
         {/* Contact Section */}
         <div id="contact" className={styles.contactSection}>
@@ -367,28 +490,61 @@ const Home: React.FC = () => {
 
         {/* CTA Section */}
         <div className={styles.ctaSection}>
-          <h2 className={styles.ctaTitle}>¿Listo para empezar?</h2>
-          <p className={styles.ctaSubtitle}>
-            Crea tu cuenta gratis y comienza a organizar tus documentos hoy mismo
-          </p>
-          <div className={styles.ctaActions}>
-            <Button 
-              variant="light" 
-              size="lg" 
-              className={styles.ctaButton}
-              onClick={() => navigate('/register')}
-            >
-              Crear Cuenta Gratis
-            </Button>
-            <Button 
-              variant="outline-light" 
-              size="lg" 
-              className={styles.ctaButtonSecondary}
-              onClick={() => navigate('/login')}
-            >
-              Ya tengo cuenta
-            </Button>
-          </div>
+          {!isAuthenticated ? (
+            <>
+              <h2 className={styles.ctaTitle}>¿Listo para empezar?</h2>
+              <p className={styles.ctaSubtitle}>
+                Crea tu cuenta gratis y comienza a organizar tus documentos hoy mismo
+              </p>
+              <div className={styles.ctaActions}>
+                <Button 
+                  variant="light" 
+                  size="lg" 
+                  className={styles.ctaButton}
+                  onClick={() => navigate('/register')}
+                >
+                  Crear Cuenta Gratis
+                </Button>
+                <Button 
+                  variant="outline-light" 
+                  size="lg" 
+                  className={styles.ctaButtonSecondary}
+                  onClick={() => navigate('/login')}
+                >
+                  Ya tengo cuenta
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className={styles.ctaTitle}>¡Continúa gestionando tus documentos!</h2>
+              <p className={styles.ctaSubtitle}>
+                {activeOrganization 
+                  ? `Accede a tu dashboard y sigue trabajando con ${activeOrganization.name}`
+                  : 'Configura tu espacio de trabajo y comienza a organizar tus documentos'}
+              </p>
+              <div className={styles.ctaActions}>
+                <Button 
+                  variant="light" 
+                  size="lg" 
+                  className={styles.ctaButton}
+                  onClick={() => navigate('/dashboard')}
+                >
+                  Ir a Dashboard
+                </Button>
+                {pendingCount > 0 && (
+                  <Button 
+                    variant="outline-light" 
+                    size="lg" 
+                    className={styles.ctaButtonSecondary}
+                    onClick={() => navigate('/invitations')}
+                  >
+                    Ver Invitaciones ({pendingCount})
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </Container>
 

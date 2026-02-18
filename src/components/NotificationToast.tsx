@@ -38,7 +38,7 @@ export function NotificationToast({
 
   return (
     <div aria-live={live} aria-atomic="true">
-      <ToastContainer position="top-end" className="p-3" style={{ zIndex: 1050, position: 'fixed' }}>
+      <ToastContainer position="top-end" className="p-3" style={{ zIndex: 2050, position: 'fixed' }}>
         <Toast 
           onClose={onClose} 
           show={show} 

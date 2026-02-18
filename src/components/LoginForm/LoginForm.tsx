@@ -5,6 +5,78 @@ import { useNavigate, Link } from "react-router-dom";
 import { usePageTitle } from "../../hooks/usePageInfoTitle";
 import { useAuth } from "../../hooks/useAuth";
 import { useFormValidation } from "../../hooks/useFormValidation";
+import axios from "axios";
+import type { AxiosError } from 'axios';
+
+
+function extractMessageFromData(data: unknown): string | undefined {
+  if (!data) return undefined;
+  if (typeof data === 'string') return data;
+  if (typeof data === 'object') {
+    const record = data as Record<string, unknown>;
+    const maybeMsg = record.message ?? record.error;
+    if (typeof maybeMsg === 'string') return maybeMsg;
+  }
+  return undefined;
+}
+
+function getHumanLoginError(err: unknown): string {
+  // Si NO es axios
+  if (!axios.isAxiosError(err)) {
+    return "Ocurrió un error inesperado. Intenta de nuevo.";
+  }
+
+  // A partir de aquí, `err` es un `AxiosError`
+  const axiosErr = err as AxiosError;
+  const status = axiosErr.response?.status;
+  const data = axiosErr.response?.data;
+
+  // Tu backend a veces manda { success:false, error:"Missing required fields" }
+  // o { message:"..." }
+  const raw = extractMessageFromData(data) || axiosErr.message || '';
+
+  const msg = String(raw).toLowerCase();
+
+  // Casos típicos del login
+  if (status === 400) {
+    if (msg.includes("missing required fields")) {
+      return "Completa tu correo y contraseña para iniciar sesión.";
+    }
+    return "Revisa los datos ingresados e inténtalo de nuevo.";
+  }
+
+  if (status === 401) {
+    return "Correo o contraseña incorrectos.";
+  }
+
+  if (status === 404) {
+    const url = `${err.config?.baseURL ?? ""}${err.config?.url ?? ""}`;
+
+    // Si el 404 viene del login, para el usuario significa credenciales inválidas
+    // (muchos backends responden 404 cuando el usuario no existe).
+    if (url.includes("/auth/login")) {
+      return "Correo o contraseña incorrectos.";
+    }
+
+    // Para cualquier otra ruta, sí es un “no encontrado” real
+    return "No se encontró el recurso solicitado.";
+  }
+
+  // Errores de red
+  if (err.code === "ERR_NETWORK" || msg.includes("network error") || msg.includes("connection refused")) {
+    return "No se pudo conectar con el servidor. Verifica que el backend esté corriendo.";
+  }
+
+  // Servidor
+  if (status && status >= 500) {
+    return "El servidor tuvo un problema. Intenta nuevamente en unos minutos.";
+  }
+
+  // Fallback: si el backend manda algo útil (aunque venga en inglés)
+  return /*raw ||*/ "No se pudo iniciar sesión. Intenta de nuevo.";
+}
+
+
 
 export default function LoginForm() {
   const navigate = useNavigate();
@@ -39,30 +111,36 @@ export default function LoginForm() {
     setServerError(null);
 
     // validate email using hook helper
-    const emailValid = validateEmail(email.trim().toLowerCase());
-    if (!emailValid) {
-      setFieldError('email', 'Ingresa un correo válido.');
-    } else {
-      clearFieldError('email');
-    }
+   // 1) Validar email
+  const emailNormalized = email.trim().toLowerCase();
+  const emailValid = validateEmail(emailNormalized);
 
-    if (!emailValid) return;
+  if (!emailValid) {
+    setFieldError("email", "Ingresa un correo válido.");
+  } else {
+    clearFieldError("email");
+  }
 
-    try {
-      setLoading(true);
-      await login(email.trim().toLowerCase(), password);
-      navigate("/dashboard", { replace: true });
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setServerError(err.message);
-      } else if (typeof err === "string") {
-        setServerError(err);
-      } else {
-        setServerError("No se pudo iniciar sesión.");
-      }
-    } finally {
-      setLoading(false);
-    }
+  // 2) Validar password requerido
+  const passValid = password.trim().length > 0;
+  if (!passValid) {
+    setFieldError("password", "Ingresa tu contraseña.");
+  } else {
+    clearFieldError("password");
+  }
+
+  // 3) Si falla algo, no pegarle al backend
+  if (!emailValid || !passValid) return;
+
+  try {
+    setLoading(true);
+    await login(emailNormalized, password);
+    navigate("/dashboard", { replace: true });
+  } catch (err: unknown) {
+    setServerError(getHumanLoginError(err));
+  } finally {
+    setLoading(false);
+  }
   };
 
   return (
@@ -134,10 +212,14 @@ export default function LoginForm() {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                
+                onBlur={(e) => handleBlur('password', e.target.value)}
                 autoComplete="current-password"
               />
-              
+
+              {errors.password && (
+              <div style={{ color: "#b91c1c", fontSize: "0.875rem" }}>{errors.password}</div>
+              )}
+
             </div>
 
             {/* Remember + Forgot */}

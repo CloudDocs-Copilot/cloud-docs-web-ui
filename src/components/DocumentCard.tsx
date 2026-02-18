@@ -4,25 +4,31 @@ import type { Document } from '../types/document.types';
 import { getFileTypeFromMime, formatFileSize } from '../types/document.types';
 import { useDocumentDeletion } from '../hooks/useDocumentDeletion';
 import { getDocumentDisplayName } from '../utils/documentHelper';
+import { DocumentPreviewModal } from './DocumentPreview';
+import type { PreviewDocument } from '../types/preview.types';
+import { previewService } from '../services/preview.service';
 import styles from './DocumentCard.module.css';
 
 interface DocumentCardProps {
   document: Document;
   onDeleted?: () => void;
+  canDelete?: boolean;
 }
 
-const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
+const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDelete = false }) => {
   const { moveToTrash, loading } = useDocumentDeletion();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   /**
    * Maneja el movimiento a papelera
    */
   const handleMoveToTrash = async () => {
-    const deleted = await moveToTrash(document._id);
+    const documentId = document.id ?? document._id ?? '';
+    const deleted = await moveToTrash(documentId);
     if (deleted) {
       setShowDeleteModal(false);
-      onDeleted?.(); // Notificar al padre que el documento fue eliminado
+      onDeleted?.();
     }
   };
 
@@ -75,82 +81,167 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
   const fileType = getFileTypeFromMime(document.mimeType);
   const folderName = getFolderName(document.folder);
 
+  /**
+   * Convertir Document a PreviewDocument para el modal de preview
+   */
+  const previewDocument: PreviewDocument = {
+    id: document.id ?? document._id ?? '', // Usar _id si id no existe (MongoDB)
+    filename: document.filename || document.originalname || 'unknown',
+    originalname: document.originalname,
+    mimeType: document.mimeType,
+    size: document.size,
+    url: document.url,
+    path: document.path
+  };
+
+  /**
+   * Verificar si el documento puede tener preview
+   */
+  const canPreview = previewService.canPreview(previewDocument);
+
+  /**
+   * Abrir modal de preview
+   */
+  const handlePreviewClick = () => {
+    if (canPreview) {
+      setShowPreview(true);
+    }
+  };
+
+  /**
+   * Cerrar modal de preview
+   */
+  const handleClosePreview = () => {
+    setShowPreview(false);
+  };
+
+  /**
+   * Descargar documento
+   */
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const downloadUrl = previewService.getDownloadUrl(previewDocument);
+    window.open(downloadUrl, '_blank');
+  };
+
   return (
     <>
-      <Card className={styles.documentCard}>
+      <Card className={styles.documentCard} onClick={handlePreviewClick} style={{ cursor: canPreview ? 'pointer' : 'default' }}>
+        <Card.Body className={styles.cardBody}>
+          {/* Ícono del documento */}
+          <div className={styles.iconWrapper}>
+            {getFileIcon(fileType)}
+          </div>
+
+          {/* Nombre del documento */}
+          <h3 className={styles.documentTitle}>
+            {document.originalname || document.filename || 'Sin nombre'}
+          </h3>
+
+          {/* Badge de categoría con ícono */}
+          <div className={styles.badgeWrapper}>
+            <Badge 
+              className={styles.categoryBadge}
+              style={{ backgroundColor: getCategoryColor(folderName) }}
+            >
+              <span className={styles.badgeIcon}>✨</span>
+              {folderName}
+            </Badge>
+          </div>
+
+          {/* Footer con fecha y tamaño */}
+          <div className={styles.cardFooter}>
+            <span className={styles.documentDate}>
+              {formatDate(document.uploadedAt)}
+            </span>
+            <span className={styles.documentSize}>
+              {formatFileSize(document.size)}
+            </span>
+          </div>
+        </Card.Body>
+
+        {/* Botones de opciones (aparecen en hover) */}
         <div className={styles.cardOptions}>
-          <button className={styles.optionBtn} title="Compartir">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" strokeWidth="2" strokeLinecap="round"/>
-              <polyline points="16 6 12 2 8 6" strokeWidth="2" strokeLinecap="round"/>
-              <line x1="12" y1="2" x2="12" y2="15" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </button>
-          <button className={styles.optionBtn} title="Descargar">
+          {canPreview && (
+            <button
+              className={styles.optionBtn}
+              title="Vista previa"
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePreviewClick();
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" strokeWidth="2" strokeLinecap="round"/>
+                <circle cx="12" cy="12" r="3" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          )}
+          <button 
+            className={styles.optionBtn} 
+            title="Descargar"
+            onClick={handleDownload}
+          >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeWidth="2" strokeLinecap="round"/>
               <polyline points="7 10 12 15 17 10" strokeWidth="2" strokeLinecap="round"/>
               <line x1="12" y1="15" x2="12" y2="3" strokeWidth="2" strokeLinecap="round"/>
             </svg>
           </button>
-          <button 
-            className={styles.optionBtn} 
-            title="Mover a papelera"
-            onClick={() => setShowDeleteModal(true)}
-            disabled={loading}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-          </button>
+
+          {canDelete && (
+            <button
+              className={styles.optionBtn}
+              title="Mover a papelera"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteModal(true);
+              }}
+              disabled={loading}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          <h6 className={styles.documentName}>{document.originalname || document.filename}</h6>
+          )}
         </div>
-        
-        <Card.Body className={styles.cardBody}>
-          <div className={styles.documentIconWrapper}>
-            {getFileIcon(fileType)}
-          </div>
-          <h6 className={styles.documentName}>{getDocumentDisplayName(document)}</h6>
-          <Badge 
-            className={styles.documentBadge} 
-            style={{ backgroundColor: getCategoryColor(folderName) }}
-          >
-            ⭐ {folderName}
-          </Badge>
-          <div className={styles.documentMeta}>
-            <span className={styles.documentDate}>{formatDate(document.uploadedAt)}</span>
-            <span className={styles.documentSize}>{formatFileSize(document.size)}</span>
-          </div>
-        </Card.Body>
       </Card>
 
-      {/* Modal de confirmación */}
-      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Mover a papelera</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <p>¿Deseas mover este documento a la papelera?</p>
-          <p className="text-muted">
+      {/* Modal de confirmación de eliminación */}
+      {canDelete && (
+        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Mover a papelera</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <p>¿Deseas mover este documento a la papelera?</p>
+            <p className="text-muted">
             <strong>{getDocumentDisplayName(document)}</strong>
-          </p>
-          <p className="text-muted small">
-            El documento se eliminará automáticamente después de 30 días. Puedes restaurarlo desde la papelera antes de ese tiempo.
-          </p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-            Cancelar
-          </Button>
-          <Button 
-            variant="danger" 
-            onClick={handleMoveToTrash}
-            disabled={loading}
-          >
-            {loading ? 'Moviendo...' : 'Mover a papelera'}
-          </Button>
-        </Modal.Footer>
-      </Modal>
+            </p>
+            <p className="text-muted small">
+              El documento se eliminará automáticamente después de 30 días. Puedes restaurarlo desde la papelera antes de
+              ese tiempo.
+            </p>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+              Cancelar
+            </Button>
+            <Button variant="danger" onClick={handleMoveToTrash} disabled={loading}>
+              {loading ? 'Moviendo...' : 'Mover a papelera'}
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
+
+      {/* Modal de preview */}
+      <DocumentPreviewModal
+        show={showPreview}
+        onHide={handleClosePreview}
+        document={previewDocument}
+      />
     </>
   );
 };

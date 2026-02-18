@@ -55,14 +55,22 @@ function normalizeError(err: unknown): Error {
 }
 
 export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+
+  const { isAuthenticated, user } = useAuth();
   const { showToast } = useToast();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [activeOrganization, setActiveOrganizationState] = useState<Organization | null>(null);
   const [membership, setMembership] = useState<Membership | null>(null);
   const [memberships, setMemberships] = useState<MembershipWithOrgDTO[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [initializing, setInitializing] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+
+  const applyActiveOrgRoleMapping = useCallback((org: Organization | null, role?: string | null): void => {
+    if (!org) return;
+    const mappedRole = String(role || (membership as Membership)?.role || 'member');
+    setActiveOrganizationState({ ...(org as Organization), membershipRole: mappedRole, role: mappedRole } as unknown as Organization);
+  }, [membership]);
 
   const fetchOrganizations = useCallback(async (): Promise<void> => {
     console.debug('OrganizationProvider: fetchOrganizations start');
@@ -92,6 +100,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             joinedAt: found.joinedAt,
           };
           setMembership(normalized);
+          applyActiveOrgRoleMapping(activeOrganization as Organization, normalized.role);
         }
       }
     } catch (err: unknown) {
@@ -99,7 +108,8 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } finally {
       setLoading(false);
     }
-  }, [activeOrganization]);
+  }, [activeOrganization, applyActiveOrgRoleMapping]);
+
  const fetchActiveOrganization = useCallback(async (): Promise<void> => {
     console.debug('OrganizationProvider: fetchActiveOrganization start');
     setLoading(true);
@@ -113,7 +123,8 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (data && data.success && data.organizationId) {
         const orgId = data.organizationId;
         const orgRes: AxiosResponse<GetOrganizationResponse> = await apiClient.get(`/organizations/${orgId}`);
-        setActiveOrganizationState(orgRes.data.organization as Organization);
+        const org = orgRes.data.organization as Organization;
+        setActiveOrganizationState(org as Organization);
         // Try to reuse already-loaded memberships to set the membership for the active org
         let existing = memberships.find((m) => (m.organization?.id === orgId) && m.status === 'active');
         if (!existing) {
@@ -140,6 +151,9 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             joinedAt: existing.joinedAt,
           };
           setMembership(normalized);
+          applyActiveOrgRoleMapping(org as Organization, normalized.role);
+        } else {
+          applyActiveOrgRoleMapping(org as Organization, null);
         }
         try { localStorage.setItem(ACTIVE_ORG_STORAGE_KEY, orgId); } catch { console.log('localStorage error'); }
         return;
@@ -150,7 +164,9 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (stored) {
         try {
           const orgRes: AxiosResponse<GetOrganizationResponse> = await apiClient.get(`/organizations/${stored}`);
-          setActiveOrganizationState(orgRes.data.organization as Organization);
+          const org = orgRes.data.organization as Organization;
+          setActiveOrganizationState(org as Organization);
+          applyActiveOrgRoleMapping(org as Organization, membership?.role ?? null);
           return;
         } catch  {
           try { localStorage.removeItem(ACTIVE_ORG_STORAGE_KEY); } catch { /* ignore */ }
@@ -165,13 +181,15 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } finally {
       setLoading(false);
     }
-  }, [memberships]);
+  }, [memberships, applyActiveOrgRoleMapping, membership]);
+
   const validateActiveMembership = useCallback(async (): Promise<void> => {
     if (!activeOrganization) return;
     console.debug('OrganizationProvider: validateActiveMembership for', activeOrganization?.id);
 
     // if we already have a membership matching the active org and it's active, keep it
     if (membership && String(membership.organizationId) === String(activeOrganization.id) && membership.status === 'active') {
+      applyActiveOrgRoleMapping(activeOrganization as Organization, membership.role);
       return;
     }
 
@@ -187,6 +205,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             joinedAt: found.joinedAt,
           };
       setMembership(normalized);
+      applyActiveOrgRoleMapping(activeOrganization as Organization, normalized.role);
       return;
     }
 
@@ -211,6 +230,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           joinedAt: foundItem.joinedAt,
         };
         setMembership(normalized);
+        applyActiveOrgRoleMapping(activeOrganization as Organization, normalized.role);
         return;
       }
 
@@ -223,6 +243,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           if (wrapped.membership && String(wrapped.membership.organizationId) === String(activeOrganization.id) && wrapped.membership.status === 'active') {
             setMembership(wrapped.membership as Membership);
             setActiveOrganizationState(wrapped.organization ?? null);
+            applyActiveOrgRoleMapping((wrapped.organization ?? activeOrganization) as Organization, wrapped.membership.role);
             try { localStorage.setItem(ACTIVE_ORG_STORAGE_KEY, wrapped.organization?.id || ''); } catch { /* noop */ }
             return;
           }
@@ -239,6 +260,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             };
             setMembership(normalized);
             setActiveOrganizationState(found2.organization ?? null);
+            applyActiveOrgRoleMapping((found2.organization ?? activeOrganization) as Organization, normalized.role);
             try { localStorage.setItem(ACTIVE_ORG_STORAGE_KEY, found2.organization?.id || ''); } catch { /* noop */ }
             return;
           }
@@ -248,6 +270,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           if (orgId && String(orgId) === String(activeOrganization.id)) {
             const orgRes = await apiClient.get<GetOrganizationResponse>(`/organizations/${orgId}`);
             setActiveOrganizationState(orgRes.data.organization);
+            applyActiveOrgRoleMapping(orgRes.data.organization as Organization, membership?.role ?? null);
             try { localStorage.setItem(ACTIVE_ORG_STORAGE_KEY, orgId); } catch { /* noop */ }
             return;
           }
@@ -256,6 +279,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           if (orgId && String(orgId) === String(activeOrganization.id)) {
             const orgRes = await apiClient.get<GetOrganizationResponse>(`/organizations/${orgId}`);
             setActiveOrganizationState(orgRes.data.organization);
+            applyActiveOrgRoleMapping(orgRes.data.organization as Organization, membership?.role ?? null);
             try { localStorage.setItem(ACTIVE_ORG_STORAGE_KEY, orgId); } catch { /* noop */ }
             return;
           }
@@ -270,7 +294,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } catch (err) {
       setError(normalizeError(err));
     }
-  }, [activeOrganization, membership, memberships]);
+  }, [activeOrganization, membership, memberships, applyActiveOrgRoleMapping]);
 
  
 
@@ -285,6 +309,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     try {
       // apply optimistic UI update immediately
       setActiveOrganizationState(optimisticOrg);
+      applyActiveOrgRoleMapping(optimisticOrg as Organization, membership?.role ?? null);
       try { localStorage.setItem(ACTIVE_ORG_STORAGE_KEY, orgId); } catch { console.log('localStorage error'); }
 
       // request server-side change
@@ -294,6 +319,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const res: AxiosResponse<GetOrganizationResponse> = await apiClient.get(`/organizations/${orgId}`);
       const org = res.data.organization as Organization;
       setActiveOrganizationState(org);
+      applyActiveOrgRoleMapping(org as Organization, membership?.role ?? null);
       try { localStorage.setItem(ACTIVE_ORG_STORAGE_KEY, org.id); } catch { console.log('localStorage error'); }
 
       // refresh membership info for the active org (server may return this elsewhere)
@@ -306,6 +332,9 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } catch (err: unknown) {
       // rollback optimistic update
       setActiveOrganizationState(previousActive ?? null);
+      if (previousActive) {
+        applyActiveOrgRoleMapping(previousActive as Organization, membership?.role ?? null);
+      }
       try {
         if (previousActive) {
           localStorage.setItem(ACTIVE_ORG_STORAGE_KEY, previousActive.id);
@@ -331,7 +360,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } finally {
       setLoading(false);
     }
-  }, [activeOrganization, organizations, fetchActiveOrganization, showToast]);
+  }, [activeOrganization, organizations, fetchActiveOrganization, showToast, applyActiveOrgRoleMapping, membership]);
 
   const createOrganization = useCallback(async (payload: CreateOrganizationPayload): Promise<Organization> => {
     setLoading(true);
@@ -361,13 +390,15 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       const id = orgId || activeOrganization?.id;
       if (!id) return;
       const res: AxiosResponse<GetOrganizationResponse> = await apiClient.get(`/organizations/${id}`);
-      setActiveOrganizationState(res.data.organization as Organization);
+      const org = res.data.organization as Organization;
+      setActiveOrganizationState(org);
+      applyActiveOrgRoleMapping(org as Organization, membership?.role ?? null);
     } catch (err: unknown) {
       setError(normalizeError(err));
     } finally {
       setLoading(false);
     }
-  }, [activeOrganization]);
+  }, [activeOrganization, applyActiveOrgRoleMapping, membership]);
 
   const clearOrganization = useCallback(() => {
     setActiveOrganizationState(null);
@@ -383,40 +414,53 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return r.includes(String(membership.role));
   }, [membership]);
 
-  const isAdmin = useCallback(() => hasRole(['admin', 'owner']), [hasRole]);
-  const isOwner = useCallback(() => hasRole(['owner']), [hasRole]);
+  const isAdmin = useMemo(() => {
+    if (!membership) return false;
+    return ['admin', 'owner'].includes(String(membership.role));
+  }, [membership]);
+  
+  const isOwner = useMemo(() => {
+    if (!membership) return false;
+    return membership.role === 'owner';
+  }, [membership]);
 
   // Initialize when user authenticates
   useEffect(() => {
-    if (!isAuthenticated) {
-      // clear local state when logged out
+    if (!isAuthenticated || !user) {
+      // clear local state when logged out or no user
       setOrganizations([]);
       setActiveOrganizationState(null);
       setMembership(null);
+      setMemberships([]);
       setError(null);
+      setLoading(false);
+      setInitializing(false);
       return;
     }
     // fetch organizations and active org in sequence and validate membership
     const init = async () => {
+      setInitializing(true);
       try {
         await fetchOrganizations();
         await fetchActiveOrganization();
         await validateActiveMembership();
       } catch (e) {
         setError(normalizeError(e));
+      } finally {
+        setInitializing(false);
       }
     };
 
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.id]);
 
   const value = useMemo<OrgContextValue>(
     () => ({
       organizations,
       activeOrganization,
       membership,
-      loading,
+      loading: loading || initializing,
       error,
       fetchOrganizations,
       fetchActiveOrganization,
@@ -428,7 +472,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       isAdmin,
       isOwner,
     }),
-    [organizations, activeOrganization, membership, loading, error, fetchOrganizations, fetchActiveOrganization, setActiveOrganization, createOrganization, refreshOrganization, clearOrganization, hasRole, isAdmin, isOwner]
+    [organizations, activeOrganization, membership, loading, initializing, error, fetchOrganizations, fetchActiveOrganization, setActiveOrganization, createOrganization, refreshOrganization, clearOrganization, hasRole, isAdmin, isOwner]
   );
 
   return <OrganizationContext.Provider value={value}>{children}</OrganizationContext.Provider>;

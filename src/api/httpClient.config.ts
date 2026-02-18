@@ -1,27 +1,6 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type InternalAxiosRequestConfig, type AxiosError } from 'axios';
 import type { ApiErrorResponse } from '../types/api.types';
-
-/**
- * Configuración base de la instancia de axios
- */
-// Use environment variable for tests (process.env) and fallback to default.
-// Prefer process.env for Jest/Node; in Vite the developer build can still
-// inject the real URL at build time. This avoids TypeScript errors during
-// tests about `import.meta` when test tsconfig uses CommonJS.
-const getEnvVar = (key: string): string | undefined => {
-  const meta = (import.meta as unknown) as { env?: Record<string, unknown> } | undefined;
-  if (meta?.env && typeof meta.env[key] === 'string') {
-    return meta.env[key] as string;
-  }
-  const proc = (globalThis as unknown as { process?: { env?: Record<string, unknown> } }).process;
-  if (proc?.env && typeof proc.env[key] === 'string') {
-    return proc.env[key] as string;
-  }
-  return undefined;
-};
-
-const API_BASE_URL = getEnvVar('VITE_API_BASE_URL') ?? 'http://localhost:4000/api';
-const REQUEST_TIMEOUT_MS = 30000; // 30 segundos
+import { API_BASE_URL, REQUEST_TIMEOUT_MS } from '../config/env';
 
 /**
  * Variable para almacenar el token CSRF en memoria

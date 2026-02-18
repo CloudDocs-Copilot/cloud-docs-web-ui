@@ -11,12 +11,14 @@ import PrivateRoute from './components/PrivateRoute'
 import ConfirmAccount from './pages/ConfirmAccount'
 import CreateOrganization from './pages/CreateOrganization'
 import NoOrganization from './pages/NoOrganization'
-import RequireOrganization from './components/RequireOrganization'
+import RequireOrganization from './components/Organization/RequireOrganization'
 import OrganizationSettings from './pages/OrganizationSettings'
+import PendingInvitations from './pages/PendingInvitations'
 import TrashPage from './pages/TrashPage'
 
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
+import SharedDocs from './pages/SharedDocs';
 
 
 function App() {
@@ -60,6 +62,8 @@ function App() {
         <Route path="/create-organization" element={<PrivateRoute><CreateOrganization /></PrivateRoute>} />
         <Route path="/no-organization" element={<PrivateRoute><NoOrganization /></PrivateRoute>} />
         <Route path="/organization/settings" element={<PrivateRoute><RequireOrganization><OrganizationSettings/></RequireOrganization></PrivateRoute>} />
+        <Route path="/invitations" element={<PrivateRoute><PendingInvitations /></PrivateRoute>} />
+        <Route path="/shared" element={<PrivateRoute><SharedDocs /></PrivateRoute>} />
       <Route path="/auth/confirmed" element={<ConfirmAccount />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

@@ -49,6 +49,24 @@ const SearchPage: React.FC = () => {
   };
 
   /**
+   * Obtiene la etiqueta elegante del tipo de archivo
+   */
+  const getFileTypeLabel = (mimeType: string): string => {
+    if (mimeType.includes('pdf')) return 'PDF';
+    if (mimeType.includes('word') || mimeType.includes('document')) return 'Word';
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'Excel';
+    if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'PowerPoint';
+    if (mimeType.includes('text/plain')) return 'Texto';
+    if (mimeType.includes('image/jpeg')) return 'JPEG';
+    if (mimeType.includes('image/png')) return 'PNG';
+    if (mimeType.includes('image/gif')) return 'GIF';
+    
+    // Fallback: usar la extensión del mimeType
+    const extension = mimeType.split('/')[1];
+    return extension ? extension.toUpperCase() : 'Archivo';
+  };
+
+  /**
    * Obtiene el ícono del tipo de archivo
    */
   const getFileIcon = (mimeType: string): string => {
@@ -184,43 +202,31 @@ const SearchPage: React.FC = () => {
     try {
       console.log('🔽 Iniciando descarga:', { docId, filename });
       
-      const response = await apiClient.get(`/documents/download/${docId}`, {
-        responseType: 'blob',
-        timeout: 30000 // 30 segundos timeout
-      });
+      // Usar window.open para descargas autenticadas
+      const downloadUrl = `/api/documents/download/${docId}`;
+      const fullUrl = `${apiClient.defaults.baseURL}${downloadUrl}`;
       
-      console.log('✅ Respuesta de descarga recibida:', {
-        status: response.status,
-        contentType: response.headers['content-type'],
-        size: response.data.size
-      });
+      console.log('📁 URL de descarga:', fullUrl);
       
-      // Crear un enlace temporal para descargar
-      const blob = new Blob([response.data]);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
+      // Abrir en nueva ventana para descarga directa
+      const downloadWindow = window.open(fullUrl, '_blank');
       
-      // Usar el filename original o uno por defecto
-      const downloadFilename = filename || `documento_${docId}`;
-      link.setAttribute('download', downloadFilename);
+      if (!downloadWindow) {
+        setError('No se pudo iniciar la descarga. Verifica que no estén bloqueadas las ventanas emergentes.');
+        return;
+      }
       
-      // Añadir al DOM temporalmente
-      document.body.appendChild(link);
-      link.click();
+      // Cerrar la ventana después de un momento para limpiar
+      setTimeout(() => {
+        downloadWindow.close();
+      }, 3000);
       
-      // Limpiar
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      console.log('✅ Descarga iniciada correctamente para:', downloadFilename);
+      console.log('✅ Descarga iniciada correctamente para:', filename || 'archivo');
       
     } catch (error: any) {
       console.error('❌ Error al descargar documento:', error);
-      const errorMsg = error.response?.status === 404 
-        ? 'El documento no fue encontrado'
-        : error.response?.data?.message || error.message || 'Error desconocido al descargar';
-      setError(`Error al descargar el documento: ${errorMsg}`);
+      const errorMsg = 'Error al descargar el documento. Inténtalo de nuevo.';
+      setError(errorMsg);
     }
   }, []);
 
@@ -422,9 +428,8 @@ const SearchPage: React.FC = () => {
                               <Badge 
                                 style={{ backgroundColor: getFileTypeColor(doc.mimeType) }}
                                 className="me-2"
-                                title={`MIME Type: ${doc.mimeType}`}
                               >
-                                {doc.mimeType ? doc.mimeType.split('/')[1]?.toUpperCase() || 'FILE' : 'UNKNOWN'}
+                                {getFileTypeLabel(doc.mimeType)}
                               </Badge>
                               <span className="text-muted me-2">
                                 {doc.size ? formatFileSize(doc.size) : 'Tamaño desconocido'}
@@ -432,13 +437,6 @@ const SearchPage: React.FC = () => {
                               <span className="text-muted">
                                 {doc.uploadedAt ? formatDate(doc.uploadedAt) : 'Fecha desconocida'}
                               </span>
-                              {/* Debug info */}
-                              <div className="mt-1">
-                                <small className="text-muted">ID: {doc.id}</small>
-                                {doc.mimeType && (
-                                  <small className="text-muted ms-2">MIME: {doc.mimeType}</small>
-                                )}
-                              </div>
                             </div>
                             
                             {/* Mostrar snippet del contenido si existe */}

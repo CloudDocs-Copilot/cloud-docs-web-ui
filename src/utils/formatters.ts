@@ -28,21 +28,24 @@ export const formatDate = (dateInput: string | Date): string => {
 
   const now = new Date();
   const diffTime = Math.abs(now.getTime() - date.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-  // Si es hoy
-  if (diffDays === 0 || diffDays === 1) {
-    return 'Hoy';
+  // Si es hoy (mostrar hora)
+  if (diffDays === 0) {
+    return date.toLocaleTimeString('es-ES', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
   }
   
   // Si es ayer
-  if (diffDays === 2) {
+  if (diffDays === 1) {
     return 'Ayer';
   }
   
   // Si es esta semana
   if (diffDays <= 7) {
-    return `Hace ${diffDays - 1} días`;
+    return `Hace ${diffDays} días`;
   }
   
   // Si es este año

@@ -15,6 +15,7 @@ import RequireOrganization from './components/Organization/RequireOrganization'
 import OrganizationSettings from './pages/OrganizationSettings'
 import PendingInvitations from './pages/PendingInvitations'
 import TrashPage from './pages/TrashPage'
+import SearchPage from './pages/SearchPage'
 
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
@@ -46,6 +47,16 @@ function App() {
           <PrivateRoute>
             <RequireOrganization>
               <TrashPage />
+            </RequireOrganization>
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/search"
+        element={
+          <PrivateRoute>
+            <RequireOrganization>
+              <SearchPage />
             </RequireOrganization>
           </PrivateRoute>
         }

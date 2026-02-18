@@ -1,0 +1,298 @@
+/* SearchPage.module.css */
+.searchContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.searchHeader {
+  margin-bottom: 30px;
+}
+
+.searchHeader h2 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.titleIcon {
+  width: 24px;
+  height: 24px;
+  color: #3498db;
+}
+
+.searchForm {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.searchInputWrapper {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.searchInput {
+  flex: 1;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  padding: 12px 16px;
+  font-size: 16px;
+}
+
+.searchInput:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+.searchButton {
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.filterSelect, 
+.dateInput {
+  border-radius: 6px;
+}
+
+.clearButton {
+  width: 100%;
+  border-radius: 6px;
+}
+
+.searchStats {
+  margin: 15px 0;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.loadingState {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6c757d;
+}
+
+.emptyIcon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}
+
+.resultsContainer {
+  margin-top: 20px;
+}
+
+.resultCard {
+  margin-bottom: 15px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  transition: box-shadow 0.2s;
+}
+
+.resultCard:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.resultHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .resultHeader {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .fileInfo {
+    width: 100%;
+  }
+  
+  .resultActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+.fileInfo {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex: 1;
+}
+
+.fileIcon {
+  font-size: 20px;
+  margin-top: 2px;
+}
+
+.fileName {
+  margin: 0 0 5px 0;
+  font-weight: 600;
+  color: #2c3e50;
+  line-height: 1.3;
+}
+
+.fileMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.resultActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: flex-start;
+  margin-top: 5px;
+}
+
+.actionButton {
+  white-space: nowrap;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  min-width: auto;
+}
+
+@media (max-width: 768px) {
+  .resultActions {
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+  }
+  
+  .actionButton {
+    width: 100%;
+  }
+}
+
+.highlight {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #f1f3f4;
+}
+
+.highlightText {
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  line-height: 1.4;
+  margin-top: 5px;
+}
+
+.highlightText mark {
+  background: #fff3cd;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+.historyCard {
+  margin-bottom: 20px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+}
+
+.historyItem {
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-bottom: 4px;
+}
+
+.historyItem:hover {
+  background-color: #f8f9fa;
+}
+
+.historyItem:last-child {
+  margin-bottom: 0;
+}
+
+.historyQuery {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2c3e50;
+  margin-bottom: 2px;
+}
+
+.tipsCard {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+}
+
+.tipsList {
+  font-size: 13px;
+  line-height: 1.4;
+  margin-bottom: 0;
+}
+
+.tipsList li {
+  margin-bottom: 8px;
+}
+
+.contentSnippet {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border-left: 3px solid #007bff;
+}
+
+.contentSnippet small {
+  font-style: italic;
+}
+
+.searchStats {
+  background-color: #e9ecef;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.tipsList li:last-child {
+  margin-bottom: 0;
+}
+
+.tipsList code {
+  background: #f1f3f4;
+  padding: 2px 4px;
+  border-radius: 2px;
+  font-size: 12px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .searchContainer {
+    padding: 15px;
+  }
+  
+  .searchInputWrapper {
+    flex-direction: column;
+  }
+  
+  .resultHeader {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .resultActions {
+    align-self: flex-start;
+  }
+}

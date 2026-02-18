@@ -3,6 +3,7 @@ import { Card, Badge, Modal, Button } from 'react-bootstrap';
 import type { Document } from '../types/document.types';
 import { getFileTypeFromMime, formatFileSize } from '../types/document.types';
 import { apiClient } from '../api';
+import { getDocumentDisplayName } from '../utils/documentHelper';
 import { DocumentPreviewModal } from './DocumentPreview';
 import type { PreviewDocument } from '../types/preview.types';
 import { previewService } from '../services/preview.service';
@@ -195,20 +196,20 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
           </button>
 
           {canDelete && (
-            <button
+            <><button
               className={styles.optionBtn}
               title="Mover a papelera"
               onClick={(e) => {
                 e.stopPropagation();
                 setShowDeleteModal(true);
-              }}
+              } }
               disabled={loading}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="2" strokeLinecap="round"/>
+                <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="2" strokeLinecap="round" />
               </svg>
-            </button>
+            </button><h6 className={styles.documentName}>{document.originalname || document.filename}</h6></>
           )}
         </div>
       </Card>
@@ -222,7 +223,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted }) => {
           <Modal.Body>
             <p>¿Deseas mover este documento a la papelera?</p>
             <p className="text-muted">
-              <strong>{document.originalname || document.filename}</strong>
+            <strong>{getDocumentDisplayName(document)}</strong>
             </p>
             <p className="text-muted small">
               El documento se eliminará automáticamente después de 30 días. Puedes restaurarlo desde la papelera antes de

@@ -21,11 +21,11 @@ Este documento resume la matriz de permisos basada en el rol de membresía del u
 |------------------------------------------|:-----:|:-----:|:------:|:------:|
 | Ver recursos (documentos/carpetas)       |  ✅   |  ✅   |   ✅   |   ✅   |
 | Editar recursos                          |  ✅   |  ✅   |   ✅   |   ❌   |
-| Compartir recursos                       |  ✅   |  ✅   |   ✅   |   ✅   |
-| Administrar miembros (invitar/remover)   |  ✅   |  ✅   |   ❌   |   ❌   |
+| Compartir recursos                       |  ✅   |  ✅   |   ✅   |   ❌   |
+| Administrar miembros (invitar/remover)   |  ✅   |  ❌   |   ❌   |   ❌   |
 | Crear documentos                         |  ✅   |  ✅   |   ✅   |   ❌   |
 | Crear carpetas                           |  ✅   |  ✅   |   ✅   |   ❌   |
-| Borrar recursos                          |  ✅   |  ❌*  |   ❌** |   ❌   |
+| Borrar recursos                          |  ✅   |  ❌  |   ❌** |   ❌   |
 
 ---
 
@@ -36,31 +36,16 @@ Este documento resume la matriz de permisos basada en el rol de membresía del u
 
 ### Admin
 - Puede hacer prácticamente todo lo operativo.
-- **No puede borrar recursos del Owner**. (*)
+- No puede borrar recursos.
 
 ### Member
 - Puede colaborar activamente (crear/editar/compartir).
 - **No administra miembros**.
-- **No borra recursos de otros** (y en general no tiene permisos de borrado global). (**)
+- **No borra recursos de otros** (y en general no tiene permisos de borrado global).
 
 ### Viewer
 - Acceso enfocado en **lectura**.
-- Puede **compartir** (según lo acordado).
+- No puede **subir documentos ni compartir**
 - No puede editar ni crear ni administrar.
 
 ---
-
-## Notas (detalle de restricciones)
-
-- (*) **Admin**: no borra recursos del Owner.
-- (**) **Member**: no borra recursos de otros (y usualmente no tiene borrado global).
-
----
-
-## Próximos pasos recomendados (opcional)
-- Definir si “Compartir” para Viewer implica:
-  - compartir con otros miembros existentes,
-  - generar links públicos,
-  - o invitar usuarios externos.
-- Definir alcance exacto de “Borrar” (soft delete vs hard delete).
-- Confirmar si “Member” puede borrar **sus propios** recursos o ninguno.

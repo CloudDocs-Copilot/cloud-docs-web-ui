@@ -132,6 +132,11 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
                         {n.type === 'DOC_UPLOADED' ? 'Documento subido' :
                          n.type === 'DOC_EDITED' ? 'Documento actualizado' :
                          n.type === 'DOC_COMMENTED' ? 'Nuevo comentario' :
+                         n.type === 'DOC_SHARED' ? 'Documento compartido' :
+                         n.type === 'DOC_DELETED' ? 'Documento eliminado' :
+                         n.type === 'INVITATION_CREATED' ? 'Nueva invitación' :
+                         n.type === 'MEMBER_JOINED' ? 'Nuevo miembro' :
+                         n.type === 'MEMBER_ROLE_UPDATED' ? 'Rol actualizado' :
                          'Notificación'}
                       </div>
                       {isUnread && (

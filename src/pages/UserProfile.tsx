@@ -169,13 +169,25 @@ export function UserProfile(props: UserProfileProps) {
   };
 
   const handlePreferenceChange = async (key: keyof UserPreferences, value: boolean) => {
-    const updated = { ...preferences, [key]: value };
-    setPreferences(updated);
+    let previousPreferences: UserPreferences | null = null;
+
+    setPreferences((prev) => {
+      previousPreferences = prev;
+      return { ...prev, [key]: value };
+    });
+
+    const updated =
+      previousPreferences !== null
+        ? { ...previousPreferences, [key]: value }
+        : { ...preferences, [key]: value };
+
     try {
       await userService.updatePreferences(updated);
       showToast({ message: 'Preferencias actualizadas.', variant: 'success', title: 'Éxito' });
     } catch {
-      setPreferences(preferences);
+      if (previousPreferences !== null) {
+        setPreferences(previousPreferences);
+      }
       showToast({ message: 'Error al actualizar preferencias.', variant: 'danger', title: 'Error' });
     }
   };

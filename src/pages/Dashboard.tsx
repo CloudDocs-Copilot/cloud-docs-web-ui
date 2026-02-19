@@ -31,12 +31,14 @@ const Dashboard: React.FC = () => {
   
 
   // Obtener ID de la organización activa desde el contexto
-  const { activeOrganization } = useOrganization();
+  const { activeOrganization, membership } = useOrganization();
   const organizationId = activeOrganization?.id ?? '';
 
-  // Permission: delete only for roles with documents:delete permission
+  // Permission: delete only for owner/admin roles (membership wins over activeOrganization)
   const { can } = usePermissions();
-  const canDeleteDocuments = can('documents:delete');
+  const rawRole = membership?.role ?? activeOrganization?.role ?? 'member';
+  const orgRole = typeof rawRole === 'string' ? rawRole.toLowerCase() : rawRole;
+  const canDeleteDocuments = orgRole === 'owner' || orgRole === 'admin';
 
   const fetchDocuments = useCallback(() => {
     if (!organizationId) return;

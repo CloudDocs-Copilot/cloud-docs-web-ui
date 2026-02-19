@@ -5,7 +5,6 @@ import DocumentCard from '../components/DocumentCard';
 import { useHttpRequest } from '../hooks/useHttpRequest';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
 import useOrganization from '../hooks/useOrganization';
-import { usePermissions } from '../hooks/usePermissions';
 import type { Document } from '../types/document.types';
 
 
@@ -35,7 +34,6 @@ const Dashboard: React.FC = () => {
   const organizationId = activeOrganization?.id ?? '';
 
   // Permission: delete only for owner/admin roles (membership wins over activeOrganization)
-  const { can } = usePermissions();
   const rawRole = membership?.role ?? activeOrganization?.role ?? 'member';
   const orgRole = typeof rawRole === 'string' ? rawRole.toLowerCase() : rawRole;
   const canDeleteDocuments = orgRole === 'owner' || orgRole === 'admin';

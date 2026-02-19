@@ -4,11 +4,13 @@ import { Form, Button, InputGroup, Modal, OverlayTrigger, Popover, Spinner } fro
 import styles from './Header.module.css';
 import { useAuth } from '../hooks/useAuth';
 import { FileUploader } from './FileUploader';
+import { RoleGuard } from './RoleGuard';
 import type { Document } from '../types/document.types';
 import OrganizationSelector from './Organization/OrganizationSelector';
-import { useNotifications } from '../hooks/useNotifications';
 import useOrganization from '../hooks/useOrganization';
 import type { MembershipRole } from '../types/organization.types';
+import { useNotifications } from '../hooks/useNotifications';
+import { getNotificationTypeLabel } from '../constants/notificationTypes';
 
 interface HeaderProps {
   /** Callback cuando se suben documentos exitosamente */
@@ -129,15 +131,7 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                       <div style={{ fontWeight: 600, fontSize: 13 }}>
-                        {n.type === 'DOC_UPLOADED' ? 'Documento subido' :
-                         n.type === 'DOC_EDITED' ? 'Documento actualizado' :
-                         n.type === 'DOC_COMMENTED' ? 'Nuevo comentario' :
-                         n.type === 'DOC_SHARED' ? 'Documento compartido' :
-                         n.type === 'DOC_DELETED' ? 'Documento eliminado' :
-                         n.type === 'INVITATION_CREATED' ? 'Nueva invitación' :
-                         n.type === 'MEMBER_JOINED' ? 'Nuevo miembro' :
-                         n.type === 'MEMBER_ROLE_UPDATED' ? 'Rol actualizado' :
-                         'Notificación'}
+                        {getNotificationTypeLabel(n.type)}
                       </div>
                       {isUnread && (
                         <span
@@ -169,10 +163,25 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
               })}
             </div>
           )}
+
+          <div style={{ textAlign: 'center', marginTop: 10 }}>
+            <Button
+              size="sm"
+              variant="link"
+              style={{ textDecoration: 'none' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigate('/notifications');
+              }}
+            >
+              Ver todas →
+            </Button>
+          </div>
         </Popover.Body>
       </Popover>
     );
-  }, [markAllRead, markRead, notifLoading, notifications, refresh]);
+  }, [markAllRead, markRead, navigate, notifLoading, notifications]);
 
   return (
     <>
@@ -269,25 +278,27 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
           </div>
 
           {canUpload && (
-            <Button
-              variant="primary"
-              className={styles.btnUpload}
-              onClick={handleOpenUploadModal}
-            >
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                style={{ marginRight: '6px' }}
+            <RoleGuard requiredPermission="documents:create">
+              <Button
+                variant="primary"
+                className={styles.btnUpload}
+                onClick={handleOpenUploadModal}
               >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeWidth="2" />
-                <polyline points="17 8 12 3 7 8" strokeWidth="2" />
-                <line x1="12" y1="3" x2="12" y2="15" strokeWidth="2" />
-              </svg>
-              Subir
-            </Button>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  style={{ marginRight: '6px' }}
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeWidth="2" />
+                  <polyline points="17 8 12 3 7 8" strokeWidth="2" />
+                  <line x1="12" y1="3" x2="12" y2="15" strokeWidth="2" />
+                </svg>
+                Subir
+              </Button>
+            </RoleGuard>
           )}
 
           <Button variant="danger" className={styles.btnLogout} onClick={handleLogout}>

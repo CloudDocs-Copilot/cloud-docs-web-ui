@@ -352,6 +352,7 @@ describe('NotificationsProvider', () => {
 
     await waitFor(() => expect(connectMock).toHaveBeenCalledTimes(1));
     expect(socket.on).toHaveBeenCalledWith('socket:connected', expect.any(Function));
+    expect(socket.on).toHaveBeenCalledWith('reconnect', expect.any(Function));
     expect(socket.on).toHaveBeenCalledWith('notification:new', expect.any(Function));
 
     // rerender while authenticated -> listeners should NOT attach again (listenersAttachedRef branch)
@@ -360,7 +361,7 @@ describe('NotificationsProvider', () => {
         <Consumer />
       </NotificationsProvider>
     );
-    expect(socket.on).toHaveBeenCalledTimes(2);
+    expect(socket.on).toHaveBeenCalledTimes(3);
 
     // different org should be ignored
     act(() => {

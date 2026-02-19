@@ -20,7 +20,9 @@ describe("useNotifications", () => {
       unreadCount: 0,
       loading: false,
       error: null,
+      hasMore: false,
       refresh: jest.fn<Promise<void>, [opts?: { unreadOnly?: boolean }]>(),
+      loadMore: jest.fn<Promise<void>, []>(),
       markRead: jest.fn<Promise<void>, [string]>(),
       markAllRead: jest.fn<Promise<void>, []>(),
     };
@@ -43,7 +45,9 @@ describe("useNotifications", () => {
       unreadCount: 3,
       loading: true,
       error: null,
+      hasMore: false,
       refresh: jest.fn<Promise<void>, [opts?: { unreadOnly?: boolean }]>(),
+      loadMore: jest.fn<Promise<void>, []>(),
       markRead: jest.fn<Promise<void>, [string]>(),
       markAllRead: jest.fn<Promise<void>, []>(),
     };

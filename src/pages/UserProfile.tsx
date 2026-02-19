@@ -169,17 +169,14 @@ export function UserProfile(props: UserProfileProps) {
   };
 
   const handlePreferenceChange = async (key: keyof UserPreferences, value: boolean) => {
-    let previousPreferences: UserPreferences | null = null;
+    // Capture current preferences snapshot for rollback if needed
+    const previousPreferences = { ...preferences };
 
-    setPreferences((prev) => {
-      previousPreferences = prev;
-      return { ...prev, [key]: value };
-    });
+    // Optimistically update UI
+    setPreferences((prev) => ({ ...prev, [key]: value }));
 
-    const updated =
-      previousPreferences !== null
-        ? { ...previousPreferences, [key]: value }
-        : { ...preferences, [key]: value };
+    // Build the updated preferences object from the current state snapshot
+    const updated: UserPreferences = { ...previousPreferences, [key]: value };
 
     try {
       await userService.updatePreferences(updated);

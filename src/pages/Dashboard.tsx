@@ -6,7 +6,6 @@ import { useHttpRequest } from '../hooks/useHttpRequest';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
 import useOrganization from '../hooks/useOrganization';
 import type { Document } from '../types/document.types';
-import type { MembershipRole } from '../types/organization.types';
 
 
 interface DocumentsApiResponse {
@@ -34,13 +33,10 @@ const Dashboard: React.FC = () => {
   const { activeOrganization, membership } = useOrganization();
   const organizationId = activeOrganization?.id ?? '';
 
-  // Permission: delete only for owner/admin
-  const orgRole = (membership?.role ||
-    activeOrganization?.role ||
-    'member') as MembershipRole;
-
-  const normalizedRole = typeof orgRole === 'string' ? orgRole.toLowerCase() : orgRole;
-  const canDeleteDocuments = normalizedRole === 'owner';
+  // Permission: delete only for owner/admin roles (membership wins over activeOrganization)
+  const rawRole = membership?.role ?? activeOrganization?.role ?? 'member';
+  const orgRole = typeof rawRole === 'string' ? rawRole.toLowerCase() : rawRole;
+  const canDeleteDocuments = orgRole === 'owner' || orgRole === 'admin';
 
   const fetchDocuments = useCallback(() => {
     if (!organizationId) return;

@@ -1,3 +1,4 @@
+import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
@@ -73,6 +74,10 @@ jest.mock("../../hooks/useOrganization", () => ({
 jest.mock("../Organization/OrganizationSelector", () => () => (
   <div>OrgSel</div>
 ));
+
+jest.mock("../RoleGuard", () => ({
+  RoleGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 
 interface FileUploaderProps {
   onUploadSuccess?: (docs: Document[]) => void;

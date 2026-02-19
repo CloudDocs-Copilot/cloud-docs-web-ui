@@ -5,9 +5,11 @@ import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home';
 import { UserProfile } from './pages/UserProfile'
 import NotFound from './pages/NotFound';
+import Forbidden from './pages/Forbidden';
 import Register from './pages/Register';
 import LoginPage from './pages/LoginPage'
 import PrivateRoute from './components/PrivateRoute'
+import RequireRole from './components/RequireRole'
 import ConfirmAccount from './pages/ConfirmAccount'
 import CreateOrganization from './pages/CreateOrganization'
 import NoOrganization from './pages/NoOrganization'
@@ -73,11 +75,12 @@ function App() {
       />
         <Route path="/create-organization" element={<PrivateRoute><CreateOrganization /></PrivateRoute>} />
         <Route path="/no-organization" element={<PrivateRoute><NoOrganization /></PrivateRoute>} />
-        <Route path="/organization/settings" element={<PrivateRoute><RequireOrganization><OrganizationSettings/></RequireOrganization></PrivateRoute>} />
+        <Route path="/organization/settings" element={<PrivateRoute><RequireOrganization><RequireRole roles={['admin', 'owner']}><OrganizationSettings/></RequireRole></RequireOrganization></PrivateRoute>} />
         <Route path="/invitations" element={<PrivateRoute><PendingInvitations /></PrivateRoute>} />
         <Route path="/shared" element={<PrivateRoute><SharedDocs /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute><RequireOrganization><Notifications /></RequireOrganization></PrivateRoute>} />
       <Route path="/auth/confirmed" element={<ConfirmAccount />} />
+      <Route path="/forbidden" element={<PrivateRoute><Forbidden /></PrivateRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

@@ -6,6 +6,8 @@ import { useAuth } from '../hooks/useAuth';
 import { FileUploader } from './FileUploader';
 import type { Document } from '../types/document.types';
 import OrganizationSelector from './Organization/OrganizationSelector';
+import useOrganization from '../hooks/useOrganization';
+import type { MembershipRole } from '../types/organization.types';
 import { useNotifications } from '../hooks/useNotifications';
 import { getNotificationTypeLabel } from '../constants/notificationTypes';
 

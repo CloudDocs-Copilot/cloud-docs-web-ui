@@ -9,6 +9,12 @@ on:
     branches:
       - '**'
 
+permissions:
+  contents: read
+  id-token: write
+  security-events: write
+  actions: read
+
 jobs:
   ci:
     name: Build, Lint & Test

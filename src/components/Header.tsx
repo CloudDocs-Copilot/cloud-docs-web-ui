@@ -7,9 +7,10 @@ import { FileUploader } from './FileUploader';
 import { RoleGuard } from './RoleGuard';
 import type { Document } from '../types/document.types';
 import OrganizationSelector from './Organization/OrganizationSelector';
-import { useNotifications } from '../hooks/useNotifications';
 import useOrganization from '../hooks/useOrganization';
 import type { MembershipRole } from '../types/organization.types';
+import { useNotifications } from '../hooks/useNotifications';
+import { getNotificationTypeLabel } from '../constants/notificationTypes';
 
 interface HeaderProps {
   /** Callback cuando se suben documentos exitosamente */
@@ -130,10 +131,7 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                       <div style={{ fontWeight: 600, fontSize: 13 }}>
-                        {n.type === 'DOC_UPLOADED' ? 'Documento subido' :
-                         n.type === 'DOC_EDITED' ? 'Documento actualizado' :
-                         n.type === 'DOC_COMMENTED' ? 'Nuevo comentario' :
-                         'Notificación'}
+                        {getNotificationTypeLabel(n.type)}
                       </div>
                       {isUnread && (
                         <span
@@ -165,10 +163,25 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
               })}
             </div>
           )}
+
+          <div style={{ textAlign: 'center', marginTop: 10 }}>
+            <Button
+              size="sm"
+              variant="link"
+              style={{ textDecoration: 'none' }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigate('/notifications');
+              }}
+            >
+              Ver todas →
+            </Button>
+          </div>
         </Popover.Body>
       </Popover>
     );
-  }, [markAllRead, markRead, notifLoading, notifications, refresh]);
+  }, [markAllRead, markRead, navigate, notifLoading, notifications]);
 
   return (
     <>

@@ -23,6 +23,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [hasMore, setHasMore] = useState(false);
 
   // StrictMode guard (avoid double listeners in dev)
   const listenersAttachedRef = useRef(false);
@@ -53,6 +54,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         const items = (r.notifications ?? []).slice().sort((a, b) => safeDateDesc(a.createdAt, b.createdAt));
         setNotifications(items);
         setTotal(r.total ?? items.length);
+        setHasMore(items.length < (r.total ?? 0));
         recalcUnread(items);
       } catch (e: unknown) {
         setError(e instanceof Error ? e : new Error(String(e)));
@@ -62,6 +64,37 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     [activeOrganization?.id, isAuthenticated, recalcUnread, user]
   );
+
+  const loadMore = useCallback(async () => {
+    if (!isAuthenticated || !user) return;
+    if (!activeOrganization?.id) return;
+    if (loading) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const r = await notificationApi.listNotifications({
+        organizationId: activeOrganization.id,
+        unreadOnly: false,
+        limit: 20,
+        skip: notifications.length,
+      });
+
+      const newItems = (r.notifications ?? []).slice().sort((a, b) => safeDateDesc(a.createdAt, b.createdAt));
+      setNotifications(prev => {
+        const combined = [...prev, ...newItems];
+        recalcUnread(combined);
+        return combined;
+      });
+      setTotal(r.total ?? notifications.length + newItems.length);
+      setHasMore(notifications.length + newItems.length < (r.total ?? 0));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e : new Error(String(e)));
+    } finally {
+      setLoading(false);
+    }
+  }, [activeOrganization?.id, isAuthenticated, loading, notifications.length, recalcUnread, user]);
 
   const markRead = useCallback(
     async (id: string) => {
@@ -124,6 +157,10 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         // Optional: you can refresh on connect once org is ready
       });
 
+      socket.on('reconnect', () => {
+        refresh().catch(() => {});
+      });
+
       socket.on('notification:new', (payload: NotificationDTO) => {
         // Filter to current active org (if present)
         const activeOrgId = activeOrganization?.id;
@@ -171,11 +208,13 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
       unreadCount,
       loading,
       error,
+      hasMore,
       refresh,
+      loadMore,
       markRead,
       markAllRead,
     }),
-    [notifications, total, unreadCount, loading, error, refresh, markRead, markAllRead]
+    [notifications, total, unreadCount, loading, error, hasMore, refresh, loadMore, markRead, markAllRead]
   );
 
   return <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>;

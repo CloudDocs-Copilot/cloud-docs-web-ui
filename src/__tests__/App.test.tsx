@@ -73,6 +73,11 @@ jest.mock('../pages/NotFound', () => ({
   default: () => <div>Página no encontrada</div>
 }));
 
+jest.mock('../pages/Notifications', () => ({
+  __esModule: true,
+  default: () => <div>Notifications Page</div>
+}));
+
 
 describe('Componente App', () => {
   it('renderiza el componente Home en la ruta por defecto', () => {
@@ -149,7 +154,23 @@ it('renderiza la página de error para una ruta desconocida', () => {
 
   });
 
-
+  it('renderiza la página de Notificaciones en la ruta /notifications', () => {
+    localStorage.setItem('auth_user', JSON.stringify({ id: 'u1', name: 'User', email: 'user@example.com' }));
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/notifications']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    expect(screen.getByText('Notifications Page')).toBeInTheDocument();
+  });
 
 });
 

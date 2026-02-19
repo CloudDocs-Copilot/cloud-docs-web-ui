@@ -10,8 +10,12 @@ const NOTIFICATION_TYPE_MAP: Record<NotificationType, NotificationTypeInfo> = {
   DOC_UPLOADED: { label: 'Documento subido', icon: '📄', bgColor: 'rgba(25,135,84,0.12)' },
   DOC_EDITED: { label: 'Documento actualizado', icon: '✏️', bgColor: 'rgba(13,110,253,0.12)' },
   DOC_COMMENTED: { label: 'Nuevo comentario', icon: '💬', bgColor: 'rgba(255,193,7,0.12)' },
+  DOC_SHARED: { label: 'Documento compartido', icon: '🔗', bgColor: 'rgba(102,16,242,0.12)' },
+  DOC_DELETED: { label: 'Documento eliminado', icon: '🗑️', bgColor: 'rgba(220,53,69,0.12)' },
+  INVITATION_CREATED: { label: 'Nueva invitación', icon: '📨', bgColor: 'rgba(111,66,193,0.12)' },
   MEMBER_INVITED: { label: 'Miembro invitado', icon: '📨', bgColor: 'rgba(111,66,193,0.12)' },
   MEMBER_JOINED: { label: 'Nuevo miembro', icon: '👤', bgColor: 'rgba(13,202,240,0.12)' },
+  MEMBER_ROLE_UPDATED: { label: 'Rol actualizado', icon: '🔑', bgColor: 'rgba(253,126,20,0.12)' },
   ROLE_CHANGED: { label: 'Rol actualizado', icon: '🔑', bgColor: 'rgba(253,126,20,0.12)' },
   AI_PROCESSED: { label: 'Análisis IA completado', icon: '🤖', bgColor: 'rgba(102,16,242,0.12)' },
 };

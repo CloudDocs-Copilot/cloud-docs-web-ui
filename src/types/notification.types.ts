@@ -5,6 +5,10 @@ export type NotificationType =
   | 'MEMBER_INVITED'
   | 'MEMBER_JOINED'
   | 'ROLE_CHANGED'
+  | 'DOC_SHARED'
+  | 'DOC_DELETED'
+  | 'INVITATION_CREATED'
+  | 'MEMBER_ROLE_UPDATED'
   | 'AI_PROCESSED';
 
 export type NotificationEntity = {

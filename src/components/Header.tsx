@@ -163,21 +163,6 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
               })}
             </div>
           )}
-
-          <div style={{ textAlign: 'center', marginTop: 10 }}>
-            <Button
-              size="sm"
-              variant="link"
-              style={{ textDecoration: 'none' }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                navigate('/notifications');
-              }}
-            >
-              Ver todas →
-            </Button>
-          </div>
         </Popover.Body>
       </Popover>
     );

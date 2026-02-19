@@ -33,12 +33,24 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
   const avatarLetter = (user?.name?.[0] || user?.email?.[0] || 'U').toUpperCase();
   const displayName = user?.name || user?.email || 'Usuario';
 
+  // Role-based permission: hide upload for viewers
+  const { activeOrganization, membership } = useOrganization();
+  
+    // Permission: delete only for owner/admin
+    const orgRole = (membership?.role ||
+      activeOrganization?.role ||
+      'member') as MembershipRole;
+  
+    const normalizedRole = typeof orgRole === 'string' ? orgRole.toLowerCase() : orgRole;
+    const canUpload = normalizedRole !== 'viewer';
+
   /**
    * Abre el modal de subida de archivos
    */
   const handleOpenUploadModal = useCallback(() => {
+    if (!canUpload) return;
     setShowUploadModal(true);
-  }, []);
+  }, [canUpload]);
 
   /**
    * Cierra el modal de subida de archivos
@@ -263,25 +275,27 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
             <span>{displayName}</span>
           </div>
 
-          <Button
-            variant="primary"
-            className={styles.btnUpload}
-            onClick={handleOpenUploadModal}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              style={{ marginRight: '6px' }}
+          {canUpload && (
+            <Button
+              variant="primary"
+              className={styles.btnUpload}
+              onClick={handleOpenUploadModal}
             >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeWidth="2" />
-              <polyline points="17 8 12 3 7 8" strokeWidth="2" />
-              <line x1="12" y1="3" x2="12" y2="15" strokeWidth="2" />
-            </svg>
-            Subir
-          </Button>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                style={{ marginRight: '6px' }}
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeWidth="2" />
+                <polyline points="17 8 12 3 7 8" strokeWidth="2" />
+                <line x1="12" y1="3" x2="12" y2="15" strokeWidth="2" />
+              </svg>
+              Subir
+            </Button>
+          )}
 
           <Button variant="danger" className={styles.btnLogout} onClick={handleLogout}>
             <svg
@@ -302,19 +316,21 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
       </header>
 
       {/* Modal de Subida de Documentos */}
-      <Modal
-        show={showUploadModal}
-        onHide={handleCloseUploadModal}
-        size="lg"
-        centered
-        backdrop="static"
-        keyboard={false}
-      >
-        <FileUploader
-          onUploadSuccess={handleUploadSuccess}
-          onClose={handleCloseUploadModal}
-        />
-      </Modal>
+      {canUpload && (
+        <Modal
+          show={showUploadModal}
+          onHide={handleCloseUploadModal}
+          size="lg"
+          centered
+          backdrop="static"
+          keyboard={false}
+        >
+          <FileUploader
+            onUploadSuccess={handleUploadSuccess}
+            onClose={handleCloseUploadModal}
+          />
+        </Modal>
+      )}
     </>
   );
 };

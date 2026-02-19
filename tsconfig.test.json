@@ -5,9 +5,11 @@
     "types": ["jest", "@testing-library/jest-dom", "node"],
     "composite": true,
     "noEmit": true,
-    "module": "es2020",
+    "module": "ESNext",
     "moduleResolution": "node",
-    "verbatimModuleSyntax": false
+    "verbatimModuleSyntax": false,
+    "allowJs": true,
+    "isolatedModules": true
   },
   "include": [
     "src",                       

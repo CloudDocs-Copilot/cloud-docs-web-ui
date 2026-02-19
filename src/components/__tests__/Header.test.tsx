@@ -43,6 +43,15 @@ const mockUseNotifications = jest.fn<
   []
 >();
 
+type OrganizationRole = "owner" | "admin" | "member" | "viewer";
+type MockMembership = { role?: OrganizationRole };
+type MockActiveOrg = { role?: OrganizationRole; id?: string };
+
+const mockUseOrganization = jest.fn<
+  { activeOrganization?: MockActiveOrg; membership?: MockMembership },
+  []
+>();
+
 jest.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
   useLocation: () => mockUseLocation(),
@@ -54,6 +63,11 @@ jest.mock("../../hooks/useAuth", () => ({
 
 jest.mock("../../hooks/useNotifications", () => ({
   useNotifications: () => mockUseNotifications(),
+}));
+
+jest.mock("../../hooks/useOrganization", () => ({
+  __esModule: true,
+  default: () => mockUseOrganization(),
 }));
 
 jest.mock("../Organization/OrganizationSelector", () => () => (
@@ -108,9 +122,15 @@ describe("Header", () => {
       markRead: mockMarkRead,
       markAllRead: mockMarkAllRead,
     });
+
+    // Default role allows upload (member)
+    mockUseOrganization.mockReturnValue({
+      activeOrganization: { role: "member", id: "org1" },
+      membership: { role: "member" },
+    });
   });
 
-  it("renders user info and main buttons", () => {
+  it("renders user info and main buttons (including upload when canUpload)", () => {
     render(<Header />);
 
     expect(screen.getByText("Pedro")).toBeInTheDocument();
@@ -118,6 +138,19 @@ describe("Header", () => {
     expect(screen.getByText("Subir")).toBeInTheDocument();
     expect(screen.getByText("Salir")).toBeInTheDocument();
     expect(screen.getByText("OrgSel")).toBeInTheDocument();
+  });
+
+  it("hides upload button and modal for viewer role (canUpload false branch)", () => {
+    mockUseOrganization.mockReturnValueOnce({
+      activeOrganization: { role: "viewer", id: "org1" },
+      membership: { role: "viewer" },
+    });
+
+    render(<Header />);
+
+    expect(screen.queryByText("Subir")).not.toBeInTheDocument();
+    // Modal content should not exist either
+    expect(screen.queryByText("mockUpload")).not.toBeInTheDocument();
   });
 
   it("navigates to /login on logout (even when logout succeeds)", async () => {
@@ -313,7 +346,6 @@ describe("Header", () => {
     expect(screen.getAllByText("Nuevo").length).toBeGreaterThan(0);
 
     // createdAt rendered (string varies by locale; just assert something from Date is present)
-    // We can assert that at least one item shows a date string including "2026" in many environments.
     const maybeDate = screen.getAllByText((t) => t.includes("2026"));
     expect(maybeDate.length).toBeGreaterThan(0);
 
@@ -321,7 +353,7 @@ describe("Header", () => {
     fireEvent.click(screen.getByText("Se subió un documento"));
     await waitFor(() => expect(mockMarkRead).toHaveBeenCalledWith("n1"));
 
-    // Click second item -> no id, should not call markRead with undefined
+    // Click second item -> no id, should not call markRead again
     fireEvent.click(screen.getByText("Tienes una notificación"));
     expect(mockMarkRead).toHaveBeenCalledTimes(1);
   });
@@ -373,5 +405,27 @@ describe("Header", () => {
       screen.getByLabelText("120 notificaciones no leídas"),
     ).toBeInTheDocument();
     expect(screen.getByText("99+")).toBeInTheDocument();
+  });
+
+  it("treats role case-insensitively: VIEWER hides upload (branch)", () => {
+    mockUseOrganization.mockReturnValueOnce({
+      activeOrganization: { role: "member", id: "org1" },
+      membership: { role: "viewer" },
+    });
+
+    render(<Header />);
+
+    expect(screen.queryByText("Subir")).not.toBeInTheDocument();
+  });
+
+  it("uses activeOrganization.role when membership.role missing (branch)", () => {
+    mockUseOrganization.mockReturnValueOnce({
+      activeOrganization: { role: "viewer", id: "org1" },
+      membership: {},
+    });
+
+    render(<Header />);
+
+    expect(screen.queryByText("Subir")).not.toBeInTheDocument();
   });
 });

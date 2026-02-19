@@ -52,7 +52,13 @@ jest.mock('../../hooks/useOrganization', () => ({
 // MainLayout: expose a way to trigger onDocumentsUploaded
 jest.mock('../../components/MainLayout', () => ({
   __esModule: true,
-  default: ({ children, onDocumentsUploaded }: { children: React.ReactNode; onDocumentsUploaded?: () => void }) => (
+  default: ({
+    children,
+    onDocumentsUploaded,
+  }: {
+    children: React.ReactNode;
+    onDocumentsUploaded?: () => void;
+  }) => (
     <div>
       <button
         type="button"
@@ -68,7 +74,15 @@ jest.mock('../../components/MainLayout', () => ({
 // DocumentCard: expose delete callback + canDelete value
 jest.mock('../../components/DocumentCard', () => ({
   __esModule: true,
-  default: ({ document, onDeleted, canDelete }: { document: { originalname?: string; filename: string }; onDeleted?: () => void; canDelete: boolean }) => (
+  default: ({
+    document,
+    onDeleted,
+    canDelete,
+  }: {
+    document: { originalname?: string; filename: string };
+    onDeleted?: () => void;
+    canDelete: boolean;
+  }) => (
     <div>
       <div>doc:{document.originalname || document.filename}</div>
       <div>canDelete:{String(!!canDelete)}</div>
@@ -112,7 +126,7 @@ describe('SharedDocs (Dashboard)', () => {
       expect.objectContaining({
         title: 'Documentos Compartidos',
         documentTitle: 'Documentos Compartidos',
-      })
+      }),
     );
 
     expect(mockExecute).toHaveBeenCalledTimes(1);
@@ -165,7 +179,7 @@ describe('SharedDocs (Dashboard)', () => {
     render(<Dashboard />);
 
     expect(
-      screen.getByText(/Sin documentos compartidos contigo aún/i)
+      screen.getByText(/Sin documentos compartidos contigo aún/i),
     ).toBeInTheDocument();
   });
 
@@ -208,10 +222,10 @@ describe('SharedDocs (Dashboard)', () => {
     expect(screen.getAllByText('canDelete:false')).toHaveLength(2);
   });
 
-  it('canDelete=true for admin role (case-insensitive) and refreshes when upload/delete callbacks fire', () => {
+  it('canDelete=true for owner role (case-insensitive) and refreshes when upload/delete callbacks fire', () => {
     // Role normalization branch: membership wins; case-insensitive
     setOrg({
-      membership: { role: 'ADMIN' },
+      membership: { role: 'OWNER' },
       activeOrganization: { role: 'member' },
     });
 
@@ -240,7 +254,7 @@ describe('SharedDocs (Dashboard)', () => {
     // mount fetch
     expect(mockExecute).toHaveBeenCalledTimes(1);
 
-    // admin -> can delete
+    // owner -> can delete
     expect(screen.getByText('canDelete:true')).toBeInTheDocument();
 
     // trigger MainLayout onDocumentsUploaded -> should fetch again
@@ -256,5 +270,35 @@ describe('SharedDocs (Dashboard)', () => {
       method: 'GET',
       url: '/documents/shared',
     });
+  });
+
+  it('uses activeOrganization.role when membership.role is missing (branch)', () => {
+    setOrg({
+      membership: null,
+      activeOrganization: { role: 'owner' },
+    });
+
+    setHttp({
+      isLoading: false,
+      isError: false,
+      data: {
+        success: true,
+        count: 1,
+        documents: [
+          {
+            id: 'd1',
+            filename: 'a.pdf',
+            originalname: 'A.pdf',
+            mimeType: 'application/pdf',
+            size: 123,
+            folder: 'folder_legal',
+            uploadedAt: new Date().toISOString(),
+          },
+        ],
+      },
+    });
+
+    render(<Dashboard />);
+    expect(screen.getByText('canDelete:true')).toBeInTheDocument();
   });
 });

@@ -7,6 +7,7 @@ export interface MenuItem {
 
 export const SIDEBAR_MENU_ITEMS: MenuItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊', path: '/dashboard' },
+  { id: 'search', label: 'Buscar', icon: '🔍', path: '/search' },
   { id: 'mi-unidad', label: 'Mi Unidad', icon: '🗄️', path: '/my-drive' },
   { id: 'compartido', label: 'Compartido', icon: '👥', path: '/shared' },
   { id: 'colecciones', label: 'Colecciones Inteligentes', icon: '✨', path: '/collections' },

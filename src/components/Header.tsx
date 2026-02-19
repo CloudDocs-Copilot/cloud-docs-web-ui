@@ -172,7 +172,6 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
                 e.preventDefault();
                 e.stopPropagation();
                 navigate('/notifications');
-                document.body.click();
               }}
             >
               Ver todas →

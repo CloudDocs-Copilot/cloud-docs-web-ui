@@ -8,6 +8,8 @@ import { RoleGuard } from './RoleGuard';
 import type { Document } from '../types/document.types';
 import OrganizationSelector from './Organization/OrganizationSelector';
 import { useNotifications } from '../hooks/useNotifications';
+import useOrganization from '../hooks/useOrganization';
+import type { MembershipRole } from '../types/organization.types';
 
 interface HeaderProps {
   /** Callback cuando se suben documentos exitosamente */
@@ -33,12 +35,24 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
   const avatarLetter = (user?.name?.[0] || user?.email?.[0] || 'U').toUpperCase();
   const displayName = user?.name || user?.email || 'Usuario';
 
+  // Role-based permission: hide upload for viewers
+  const { activeOrganization, membership } = useOrganization();
+  
+    // Permission: delete only for owner/admin
+    const orgRole = (membership?.role ||
+      activeOrganization?.role ||
+      'member') as MembershipRole;
+  
+    const normalizedRole = typeof orgRole === 'string' ? orgRole.toLowerCase() : orgRole;
+    const canUpload = normalizedRole !== 'viewer';
+
   /**
    * Abre el modal de subida de archivos
    */
   const handleOpenUploadModal = useCallback(() => {
+    if (!canUpload) return;
     setShowUploadModal(true);
-  }, []);
+  }, [canUpload]);
 
   /**
    * Cierra el modal de subida de archivos
@@ -154,7 +168,7 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
         </Popover.Body>
       </Popover>
     );
-  }, [markAllRead, markRead, notifLoading, notifications]);
+  }, [markAllRead, markRead, notifLoading, notifications, refresh]);
 
   return (
     <>
@@ -291,19 +305,21 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
       </header>
 
       {/* Modal de Subida de Documentos */}
-      <Modal
-        show={showUploadModal}
-        onHide={handleCloseUploadModal}
-        size="lg"
-        centered
-        backdrop="static"
-        keyboard={false}
-      >
-        <FileUploader
-          onUploadSuccess={handleUploadSuccess}
-          onClose={handleCloseUploadModal}
-        />
-      </Modal>
+      {canUpload && (
+        <Modal
+          show={showUploadModal}
+          onHide={handleCloseUploadModal}
+          size="lg"
+          centered
+          backdrop="static"
+          keyboard={false}
+        >
+          <FileUploader
+            onUploadSuccess={handleUploadSuccess}
+            onClose={handleCloseUploadModal}
+          />
+        </Modal>
+      )}
     </>
   );
 };

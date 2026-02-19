@@ -78,17 +78,17 @@ const Dashboard: React.FC = () => {
         {isLoading && (
           <div className="text-center py-5">
             <Spinner animation="border" role="status">
-              <span className="visually-hidden">Loading documents...</span>
+              <span className="visually-hidden">Cargando documentos...</span>
             </Spinner>
-            <p className="mt-3">Loading documents...</p>
+            <p className="mt-3">Cargando documentos...</p>
           </div>
         )}
 
         {/* Error state */}
         {isError && (
           <Alert variant="danger" className="my-3">
-            <Alert.Heading>Error loading documents</Alert.Heading>
-            <p>{error?.message || 'An unexpected error occurred'}</p>
+            <Alert.Heading>Error al cargar documentos</Alert.Heading>
+            <p>{error?.message || 'Ocurrió un error inesperado'}</p>
           </Alert>
         )}
 
@@ -108,7 +108,7 @@ const Dashboard: React.FC = () => {
             ) : (
               <Col xs={12}>
                 <Alert variant="info">
-                  No documents found. Upload your first document to get started!
+                  No se encontraron documentos. ¡Sube tu primer documento para comenzar!
                 </Alert>
               </Col>
             )}

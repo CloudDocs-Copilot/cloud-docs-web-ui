@@ -44,7 +44,7 @@ const Dashboard: React.FC = () => {
     'member';
 
   const normalizedRole = typeof orgRole === 'string' ? orgRole.toLowerCase() : orgRole;
-  const canDeleteDocuments = normalizedRole === 'owner' || normalizedRole === 'admin';
+  const canDeleteDocuments = normalizedRole === 'owner';
 
   const fetchDocuments = useCallback(() => {
     execute({

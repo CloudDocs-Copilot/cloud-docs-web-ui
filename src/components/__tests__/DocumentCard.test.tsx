@@ -135,4 +135,77 @@ describe('DocumentCard', () => {
     // Should not throw error even without onDeleted callback
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
+
+  describe('Drag and Drop', () => {
+    it('is draggable', () => {
+      const { container } = render(<DocumentCard document={baseDoc as Document} />);
+      const card = container.querySelector('.card');
+      expect(card).toHaveAttribute('draggable', 'true');
+    });
+
+    it('has grab cursor by default', () => {
+      const { container } = render(<DocumentCard document={baseDoc as Document} />);
+      const card = container.querySelector('.card') as HTMLElement;
+      expect(card.style.cursor).toBe('grab');
+    });
+
+    it('handles drag start event', () => {
+      const { container } = render(<DocumentCard document={baseDoc as Document} />);
+      const card = container.querySelector('.card')!;
+      
+      const dataTransfer = {
+        setData: jest.fn(),
+        effectAllowed: ''
+      };
+
+      fireEvent.dragStart(card, { dataTransfer });
+
+      expect(dataTransfer.setData).toHaveBeenCalledWith(
+        'application/json',
+        JSON.stringify({ type: 'document', id: 'd1' })
+      );
+      expect(dataTransfer.effectAllowed).toBe('move');
+    });
+
+    it('applies dragging class when being dragged', () => {
+      const { container } = render(<DocumentCard document={baseDoc as Document} />);
+      const card = container.querySelector('.card')!;
+      
+      const dataTransfer = {
+        setData: jest.fn(),
+        effectAllowed: ''
+      };
+
+      fireEvent.dragStart(card, { dataTransfer });
+
+      // La clase dragging debería aplicarse
+      expect(card.className).toContain('dragging');
+    });
+
+    it('removes dragging class when drag ends', () => {
+      const { container } = render(<DocumentCard document={baseDoc as Document} />);
+      const card = container.querySelector('.card')!;
+      
+      const dataTransfer = {
+        setData: jest.fn(),
+        effectAllowed: ''
+      };
+
+      // Iniciar drag
+      fireEvent.dragStart(card, { dataTransfer });
+      expect(card.className).toContain('dragging');
+
+      // Terminar drag
+      fireEvent.dragEnd(card, { preventDefault: jest.fn() });
+
+      // La clase dragging debería removerse
+      expect(card.className).not.toContain('dragging');
+    });
+
+    it('renders grip handle icon', () => {
+      const { container } = render(<DocumentCard document={baseDoc as Document} />);
+      const dragHandle = container.querySelector('.dragHandle');
+      expect(dragHandle).toBeInTheDocument();
+    });
+  });
 });

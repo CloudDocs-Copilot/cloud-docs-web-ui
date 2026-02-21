@@ -422,7 +422,7 @@ const SearchPage: React.FC = () => {
                             onClick={() => handlePreview(doc.id)}
                             title="Ver documento"
                           >
-                            <span className="me-1">👁️</span> Ver
+                            Ver
                           </Button>
                         </div>
                       </div>

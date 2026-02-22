@@ -58,7 +58,11 @@ npm run dev
 
 **That's it!** No `.env` setup required - the app automatically loads `.env.example` as defaults.
 
-> **Note:** The backend API must be running on port 4000. See [backend quickstart](../cloud-docs-api-service/README.md).
+> **Note:** To override any variable locally, create a `.env.local` file (git-ignored):
+> ```bash
+> cp .env.example .env.local
+> ```
+> The backend API must be running on port 4000. See [backend quickstart](../cloud-docs-api-service/README.md).
 
 ### Test Accounts
 

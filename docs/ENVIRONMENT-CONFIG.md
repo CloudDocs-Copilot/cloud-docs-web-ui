@@ -19,7 +19,7 @@ src/
 #### 1. **En Desarrollo/Build (Vite)**
 
 - El archivo `src/config/env.ts` usa `import.meta.env`
-- Vite **reemplaza** `import.meta.env.VITE_API_BASE_URL` con el valor real del archivo `.env` en **tiempo de compilación**
+- Vite **reemplaza** `import.meta.env.VITE_API_BASE_URL` con el valor real del archivo `.env` (o `.env.local`) en **tiempo de compilación**
 - El resultado final es código JavaScript con el valor literal (sin referencia a import.meta)
 
 #### 2. **En Tests (Jest)**
@@ -66,7 +66,7 @@ src/
 
 ### Agregar nueva variable de entorno
 
-1. **Agregar al archivo `.env`:**
+1. **Agregar al archivo `.env.local` (o `.env` para valores por defecto):**
 
    ```env
    VITE_NEW_VARIABLE=valor

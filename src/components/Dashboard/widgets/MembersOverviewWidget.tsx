@@ -2,7 +2,7 @@ import React from 'react';
 import { Badge, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { DashboardWidget } from '../DashboardWidget';
-import type { OrgMember } from '../../../types/dashboard.types';
+import type { OrgMember } from '../../../services/dashboard.service';
 
 interface MembersOverviewWidgetProps {
   members: OrgMember[] | null;

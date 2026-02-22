@@ -1,30 +1,10 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
 import Dashboard from '../Dashboard';
 import * as useOrganizationHook from '../../hooks/useOrganization';
 import * as useDashboardDataHook from '../../hooks/useDashboardData';
-import * as useHttpRequestHook from '../../hooks/useHttpRequest';
-
-const mockExecute = jest.fn();
-
-let mockHttpState = {
-  data: undefined,
-  isLoading: false,
-  isError: false,
-  error: undefined,
-};
-
-jest.mock('../../hooks/useHttpRequest', () => ({
-  useHttpRequest: jest.fn(() => ({
-    execute: mockExecute,
-    data: mockHttpState.data,
-    isLoading: mockHttpState.isLoading,
-    isError: mockHttpState.isError,
-    error: mockHttpState.error,
-  })),
-}));
 
 // Mock hooks
 jest.mock('../../hooks/useOrganization');
@@ -32,8 +12,6 @@ jest.mock('../../hooks/useDashboardData');
 jest.mock('../../hooks/usePageInfoTitle', () => ({
   usePageTitle: jest.fn(),
 }));
-  useDashboardData: () => ({
-  }),
 
 // Mock DashboardGrid to avoid cascading widget mocks
 jest.mock('../../components/Dashboard/DashboardGrid', () => ({
@@ -148,18 +126,10 @@ describe('Dashboard', () => {
       </BrowserRouter>,
     );
 
-      expect(screen.getByTestId('dashboard-grid')).toBeInTheDocument();
+    expect(screen.getByTestId('dashboard-grid')).toBeInTheDocument();
   });
 
   it('does not crash when organization has no name', () => {
-    (useHttpRequestHook.useHttpRequest as jest.Mock).mockReturnValue({
-      execute: mockExecute,
-      data: null,
-      isLoading: false,
-      isError: false,
-      error: null,
-    });
-
     (useOrganizationHook.default as jest.Mock).mockReturnValue({
       activeOrganization: { id: 'org-456' },
       membership: null,

@@ -8,15 +8,9 @@ import { useDashboardData } from '../hooks/useDashboardData';
 import type { OrgStats } from '../types/dashboard.types';
 import type { MembershipRole } from '../types/organization.types';
 import { useHttpRequest } from '../hooks/useHttpRequest';
-import type { Document } from '../types/document.types';
 import { DashboardGrid } from '../components/Dashboard/DashboardGrid';
-
-
-interface DocumentsApiResponse {
-  success: boolean;
-  count: number;
-  documents: Document[];
-}
+import { DashboardGrid } from '../components/Dashboard/DashboardGrid';
+};
 
 interface DashboardDataReturn {
   role?: MembershipRole;
@@ -37,14 +31,17 @@ const Dashboard: React.FC = () => {
     metaDescription: 'Dashboard contextual con información relevante según tu rol y organización',
   });
 
-  
+  const {
+    role,
+  const { execute, data: documents, isLoading, isError, error } = useHttpRequest<DocumentsApiResponse>();
 
-  // Usar el hook useHttpRequest para obtener documentos
-  const { execute} = useHttpRequest<DocumentsApiResponse>();
-
-  
-  const { role = 'member', orgStats, statsLoading, statsError } = useDashboardData() as DashboardDataReturn;
-  const organizationId = activeOrganization?.id ?? '';
+    stats,
+    members,
+  // Obtener ID de la organización activa desde el contexto
+  const { activeOrganization, membership, isAdmin, isOwner } = useOrganization();
+  const { can } = usePermissions();
+  const { orgStats, statsLoading, statsError, notifications, notificationsLoading } = useDashboardData();
+  } = useDashboardData();
 
   // Incrementing this key causes RecentDocumentsWidget to re-fetch
   const [docsRefreshKey, setDocsRefreshKey] = useState(0);
@@ -75,12 +72,17 @@ const Dashboard: React.FC = () => {
       <Container fluid>
         <DashboardGrid
           role={role}
-          stats={orgStats}
+              storageStats={orgStats?.storage ?? null}
           members={null}
-          statsLoading={statsLoading}
-          membersLoading={false}
-          statsError={statsError}
-          membersError={null}
+              loading={statsLoading}
+              error={statsError}
+                memberStats={orgStats?.members ?? null}
+                loading={statsLoading}
+                error={statsError}
+          membersLoading={membersLoading}
+              error={null}
+
+          membersError={membersError}
           docsRefreshKey={docsRefreshKey}
           onDocumentsUploaded={handleDocumentsUploaded}
           onDocumentDeleted={handleDocumentDeleted}

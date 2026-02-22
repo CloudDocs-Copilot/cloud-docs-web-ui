@@ -1,6 +1,5 @@
 /// <reference types="jest" />
-import { render, screen, waitFor } from '@testing-library/react';
-import { act } from 'react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { VideoPlayer } from '../../../components/DocumentPreview/VideoPlayer';
 
@@ -63,7 +62,6 @@ describe('VideoPlayer', () => {
     await act(async () => {
       render(<VideoPlayer {...defaultProps} />);
     });
-
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith(
         defaultProps.url,
@@ -76,19 +74,17 @@ describe('VideoPlayer', () => {
     await act(async () => {
       render(<VideoPlayer {...defaultProps} />);
     });
-
     await waitFor(() => {
       expect(global.URL.createObjectURL).toHaveBeenCalled();
     });
   });
 
   it('renders video element with correct MIME type', async () => {
-    let container: HTMLElement | undefined;
+    let container;
     await act(async () => {
       const result = render(<VideoPlayer {...defaultProps} />);
       container = result.container;
     });
-
     await waitFor(() => {
       const video = container!.querySelector('video');
       expect(video).toBeInTheDocument();
@@ -98,24 +94,19 @@ describe('VideoPlayer', () => {
   it('calls onBack when back button is clicked', async () => {
     const onBack = jest.fn();
     const user = userEvent.setup();
-
     await act(async () => {
       render(<VideoPlayer {...defaultProps} onBack={onBack} />);
     });
-
     const backButton = screen.getByRole('button', { name: /back/i });
     await user.click(backButton);
-
     expect(onBack).toHaveBeenCalledTimes(1);
   });
 
   it('handles fetch error gracefully', async () => {
     (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
-
     await act(async () => {
       render(<VideoPlayer {...defaultProps} />);
     });
-
     await waitFor(() => {
       expect(global.URL.createObjectURL).not.toHaveBeenCalled();
     });
@@ -126,11 +117,9 @@ describe('VideoPlayer', () => {
       ok: false,
       status: 404,
     });
-
     await act(async () => {
       render(<VideoPlayer {...defaultProps} />);
     });
-
     await waitFor(() => {
       expect(global.URL.createObjectURL).not.toHaveBeenCalled();
     });
@@ -140,7 +129,6 @@ describe('VideoPlayer', () => {
     await act(async () => {
       render(<VideoPlayer {...defaultProps} />);
     });
-
     await waitFor(() => {
       expect(global.URL.createObjectURL).toHaveBeenCalledWith(
         expect.objectContaining({ type: 'video/mp4' })

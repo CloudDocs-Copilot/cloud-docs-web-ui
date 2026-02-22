@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Card, Button, Alert, ProgressBar } from 'react-bootstrap';
+import { Card, Button, Alert, ProgressBar, Spinner } from 'react-bootstrap';
 import { Upload, X, CheckCircle } from 'lucide-react';
 import { useFileUpload } from '../../hooks/useFileUpload';
 import { DropZone } from './DropZone';
@@ -20,6 +20,12 @@ interface FileUploaderProps {
   onUploadSuccess?: (documents: Document[]) => void;
   /** Callback para cerrar el uploader */
   onClose?: () => void;
+  /** Custom upload handler (e.g. replace/overwrite) */
+  uploadHandler?: (files: File[]) => Promise<Document[]>;
+  /** Allow selecting multiple files (default true for normal upload, false recommended for replace) */
+  allowMultiple?: boolean;
+  /** Optional title override */
+  title?: string;
 }
 
 /**
@@ -29,11 +35,20 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
   folderId,
   onUploadSuccess,
   onClose,
+  uploadHandler,
+  allowMultiple = true,
+  title,
 }) => {
   const [validationErrors, setValidationErrors] = useState<
     Array<{ fileName: string; message: string }>
   >([]);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  const [customFiles, setCustomFiles] = useState<File[]>([]);
+  const [customUploading, setCustomUploading] = useState(false);
+  const [customError, setCustomError] = useState<string | null>(null);
+
+  const isCustomMode = typeof uploadHandler === 'function';
 
   const {
     files,
@@ -83,6 +98,27 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
    * Maneja la selección de archivos
    */
   const handleFilesSelected = (selectedFiles: FileList | File[]) => {
+    if (isCustomMode) {
+      const list = Array.isArray(selectedFiles) ? selectedFiles : Array.from(selectedFiles);
+      setCustomError(null);
+
+      if (!allowMultiple && list.length > 1) {
+        setValidationErrors([
+          { fileName: list[0].name, message: 'Solo puedes seleccionar un archivo.' },
+        ]);
+        setCustomFiles([list[0]]);
+        return;
+      }
+
+      if (!allowMultiple && list.length === 1) {
+        setCustomFiles([list[0]]);
+        return;
+      }
+
+      setCustomFiles(list);
+      return;
+    }
+
     const result = addFiles(selectedFiles);
 
     if (result.invalid.length > 0) {
@@ -100,6 +136,28 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
    */
   const handleUpload = async () => {
     setValidationErrors([]);
+
+    if (isCustomMode) {
+      if (!customFiles.length || customUploading) return;
+      setCustomUploading(true);
+      setCustomError(null);
+
+      try {
+        const docs = await uploadHandler!(customFiles);
+        setShowSuccess(true);
+
+        setTimeout(() => {
+          onUploadSuccess?.(docs);
+          onClose?.();
+        }, UPLOAD_CONSTRAINTS.SUCCESS_CLOSE_DELAY_MS);
+      } catch {
+        setCustomError('Error al subir el archivo');
+      } finally {
+        setCustomUploading(false);
+      }
+      return;
+    }
+
     await uploadAll();
   };
 
@@ -107,6 +165,16 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
    * Maneja el cierre del uploader
    */
   const handleClose = () => {
+    if (isCustomMode) {
+      setCustomFiles([]);
+      setCustomError(null);
+      setCustomUploading(false);
+      setShowSuccess(false);
+      setValidationErrors([]);
+      onClose?.();
+      return;
+    }
+
     if (isUploading) {
       cancelAll();
     }
@@ -114,9 +182,27 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
     onClose?.();
   };
 
-  const hasFiles = files.length > 0;
-  const canUpload = pendingCount > 0 && !isUploading;
-  const maxFilesReached = files.length >= UPLOAD_CONSTRAINTS.MAX_SIMULTANEOUS_UPLOADS;
+  const hasFiles = isCustomMode ? customFiles.length > 0 : files.length > 0;
+  const canUpload = isCustomMode
+    ? customFiles.length > 0 && !customUploading
+    : pendingCount > 0 && !isUploading;
+
+  const maxFilesReached = isCustomMode
+    ? (!allowMultiple && customFiles.length >= 1)
+    : files.length >= UPLOAD_CONSTRAINTS.MAX_SIMULTANEOUS_UPLOADS;
+
+  const effectiveTitle = title || (isCustomMode ? 'Reemplazar Documento' : 'Subir Documentos');
+
+  const handleCustomRemove = (idx: number) => {
+    setCustomFiles((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleCustomReset = () => {
+    setCustomFiles([]);
+    setCustomError(null);
+    setShowSuccess(false);
+    setValidationErrors([]);
+  };
 
   return (
     <Card className={styles.uploaderCard}>
@@ -124,7 +210,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
       <Card.Header className={styles.header}>
         <div className={styles.headerTitle}>
           <Upload size={20} />
-          <h5>Subir Documentos</h5>
+          <h5>{effectiveTitle}</h5>
         </div>
         {onClose && (
           <Button
@@ -144,7 +230,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           <Alert variant="success" className={styles.successAlert}>
             <CheckCircle size={20} />
             <span>
-              ¡{successCount} {successCount === 1 ? 'archivo subido' : 'archivos subidos'} exitosamente!
+              ¡{isCustomMode ? 'Archivo reemplazado' : `${successCount} ${successCount === 1 ? 'archivo subido' : 'archivos subidos'}`} exitosamente!
             </span>
           </Alert>
         )}
@@ -153,8 +239,12 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
         {!showSuccess && (
           <DropZone
             onFilesSelected={handleFilesSelected}
-            disabled={isUploading || maxFilesReached}
-            maxFiles={UPLOAD_CONSTRAINTS.MAX_SIMULTANEOUS_UPLOADS - files.length}
+            disabled={(isCustomMode ? customUploading : isUploading) || maxFilesReached}
+            maxFiles={
+              isCustomMode
+                ? (allowMultiple ? UPLOAD_CONSTRAINTS.MAX_SIMULTANEOUS_UPLOADS : 1) - customFiles.length
+                : UPLOAD_CONSTRAINTS.MAX_SIMULTANEOUS_UPLOADS - files.length
+            }
           />
         )}
 
@@ -179,8 +269,14 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           </Alert>
         )}
 
+        {customError && (
+          <Alert variant="danger" className={styles.validationAlert} dismissible onClose={() => setCustomError(null)}>
+            {customError}
+          </Alert>
+        )}
+
         {/* Lista de archivos */}
-        {hasFiles && !showSuccess && (
+        {hasFiles && !showSuccess && !isCustomMode && (
           <FileList
             files={files}
             onRemove={removeFile}
@@ -189,8 +285,28 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           />
         )}
 
-        {/* Barra de progreso total */}
-        {isUploading && (
+        {hasFiles && !showSuccess && isCustomMode && (
+          <div>
+            <ul className={styles.errorList} style={{ marginBottom: 0 }}>
+              {customFiles.map((f, idx) => (
+                <li key={`${f.name}-${idx}`} style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+                  <span>{f.name}</span>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    onClick={() => handleCustomRemove(idx)}
+                    disabled={customUploading}
+                    style={{ padding: 0 }}
+                  >
+                    <X size={16} />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {isUploading && !isCustomMode && (
           <div className={styles.totalProgress}>
             <div className={styles.progressLabel}>
               <span>Progreso total</span>
@@ -204,23 +320,32 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
             />
           </div>
         )}
+
+        {customUploading && isCustomMode && (
+          <div className={styles.totalProgress}>
+            <div className={styles.center}>
+              <Spinner animation="border" size="sm" />
+              <span className={styles.centerText}>Reemplazando archivo...</span>
+            </div>
+          </div>
+        )}
       </Card.Body>
 
       {/* Footer */}
       {!showSuccess && (
         <Card.Footer className={styles.footer}>
           <div className={styles.stats}>
-            {pendingCount > 0 && (
+            {!isCustomMode && pendingCount > 0 && (
               <span className={styles.statPending}>
                 {pendingCount} {pendingCount === 1 ? 'pendiente' : 'pendientes'}
               </span>
             )}
-            {successCount > 0 && (
+            {!isCustomMode && successCount > 0 && (
               <span className={styles.statSuccess}>
                 {successCount} {successCount === 1 ? 'completado' : 'completados'}
               </span>
             )}
-            {errorCount > 0 && (
+            {!isCustomMode && errorCount > 0 && (
               <span className={styles.statError}>
                 {errorCount} {errorCount === 1 ? 'fallido' : 'fallidos'}
               </span>
@@ -228,7 +353,7 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           </div>
 
           <div className={styles.actions}>
-            {successCount > 0 && !isUploading && (
+            {!isCustomMode && successCount > 0 && !isUploading && (
               <Button
                 variant="outline-secondary"
                 size="sm"
@@ -238,16 +363,13 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
               </Button>
             )}
 
-            {isUploading ? (
-              <Button variant="danger" onClick={cancelAll}>
-                Cancelar todo
-              </Button>
-            ) : (
+            {isCustomMode ? (
               <>
                 {hasFiles && (
                   <Button
                     variant="outline-secondary"
-                    onClick={reset}
+                    onClick={handleCustomReset}
+                    disabled={customUploading}
                   >
                     Limpiar
                   </Button>
@@ -257,8 +379,34 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
                   onClick={handleUpload}
                   disabled={!canUpload}
                 >
-                  {pendingCount > 0 ? `Subir (${pendingCount})` : 'Subir'}
+                  Reemplazar
                 </Button>
+              </>
+            ) : (
+              <>
+                {isUploading ? (
+                  <Button variant="danger" onClick={cancelAll}>
+                    Cancelar todo
+                  </Button>
+                ) : (
+                  <>
+                    {hasFiles && (
+                      <Button
+                        variant="outline-secondary"
+                        onClick={reset}
+                      >
+                        Limpiar
+                      </Button>
+                    )}
+                    <Button
+                      variant="primary"
+                      onClick={handleUpload}
+                      disabled={!canUpload}
+                    >
+                      {pendingCount > 0 ? `Subir (${pendingCount})` : 'Subir'}
+                    </Button>
+                  </>
+                )}
               </>
             )}
           </div>

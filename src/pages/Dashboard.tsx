@@ -9,7 +9,7 @@ const Dashboard: React.FC = () => {
     title: 'Mis Documentos',
     subtitle: 'Gestión de archivos y carpetas',
     documentTitle: 'Mis Documentos',
-    metaDescription: 'Gestiona y organiza tus documentos y carpetas'
+    metaDescription: 'Gestiona y organiza tus documentos y carpetas con inteligencia artificial',
   });
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);

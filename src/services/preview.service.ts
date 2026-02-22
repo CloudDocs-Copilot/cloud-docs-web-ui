@@ -1,6 +1,7 @@
+import { API_BASE_URL } from '../config/env';
 import { DocumentPreviewType } from '../types/preview.types';
 import type { PreviewConfig, PreviewDocument } from '../types/preview.types';
-import { API_BASE_URL } from '../config/env';
+
 
 /**
  * Configuración por defecto del sistema de preview
@@ -183,14 +184,28 @@ export class PreviewService {
   /**
    * Genera la URL de preview para un documento
    */
-  getPreviewUrl(document: PreviewDocument): string {
-    return `${API_BASE_URL}/documents/preview/${document.id}`;
+  public getPreviewUrl(document: PreviewDocument): string {
+    // Siempre usar el endpoint de preview del API para asegurar autenticación correcta
+    const baseUrl = API_BASE_URL || 'http://localhost:4000/api';
+    const url = `${baseUrl}/documents/preview/${document.id}`;
+    
+    return url;
+  }
+
+  /**
+   * Genera la URL de descarga para un documento
+   */
+  getDownloadUrl(document: PreviewDocument): string {
+    const baseUrl = API_BASE_URL || 'http://localhost:4000/api';
+    const url = `${baseUrl}/documents/download/${document.id}`;
+
+    return url;
   }
 
   /**
    * Formatea el tamaño de archivo para mostrar
    */
-  formatFileSize(bytes: number): string {
+  public formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
 
     const k = 1024;

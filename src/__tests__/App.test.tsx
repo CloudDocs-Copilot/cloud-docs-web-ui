@@ -50,6 +50,11 @@ jest.mock('../hooks/useAuth', () => ({
   }),
 }));
 
+jest.mock('../pages/SharedDocs', () => ({
+  __esModule: true,
+  default: () => <div>SharedDocs Page</div>,
+}));
+
 // Mock child components to isolate App test from page complexity
 jest.mock('../pages/Home', () => ({
   __esModule: true,
@@ -66,6 +71,11 @@ jest.mock('../pages/UserProfile', () => ({
 jest.mock('../pages/NotFound', () => ({
   __esModule: true,
   default: () => <div>Página no encontrada</div>
+}));
+
+jest.mock('../pages/Notifications', () => ({
+  __esModule: true,
+  default: () => <div>Notifications Page</div>
 }));
 
 
@@ -144,7 +154,23 @@ it('renderiza la página de error para una ruta desconocida', () => {
 
   });
 
-
+  it('renderiza la página de Notificaciones en la ruta /notifications', () => {
+    localStorage.setItem('auth_user', JSON.stringify({ id: 'u1', name: 'User', email: 'user@example.com' }));
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/notifications']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    expect(screen.getByText('Notifications Page')).toBeInTheDocument();
+  });
 
 });
 

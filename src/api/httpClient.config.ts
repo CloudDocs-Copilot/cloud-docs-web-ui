@@ -1,6 +1,49 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type InternalAxiosRequestConfig, type AxiosError } from 'axios';
 import type { ApiErrorResponse } from '../types/api.types';
-import { API_BASE_URL, REQUEST_TIMEOUT_MS } from '../config/env';
+
+/**
+ * Configuración base de la instancia de axios
+ */
+import { API_BASE_URL as CONFIG_API_BASE_URL } from '../config/env';
+
+function resolveApiBaseUrl(): string {
+  // Prefer any test-provided global process replacement
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const maybeGlobalProcess = (globalThis as any).process as { env?: Record<string, string> } | undefined;
+    if (maybeGlobalProcess && maybeGlobalProcess.env && maybeGlobalProcess.env.VITE_API_BASE_URL) {
+      return maybeGlobalProcess.env.VITE_API_BASE_URL;
+    }
+  } catch {
+    // ignore
+  }
+
+  // Then prefer real process.env
+  try {
+    if (typeof process !== 'undefined' && process.env && (process.env as Record<string, string>).VITE_API_BASE_URL) {
+      return (process.env as Record<string, string>).VITE_API_BASE_URL;
+    }
+  } catch {
+    // ignore
+  }
+
+  // Then try global __VITE_ENV__ used by some tests
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const g = (globalThis as any).__VITE_ENV__;
+    if (g && g.VITE_API_BASE_URL) return g.VITE_API_BASE_URL;
+  } catch {
+    // ignore
+  }
+
+  // Fallback to canonical config which itself reads import.meta.env or defaults
+  if (CONFIG_API_BASE_URL) return CONFIG_API_BASE_URL;
+
+  return 'http://localhost:4000/api';
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
+const REQUEST_TIMEOUT_MS = 30000; // 30 segundos
 
 /**
  * Variable para almacenar el token CSRF en memoria

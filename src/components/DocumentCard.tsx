@@ -30,7 +30,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
    */
   const handleMoveToTrash = async () => {
     try {
-      const documentId = document.id ?? document._id ?? '';
+      const documentId = document.id || '';
       const deleted = await moveToTrash(documentId);
       if (deleted) {
         setShowDeleteModal(false);
@@ -255,10 +255,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </button>
-            {/* <h6 className={styles.documentName}>{document.originalname || document.filename}</h6> */}
-            </>
           )}
->>>>>>> d1e68ce6e7c73c34a1148a744a8e6ed335856b0d
         </div>
       </Card>
 

@@ -152,19 +152,18 @@ describe("DocumentCard", () => {
     openSpy.mockRestore();
   });
 
-  it("uses _id if id is missing for download url", () => {
+  it("uses id for download url", () => {
     const openSpy = jest.spyOn(window, "open").mockImplementation(() => null);
 
     const doc: Partial<Document> = {
       ...baseDoc,
-      id: undefined,
-      _id: "mongo-1",
+      id: "doc-123",
     };
     render(<DocumentCard document={doc as Document} />);
 
     fireEvent.click(screen.getByTitle("Descargar"));
 
-    expect(openSpy).toHaveBeenCalledWith("/download/mongo-1", "_blank");
+    expect(openSpy).toHaveBeenCalledWith("/download/doc-123", "_blank");
     openSpy.mockRestore();
   });
 

@@ -64,7 +64,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       // Update current folder details from response
       setCurrentFolder(data.folder);
     } catch (error: any) {
-      console.error('Error al cargar contenido:', error);
+      console.error('[FileManagerView] Error al cargar contenido:', error);
       alert(`Error al cargar carpeta: ${error.response?.data?.message || error.message}`);
       // Reset loading even on error
       setItems({ subfolders: [], documents: [] });
@@ -169,6 +169,19 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
     setRenameDocValue(doc.originalname || doc.filename || '');
     setShowRenameDocModal(true);
   };
+
+  const handleDocumentDeleted = useCallback(() => {
+    console.log('[FileManagerView] handleDocumentDeleted ejecutado');
+    console.log('[FileManagerView] currentFolder:', currentFolder?.id, currentFolder?.name);
+    
+    // Refrescar el contenido de la carpeta actual después de eliminar
+    if (currentFolder) {
+      console.log('[FileManagerView] Llamando a fetchContents para actualizar la lista...');
+      fetchContents(currentFolder.id);
+    } else {
+      console.warn('[FileManagerView] No hay currentFolder, no se puede refrescar');
+    }
+  }, [currentFolder, fetchContents]);
 
   const handleConfirmRenameDocument = async () => {
     if (!documentToRename || !renameDocValue.trim()) {
@@ -438,6 +451,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
                           <DocumentCard 
                             document={doc} 
                             onRename={handleRenameDocument}
+                            onDeleted={handleDocumentDeleted}
                           />
                         </Col>
                       ))}

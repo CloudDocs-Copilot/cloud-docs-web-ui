@@ -20,6 +20,16 @@ jest.mock('../../hooks/usePermissions', () => ({
 jest.mock('../../hooks/usePageInfoTitle', () => ({
   usePageTitle: jest.fn(),
 }));
+jest.mock('../../hooks/useDashboardData', () => ({
+  useDashboardData: () => ({
+    orgStats: null,
+    statsLoading: false,
+    statsError: null,
+    notifications: [],
+    notificationsLoading: false,
+    refetch: jest.fn(),
+  }),
+}));
 
 const mockExecute = jest.fn();
 
@@ -76,6 +86,8 @@ describe('Dashboard', () => {
     (useOrganizationHook.default as jest.Mock).mockReturnValue({
       activeOrganization: { id: 'org-123', role: 'member' },
       membership: null,
+      isAdmin: false,
+      isOwner: false,
     });
 
     (useHttpRequestHook.useHttpRequest as jest.Mock).mockReturnValue({
@@ -159,6 +171,8 @@ describe('Dashboard', () => {
     (useOrganizationHook.default as jest.Mock).mockReturnValue({
       activeOrganization: { id: 'org-123', role: 'member' },
       membership: { role: 'OWNER' },
+      isAdmin: false,
+      isOwner: true,
     });
 
     (useHttpRequestHook.useHttpRequest as jest.Mock).mockReturnValue({
@@ -205,6 +219,8 @@ describe('Dashboard', () => {
     (useOrganizationHook.default as jest.Mock).mockReturnValue({
       activeOrganization: { id: '', role: 'member' },
       membership: null,
+      isAdmin: false,
+      isOwner: false,
     });
 
     render(

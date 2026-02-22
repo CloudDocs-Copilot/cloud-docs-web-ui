@@ -5,6 +5,15 @@ import DocumentCard from '../components/DocumentCard';
 import { useHttpRequest } from '../hooks/useHttpRequest';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
 import useOrganization from '../hooks/useOrganization';
+import { usePermissions } from '../hooks/usePermissions';
+import { useDashboardData } from '../hooks/useDashboardData';
+import {
+  StorageWidget,
+  DocumentStatsWidget,
+  MemberStatsWidget,
+  RecentActivityWidget,
+  QuickActionsWidget,
+} from '../components/Dashboard';
 import type { Document } from '../types/document.types';
 
 
@@ -30,7 +39,9 @@ const Dashboard: React.FC = () => {
   
 
   // Obtener ID de la organización activa desde el contexto
-  const { activeOrganization, membership } = useOrganization();
+  const { activeOrganization, membership, isAdmin, isOwner } = useOrganization();
+  const { can } = usePermissions();
+  const { orgStats, statsLoading, statsError, notifications, notificationsLoading } = useDashboardData();
   const organizationId = activeOrganization?.id ?? '';
 
   // Permission: delete only for owner/admin roles (membership wins over activeOrganization)
@@ -72,8 +83,51 @@ const Dashboard: React.FC = () => {
   return (
     <MainLayout onDocumentsUploaded={handleDocumentsUploaded}>
       <Container fluid>
-       
-       
+
+        {/* Stats Row - KPI Cards */}
+        <Row className="g-3 mb-4">
+          <Col xs={12} md={6} lg={3}>
+            <DocumentStatsWidget
+              totalDocuments={documents?.documents?.length ?? 0}
+              loading={statsLoading}
+              error={statsError}
+            />
+          </Col>
+          <Col xs={12} md={6} lg={3}>
+            <StorageWidget
+              storageStats={orgStats?.storage ?? null}
+              loading={statsLoading}
+              error={statsError}
+            />
+          </Col>
+          {(isAdmin || isOwner) && (
+            <Col xs={12} md={6} lg={3}>
+              <MemberStatsWidget
+                memberStats={orgStats?.members ?? null}
+                loading={statsLoading}
+                error={statsError}
+              />
+            </Col>
+          )}
+          <Col xs={12} md={6} lg={3}>
+            <QuickActionsWidget
+              canUpload={can('documents:create')}
+              canInvite={can('members:invite')}
+            />
+          </Col>
+        </Row>
+
+        {/* Activity Row */}
+        <Row className="g-3 mb-4">
+          <Col xs={12} lg={8}>
+            <RecentActivityWidget
+              notifications={notifications.slice(0, 5)}
+              loading={notificationsLoading}
+              error={null}
+            />
+          </Col>
+        </Row>
+
         {/* Loading state */}
         {isLoading && (
           <div className="text-center py-5">

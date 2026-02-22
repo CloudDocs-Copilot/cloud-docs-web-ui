@@ -286,12 +286,14 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
         </Modal>
       )}
 
-      {/* Modal de preview */}
-      <DocumentPreviewModal
-        show={showPreview}
-        onHide={handleClosePreview}
-        document={previewDocument}
-      />
+      {/* Modal de preview - solo renderizar cuando se muestra */}
+      {showPreview && (
+        <DocumentPreviewModal
+          show={showPreview}
+          onHide={handleClosePreview}
+          document={previewDocument}
+        />
+      )}
     </>
   );
 };

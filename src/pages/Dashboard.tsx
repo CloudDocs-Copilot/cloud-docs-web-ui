@@ -7,16 +7,6 @@ import { useDashboardData } from '../hooks/useDashboardData';
 import { DashboardGrid } from '../components/Dashboard/DashboardGrid';
 
 const Dashboard: React.FC = () => {
-  const { activeOrganization } = useOrganization();
-  const orgName = activeOrganization?.name ?? 'Mi Organización';
-
-  usePageTitle({
-    title: `Dashboard - ${orgName}`,
-    subtitle: 'Vista general de tu organización',
-    documentTitle: `Dashboard - ${orgName}`,
-    metaDescription: 'Dashboard contextual con información relevante según tu rol y organización',
-  });
-
   const {
     role,
     stats,
@@ -27,7 +17,16 @@ const Dashboard: React.FC = () => {
     membersError,
   } = useDashboardData();
 
-  // Incrementing this key causes RecentDocumentsWidget to re-fetch
+  const { activeOrganization } = useOrganization();
+  const orgName = activeOrganization?.name ?? 'Mi Organización';
+
+  usePageTitle({
+    title: `Dashboard - ${orgName}`,
+    subtitle: 'Vista general de tu organización',
+    documentTitle: `Dashboard - ${orgName}`,
+    metaDescription: 'Dashboard contextual con información relevante según tu rol y organización',
+  });
+
   const [docsRefreshKey, setDocsRefreshKey] = useState(0);
 
   const handleDocumentsUploaded = useCallback(() => {

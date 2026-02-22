@@ -111,9 +111,27 @@ describe('Dashboard', () => {
     expect(screen.getByTestId('dashboard-grid')).toHaveAttribute('data-role', 'admin');
   });
 
-  it('renders even when no organization is set', () => {
+  it('renders even when no organization is set', async () => {
     (useOrganizationHook.default as jest.Mock).mockReturnValue({
       activeOrganization: null,
+      membership: null,
+      isAdmin: false,
+      isOwner: false,
+      hasRole: jest.fn().mockReturnValue(false),
+    });
+
+    render(
+      <BrowserRouter>
+        <Dashboard />
+      </BrowserRouter>,
+    );
+
+    expect(screen.getByTestId('dashboard-grid')).toBeInTheDocument();
+  });
+
+  it('does not crash when organization has no name', () => {
+    (useOrganizationHook.default as jest.Mock).mockReturnValue({
+      activeOrganization: { id: 'org-456' },
       membership: null,
       isAdmin: false,
       isOwner: false,

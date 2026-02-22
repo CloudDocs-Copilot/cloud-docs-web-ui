@@ -83,5 +83,3 @@ export const useDashboardData = (): DashboardData => {
     refreshMembers,
   };
 };
-
-export default useDashboardData;

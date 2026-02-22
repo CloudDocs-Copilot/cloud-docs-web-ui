@@ -2,7 +2,7 @@ import React from 'react';
 import { Row, Col } from 'react-bootstrap';
 import { DASHBOARD_WIDGETS_BY_ROLE } from '../../constants/dashboardWidgets';
 import type { MembershipRole } from '../../types/organization.types';
-import type { OrgStats, OrgMember } from '../../services/dashboard.service';
+import type { OrgStats, OrgMember } from '../../types/dashboard.types';
 import { OrgContextBanner } from './widgets/OrgContextBanner';
 import { RecentDocumentsWidget } from './widgets/RecentDocumentsWidget';
 import { QuickActionsWidget } from './widgets/QuickActionsWidget';

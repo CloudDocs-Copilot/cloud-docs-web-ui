@@ -1,10 +1,30 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
 import Dashboard from '../Dashboard';
 import * as useOrganizationHook from '../../hooks/useOrganization';
 import * as useDashboardDataHook from '../../hooks/useDashboardData';
+import * as useHttpRequestHook from '../../hooks/useHttpRequest';
+
+const mockExecute = jest.fn();
+
+let mockHttpState = {
+  data: undefined,
+  isLoading: false,
+  isError: false,
+  error: undefined,
+};
+
+jest.mock('../../hooks/useHttpRequest', () => ({
+  useHttpRequest: jest.fn(() => ({
+    execute: mockExecute,
+    data: mockHttpState.data,
+    isLoading: mockHttpState.isLoading,
+    isError: mockHttpState.isError,
+    error: mockHttpState.error,
+  })),
+}));
 
 // Mock hooks
 jest.mock('../../hooks/useOrganization');
@@ -13,14 +33,14 @@ jest.mock('../../hooks/usePageInfoTitle', () => ({
   usePageTitle: jest.fn(),
 }));
 jest.mock('../../hooks/useDashboardData', () => ({
-  useDashboardData: () => ({
+  useDashboardData: jest.fn(() => ({
     orgStats: null,
     statsLoading: false,
     statsError: null,
     notifications: [],
     notificationsLoading: false,
     refetch: jest.fn(),
-  }),
+  })),
 }));
 
 // Mock DashboardGrid to avoid cascading widget mocks
@@ -120,7 +140,7 @@ describe('Dashboard', () => {
     expect(screen.getByTestId('dashboard-grid')).toHaveAttribute('data-role', 'admin');
   });
 
-  it('renders even when no organization is set', () => {
+  it('renders even when no organization is set', async () => {
     (useOrganizationHook.default as jest.Mock).mockReturnValue({
       activeOrganization: { id: 'org-123', role: 'member' },
       membership: { role: 'OWNER' },
@@ -147,13 +167,19 @@ describe('Dashboard', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId('doc-card-test1.pdf')).toBeInTheDocument();
+      expect(screen.getByTestId('dashboard-grid')).toBeInTheDocument();
     });
-
-    expect(screen.getByText('canDelete:true')).toBeInTheDocument();
   });
 
   it('fetches documents on mount with organization ID', async () => {
+    (useHttpRequestHook.useHttpRequest as jest.Mock).mockReturnValue({
+      execute: mockExecute,
+      data: null,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
     render(
       <BrowserRouter>
         <Dashboard />

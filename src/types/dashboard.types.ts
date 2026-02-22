@@ -24,3 +24,11 @@ export interface OrgStats {
   storage: StorageStats;
   members: MemberStats;
 }
+
+export interface OrgMember {
+  id: string;
+  role: string;
+  status: string;
+  name?: string;
+  email?: string;
+}

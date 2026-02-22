@@ -2,13 +2,22 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { StorageWidget } from '../widgets/StorageWidget';
-import type { OrgStats } from '../../../services/dashboard.service';
+import type { OrgStats } from '../../../types/dashboard.types';
 
 const mockStats: OrgStats = {
-  storageUsed: 500 * 1024 * 1024, // 500 MB
-  storageTotal: 1024 * 1024 * 1024, // 1 GB
-  documentsCount: 20,
-  membersCount: 5,
+  storage: {
+    used: 500 * 1024 * 1024, // 500 MB
+    total: 1024 * 1024 * 1024, // 1 GB
+    percentage: 49,
+    formattedUsed: '500 MB',
+    formattedTotal: '1 GB',
+  },
+  members: {
+    total: 5,
+    active: 4,
+    pending: 1,
+    byRole: { owner: 1, admin: 1, member: 2, viewer: 1 },
+  },
 };
 
 describe('StorageWidget', () => {
@@ -22,7 +31,10 @@ describe('StorageWidget', () => {
   it('shows warning alert when usage > 80%', () => {
     const highUsageStats: OrgStats = {
       ...mockStats,
-      storageUsed: 850 * 1024 * 1024, // 850 MB of 1 GB = ~83%
+      storage: {
+        ...mockStats.storage,
+        used: 850 * 1024 * 1024, // 850 MB of 1 GB = ~83%
+      },
     };
 
     render(<StorageWidget stats={highUsageStats} loading={false} error={null} />);
@@ -33,7 +45,10 @@ describe('StorageWidget', () => {
   it('shows danger alert when usage > 95%', () => {
     const criticalStats: OrgStats = {
       ...mockStats,
-      storageUsed: 980 * 1024 * 1024, // 980 MB of 1 GB = ~96%
+      storage: {
+        ...mockStats.storage,
+        used: 980 * 1024 * 1024, // 980 MB of 1 GB = ~96%
+      },
     };
 
     render(<StorageWidget stats={criticalStats} loading={false} error={null} />);

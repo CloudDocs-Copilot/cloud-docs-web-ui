@@ -2,7 +2,7 @@ import React from 'react';
 import { ProgressBar, Alert } from 'react-bootstrap';
 import { DashboardWidget } from '../DashboardWidget';
 import { formatStorageUsed } from '../../../types/user.types';
-import type { OrgStats } from '../../../services/dashboard.service';
+import type { OrgStats } from '../../../types/dashboard.types';
 
 interface StorageWidgetProps {
   stats: OrgStats | null;
@@ -20,8 +20,8 @@ export const StorageWidget: React.FC<StorageWidgetProps> = ({ stats, loading, er
   );
 
   const usedPercent =
-    stats && stats.storageTotal > 0
-      ? Math.min(100, Math.round((stats.storageUsed / stats.storageTotal) * 100))
+    stats && stats.storage.total > 0
+      ? Math.min(100, Math.round((stats.storage.used / stats.storage.total) * 100))
       : 0;
 
   const progressVariant =
@@ -49,8 +49,8 @@ export const StorageWidget: React.FC<StorageWidgetProps> = ({ stats, loading, er
             visuallyHidden
           />
           <div className="d-flex justify-content-between">
-            <small className="text-muted">{formatStorageUsed(stats.storageUsed)}</small>
-            <small className="text-muted">{formatStorageUsed(stats.storageTotal)}</small>
+            <small className="text-muted">{formatStorageUsed(stats.storage.used)}</small>
+            <small className="text-muted">{formatStorageUsed(stats.storage.total)}</small>
           </div>
           {usedPercent >= 95 && (
             <Alert variant="danger" className="mt-2 mb-0 py-1">

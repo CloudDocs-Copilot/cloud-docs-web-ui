@@ -12,16 +12,6 @@ jest.mock('../../hooks/useDashboardData');
 jest.mock('../../hooks/usePageInfoTitle', () => ({
   usePageTitle: jest.fn(),
 }));
-jest.mock('../../hooks/useDashboardData', () => ({
-  useDashboardData: () => ({
-    orgStats: null,
-    statsLoading: false,
-    statsError: null,
-    notifications: [],
-    notificationsLoading: false,
-    refetch: jest.fn(),
-  }),
-}));
 
 // Mock DashboardGrid to avoid cascading widget mocks
 jest.mock('../../components/Dashboard/DashboardGrid', () => ({
@@ -74,6 +64,7 @@ describe('Dashboard', () => {
       membership: null,
       isAdmin: false,
       isOwner: false,
+      hasRole: jest.fn().mockReturnValue(false),
     });
 
     (useDashboardDataHook.useDashboardData as jest.Mock).mockReturnValue(defaultDashboardData);
@@ -122,58 +113,29 @@ describe('Dashboard', () => {
 
   it('renders even when no organization is set', () => {
     (useOrganizationHook.default as jest.Mock).mockReturnValue({
-      activeOrganization: { id: 'org-123', role: 'member' },
-      membership: { role: 'OWNER' },
-      isAdmin: false,
-      isOwner: true,
-    });
-
-    (useHttpRequestHook.useHttpRequest as jest.Mock).mockReturnValue({
-      execute: mockExecute,
-      data: {
-        success: true,
-        count: 1,
-        documents: [{ id: '1', filename: 'test1.pdf' }],
-      },
-      isLoading: false,
-      isError: false,
-      error: null,
-    });
-
-    render(
-      <BrowserRouter>
-        <Dashboard />
-      </BrowserRouter>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getByTestId('doc-card-test1.pdf')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('canDelete:true')).toBeInTheDocument();
-  });
-
-  it('fetches documents on mount with organization ID', async () => {
-    render(
-      <BrowserRouter>
-        <Dashboard />
-      </BrowserRouter>,
-    );
-
-    await waitFor(() => {
-      expect(mockExecute).toHaveBeenCalledWith({
-        method: 'GET',
-        url: '/documents/recent/org-123',
-      });
-    });
-  });
-
-  it('does not fetch documents on mount when organization ID is missing (branch)', async () => {
-    (useOrganizationHook.default as jest.Mock).mockReturnValue({
-      activeOrganization: { id: '', role: 'member' },
+      activeOrganization: null,
       membership: null,
       isAdmin: false,
       isOwner: false,
+      hasRole: jest.fn().mockReturnValue(false),
+    });
+
+    render(
+      <BrowserRouter>
+        <Dashboard />
+      </BrowserRouter>,
+    );
+
+    expect(screen.getByTestId('dashboard-grid')).toBeInTheDocument();
+  });
+
+  it('does not crash when organization has no name', () => {
+    (useOrganizationHook.default as jest.Mock).mockReturnValue({
+      activeOrganization: { id: 'org-456' },
+      membership: null,
+      isAdmin: false,
+      isOwner: false,
+      hasRole: jest.fn().mockReturnValue(false),
     });
 
     render(

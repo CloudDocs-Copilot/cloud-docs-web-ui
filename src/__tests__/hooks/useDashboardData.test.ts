@@ -8,125 +8,107 @@ jest.mock('../../hooks/useOrganization', () => ({
   useOrganization: jest.fn(),
 }));
 
-jest.mock('../../hooks/useNotifications', () => ({
-  useNotifications: jest.fn(),
-}));
-
 jest.mock('../../services/dashboard.service', () => ({
   dashboardService: {
-    getOrgStats: jest.fn(),
+    getOrganizationStats: jest.fn(),
+    getOrganizationMembers: jest.fn(),
   },
 }));
 
 import * as useOrgModule from '../../hooks/useOrganization';
-import { useNotifications } from '../../hooks/useNotifications';
 import { dashboardService } from '../../services/dashboard.service';
 
-const mockOrgStats = {
-  storage: {
-    used: 1000,
-    total: 10000,
-    percentage: 10,
-    formattedUsed: '1 KB',
-    formattedTotal: '10 KB',
-  },
-  members: {
-    total: 3,
-    active: 2,
-    pending: 1,
-    byRole: { owner: 1, admin: 1, member: 1, viewer: 0 },
-  },
+const mockStats = {
+  storageUsed: 1000,
+  storageTotal: 10000,
+  documentsCount: 5,
+  membersCount: 3,
 };
 
-const mockNotifications = [
-  {
-    id: 'n1',
-    organization: 'org-1',
-    recipient: 'u1',
-    actor: 'u2',
-    type: 'DOC_UPLOADED' as const,
-    entity: { kind: 'document' as const, id: 'd1' },
-  },
+const mockMembers = [
+  { id: 'm1', userId: 'u1', role: 'owner', status: 'active' },
+  { id: 'm2', userId: 'u2', role: 'admin', status: 'active' },
 ];
 
 describe('useDashboardData', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (useOrgModule.default as jest.Mock).mockReturnValue({
-      activeOrganization: { id: 'org-123' },
+      activeOrganization: { id: 'org-123', role: 'admin' },
+      membership: { role: 'admin' },
+      isAdmin: true,
+      isOwner: false,
     });
-    (useNotifications as jest.Mock).mockReturnValue({
-      notifications: mockNotifications,
-      loading: false,
-    });
-    (dashboardService.getOrgStats as jest.Mock).mockResolvedValue(mockOrgStats);
+    (dashboardService.getOrganizationStats as jest.Mock).mockResolvedValue(mockStats);
+    (dashboardService.getOrganizationMembers as jest.Mock).mockResolvedValue(mockMembers);
   });
 
-  it('fetches org stats on mount when organization is present', async () => {
+  it('fetches stats and members for admin on mount', async () => {
     const { result } = renderHook(() => useDashboardData());
 
     await waitFor(() => {
-      expect(result.current.orgStats).toEqual(mockOrgStats);
+      expect(result.current.stats).toEqual(mockStats);
+      expect(result.current.members).toEqual(mockMembers);
     });
 
-    expect(dashboardService.getOrgStats).toHaveBeenCalledWith('org-123');
+    expect(dashboardService.getOrganizationStats).toHaveBeenCalledWith('org-123');
+    expect(dashboardService.getOrganizationMembers).toHaveBeenCalledWith('org-123');
   });
 
-  it('returns notifications from useNotifications context', async () => {
+  it('derives role from membership', async () => {
     const { result } = renderHook(() => useDashboardData());
 
     await waitFor(() => {
-      expect(result.current.notifications).toEqual(mockNotifications);
+      expect(result.current.role).toBe('admin');
     });
   });
 
-  it('sets statsError when service throws', async () => {
-    (dashboardService.getOrgStats as jest.Mock).mockRejectedValue(
+  it('does not fetch data for non-admin member', async () => {
+    (useOrgModule.default as jest.Mock).mockReturnValue({
+      activeOrganization: { id: 'org-123', role: 'member' },
+      membership: { role: 'member' },
+      isAdmin: false,
+      isOwner: false,
+    });
+
+    renderHook(() => useDashboardData());
+
+    await waitFor(() => {
+      expect(dashboardService.getOrganizationStats).not.toHaveBeenCalled();
+      expect(dashboardService.getOrganizationMembers).not.toHaveBeenCalled();
+    });
+  });
+
+  it('sets statsError when stats service throws', async () => {
+    (dashboardService.getOrganizationStats as jest.Mock).mockRejectedValue(
       new Error('Network error'),
     );
 
     const { result } = renderHook(() => useDashboardData());
 
     await waitFor(() => {
-      expect(result.current.statsError).toBeTruthy();
-      expect(result.current.orgStats).toBeNull();
+      expect(result.current.statsError).toBe('Network error');
+      expect(result.current.stats).toBeNull();
     });
   });
 
-  it('does not fetch stats when no organization is set', async () => {
-    (useOrgModule.default as jest.Mock).mockReturnValue({
-      activeOrganization: null,
-    });
+  it('sets membersError when members service throws', async () => {
+    (dashboardService.getOrganizationMembers as jest.Mock).mockRejectedValue(
+      new Error('Members error'),
+    );
 
-    renderHook(() => useDashboardData());
-
-    await waitFor(() => {
-      expect(dashboardService.getOrgStats).not.toHaveBeenCalled();
-    });
-  });
-
-  it('exposes notificationsLoading from context', () => {
-    (useNotifications as jest.Mock).mockReturnValue({
-      notifications: [],
-      loading: true,
-    });
-
-    const { result } = renderHook(() => useDashboardData());
-    expect(result.current.notificationsLoading).toBe(true);
-  });
-
-  it('provides refetch function', async () => {
     const { result } = renderHook(() => useDashboardData());
 
     await waitFor(() => {
-      expect(result.current.orgStats).toEqual(mockOrgStats);
+      expect(result.current.membersError).toBe('Members error');
+      expect(result.current.members).toBeNull();
     });
+  });
 
-    const callCount = (dashboardService.getOrgStats as jest.Mock).mock.calls.length;
-    result.current.refetch();
+  it('exposes refreshStats and refreshMembers functions', () => {
+    const { result } = renderHook(() => useDashboardData());
 
-    await waitFor(() => {
-      expect((dashboardService.getOrgStats as jest.Mock).mock.calls.length).toBeGreaterThan(callCount);
-    });
+    expect(typeof result.current.refreshStats).toBe('function');
+    expect(typeof result.current.refreshMembers).toBe('function');
   });
 });

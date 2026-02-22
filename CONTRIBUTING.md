@@ -34,7 +34,7 @@ Run frontend with backend and database:
 
 ```bash
 # From the workspace root (parent of cloud-docs-web-ui)
-cp .env.example .env
+cp .env.example .env.local
 docker-compose up -d
 
 # Frontend available at http://localhost:3000

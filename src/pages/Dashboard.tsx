@@ -1,8 +1,6 @@
-import React, { useCallback } from 'react';
-import { Container, Row, Col, Spinner, Alert } from 'react-bootstrap';
+import React, { useCallback, useState } from 'react';
+import { Container } from 'react-bootstrap';
 import MainLayout from '../components/MainLayout';
-import DocumentCard from '../components/DocumentCard';
-import { useHttpRequest } from '../hooks/useHttpRequest';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
 import useOrganization from '../hooks/useOrganization';
 import { usePermissions } from '../hooks/usePermissions';
@@ -24,12 +22,14 @@ interface DocumentsApiResponse {
 };
 
 const Dashboard: React.FC = () => {
-    
+  const { activeOrganization } = useOrganization();
+  const orgName = activeOrganization?.name ?? 'Mi Organización';
+
   usePageTitle({
-    title: 'Mis Documentos',
-    subtitle: 'Organizado automáticamente con IA',
-    documentTitle: 'Mis Documentos',
-    metaDescription: 'Gestiona y organiza tus documentos con inteligencia artificial',
+    title: `Dashboard - ${orgName}`,
+    subtitle: 'Vista general de tu organización',
+    documentTitle: `Dashboard - ${orgName}`,
+    metaDescription: 'Dashboard contextual con información relevante según tu rol y organización',
   });
 
   
@@ -44,42 +44,17 @@ const Dashboard: React.FC = () => {
   const { orgStats, statsLoading, statsError, notifications, notificationsLoading } = useDashboardData();
   const organizationId = activeOrganization?.id ?? '';
 
-  // Permission: delete only for owner/admin roles (membership wins over activeOrganization)
-  const rawRole = membership?.role ?? activeOrganization?.role ?? 'member';
-  const orgRole = typeof rawRole === 'string' ? rawRole.toLowerCase() : rawRole;
-  const canDeleteDocuments = orgRole === 'owner' || orgRole === 'admin';
+  // Incrementing this key causes RecentDocumentsWidget to re-fetch
+  const [docsRefreshKey, setDocsRefreshKey] = useState(0);
 
-  const fetchDocuments = useCallback(() => {
-    if (!organizationId) return;
-    execute({
-      method: 'GET',
-      url: `/documents/recent/${organizationId}`,
-    });
-  }, [execute, organizationId]);
-
-  /**
-   * Callback cuando se suben documentos exitosamente
-   */
   const handleDocumentsUploaded = useCallback(() => {
-    // Refrescar la lista de documentos
-    fetchDocuments();
-  }, [fetchDocuments]);
+    setDocsRefreshKey((k) => k + 1);
+  }, []);
 
-  /**
-   * Callback cuando se elimina un documento
-   */
   const handleDocumentDeleted = useCallback(() => {
-    // Refrescar la lista de documentos
-    fetchDocuments();
-  }, [fetchDocuments]);
+    setDocsRefreshKey((k) => k + 1);
+  }, []);
 
-
-
-  React.useEffect(() => {
-    fetchDocuments();
-  }, [fetchDocuments]);
-
- 
   return (
     <MainLayout onDocumentsUploaded={handleDocumentsUploaded}>
       <Container fluid>

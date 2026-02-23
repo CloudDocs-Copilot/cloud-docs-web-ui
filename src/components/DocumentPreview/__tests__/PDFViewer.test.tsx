@@ -2,73 +2,124 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import React from 'react';
 import { PDFViewer } from '../PDFViewer';
+import { apiClient } from '../../../api/httpClient.config';
+
+// Mock apiClient
+jest.mock('../../../api/httpClient.config', () => ({
+  apiClient: {
+    get: jest.fn(),
+  },
+}));
 
 // Mock react-pdf to avoid heavy native behavior in tests
 jest.mock('react-pdf', () => ({
-  Document: ({ children, onLoadSuccess }: { children: React.ReactNode; onLoadSuccess?: (doc: { numPages: number }) => void }) => {
+  Document: ({ children, onLoadSuccess, file }: { children: React.ReactNode; onLoadSuccess?: (doc: { numPages: number }) => void; file?: string }) => {
     React.useEffect(() => { 
-      if (onLoadSuccess) {
-        onLoadSuccess({ numPages: 2 });
+      if (onLoadSuccess && file) {
+        // Simular carga exitosa después de un tick
+        setTimeout(() => onLoadSuccess({ numPages: 2 }), 0);
       }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-    return <div>{children}</div>;
+    }, [file]);
+    return <div data-testid="pdf-document">{children}</div>;
   },
-  Page: () => <div data-testid="pdf-page" />,
-  pdfjs: { GlobalWorkerOptions: {} },
+  Page: () => <div data-testid="pdf-page">PDF Page</div>,
+  pdfjs: { GlobalWorkerOptions: { workerSrc: '' }, version: '3.11.174' },
 }));
 
 jest.mock('../../../services/preview.service', () => ({ previewService: { formatFileSize: (n: number) => `${n} bytes` } }));
 
-// Aumentar timeout por si las operaciones de fetch/pdf tardan en CI
-jest.setTimeout(30000);
-
 describe('PDFViewer', () => {
-  beforeEach(() => jest.resetAllMocks());
+  const mockApiGet = apiClient.get as jest.MockedFunction<typeof apiClient.get>;
 
   beforeEach(() => {
+    jest.clearAllMocks();
+    
     // Ensure URL.createObjectURL exists in the test environment
-    // and can be spied on / restored
     if (!global.URL.createObjectURL) {
-      global.URL.createObjectURL = () => 'blob:mock';
+      global.URL.createObjectURL = jest.fn(() => 'blob:mock-url');
     }
     if (!global.URL.revokeObjectURL) {
-      global.URL.revokeObjectURL = () => {};
+      global.URL.revokeObjectURL = jest.fn();
     }
   });
 
   it('loads PDF blob and renders page', async () => {
     const blob = new Blob(['%PDF-1.4'], { type: 'application/pdf' });
-    global.fetch = jest.fn(() => Promise.resolve({ ok: true, status: 200, headers: new Headers(), blob: () => Promise.resolve(blob) } as Response));
-    const { container } = render(<PDFViewer url="/doc.pdf" filename="f.pdf" fileSize={1024} />);
-    await waitFor(() => expect(container.querySelector('[data-testid="pdf-page"]')).toBeInTheDocument(), { timeout: 5000 });
-    (global.fetch as jest.Mock | undefined)?.mockClear();
+    mockApiGet.mockResolvedValueOnce({ 
+      data: blob, 
+      status: 200, 
+      statusText: 'OK',
+      headers: {},
+      config: {} as any
+    });
+
+    render(<PDFViewer url="/doc.pdf" filename="f.pdf" fileSize={1024} />);
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('pdf-document')).toBeInTheDocument();
+    }, { timeout: 2000 });
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('pdf-page')).toBeInTheDocument();
+    }, { timeout: 2000 });
   });
 
-  it('shows error when response not ok', async () => {
-    global.fetch = jest.fn(() => Promise.resolve({ ok: false, status: 404, headers: new Headers(), text: () => Promise.resolve('no') } as Response));
+  it('shows error when apiClient request fails', async () => {
+    mockApiGet.mockRejectedValueOnce(new Error('Network error'));
+    
     render(<PDFViewer url="/missing.pdf" filename="x.pdf" />);
-    await waitFor(() => expect(screen.getByText(/Error Loading PDF/i)).toBeInTheDocument());
-    (global.fetch as jest.Mock | undefined)?.mockClear();
+    
+    await waitFor(() => {
+      expect(screen.getByText(/Error Loading PDF/i)).toBeInTheDocument();
+    }, { timeout: 2000 });
   });
 
   it('errors for invalid blob type', async () => {
     const blob = new Blob(['hello'], { type: 'text/plain' });
-    global.fetch = jest.fn(() => Promise.resolve({ ok: true, status: 200, headers: new Headers(), blob: () => Promise.resolve(blob) } as Response));
+    mockApiGet.mockResolvedValueOnce({ 
+      data: blob, 
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {} as any
+    });
+    
     render(<PDFViewer url="/bad.pdf" filename="bad.pdf" />);
-    await waitFor(() => expect(screen.getByText(/Failed to load PDF/i)).toBeInTheDocument());
-    (global.fetch as jest.Mock | undefined)?.mockClear();
+    
+    await waitFor(() => {
+      expect(screen.getByText(/Failed to load PDF/i)).toBeInTheDocument();
+    }, { timeout: 2000 });
   });
 
   it('zoom buttons update percentage', async () => {
     const blob = new Blob(['%PDF'], { type: 'application/pdf' });
-    global.fetch = jest.fn(() => Promise.resolve({ ok: true, status: 200, headers: new Headers(), blob: () => Promise.resolve(blob) } as Response));
+    mockApiGet.mockResolvedValueOnce({ 
+      data: blob, 
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {} as any
+    });
+    
     const { container } = render(<PDFViewer url="/doc.pdf" filename="f.pdf" fileSize={1024} />);
-    await waitFor(() => expect(container.textContent).toMatch(/100%/), { timeout: 5000 });
-    fireEvent.click(screen.getByTitle(/Aumentar zoom/i));
-    await waitFor(() => expect(container.textContent).toMatch(/120%/));
-    fireEvent.click(screen.getByTitle(/Reducir zoom/i));
-    await waitFor(() => expect(container.textContent).toMatch(/100%/));
-    (global.fetch as jest.Mock | undefined)?.mockClear();
+    
+    await waitFor(() => {
+      expect(container.textContent).toMatch(/100%/);
+    }, { timeout: 2000 });
+    
+    const zoomInBtn = screen.getByTitle(/Aumentar zoom/i);
+    fireEvent.click(zoomInBtn);
+    
+    await waitFor(() => {
+      expect(container.textContent).toMatch(/120%/);
+    }, { timeout: 1000 });
+    
+    const zoomOutBtn = screen.getByTitle(/Reducir zoom/i);
+    fireEvent.click(zoomOutBtn);
+    
+    await waitFor(() => {
+      expect(container.textContent).toMatch(/100%/);
+    }, { timeout: 1000 });
   });
 });

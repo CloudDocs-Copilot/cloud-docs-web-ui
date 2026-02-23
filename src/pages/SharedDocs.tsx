@@ -52,15 +52,6 @@ const Dashboard: React.FC = () => {
       url: `/documents/shared`,
     });
   }, [execute]);
-
-  /**
-   * Callback cuando se suben documentos exitosamente
-   */
-  const handleDocumentsUploaded = useCallback(() => {
-    // Refrescar la lista de documentos
-    fetchDocuments();
-  }, [fetchDocuments]);
-
   /**
    * Callback cuando se elimina un documento
    */
@@ -77,7 +68,7 @@ const Dashboard: React.FC = () => {
 
  
   return (
-    <MainLayout onDocumentsUploaded={handleDocumentsUploaded}>
+    <MainLayout>
       <Container fluid>
        
        

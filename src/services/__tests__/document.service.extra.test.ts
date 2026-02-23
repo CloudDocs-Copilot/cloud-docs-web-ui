@@ -24,8 +24,8 @@ describe('document.service basic operations', () => {
     expect(res.success).toBe(true);
   });
 
-  it('moveDocument calls patch and returns document', async () => {
-    (apiClient.patch as jest.Mock).mockResolvedValue({ data: { success: true, message: 'moved', document: { id: 'd1' } } });
+  it('moveDocument calls post and returns document', async () => {
+    (apiClient.post as jest.Mock).mockResolvedValue({ data: { success: true, message: 'moved', document: { id: 'd1' } } });
     const res = await DocService.moveDocument('d1', 'f2');
     expect(res.document.id).toBe('d1');
   });

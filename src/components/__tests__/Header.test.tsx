@@ -44,15 +44,6 @@ const mockUseNotifications = jest.fn<
   []
 >();
 
-type OrganizationRole = "owner" | "admin" | "member" | "viewer";
-type MockMembership = { role?: OrganizationRole };
-type MockActiveOrg = { role?: OrganizationRole; id?: string };
-
-const mockUseOrganization = jest.fn<
-  { activeOrganization?: MockActiveOrg; membership?: MockMembership },
-  []
->();
-
 jest.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
   useLocation: () => mockUseLocation(),
@@ -66,42 +57,9 @@ jest.mock("../../hooks/useNotifications", () => ({
   useNotifications: () => mockUseNotifications(),
 }));
 
-jest.mock("../../hooks/useOrganization", () => ({
-  __esModule: true,
-  default: () => mockUseOrganization(),
-}));
-
 jest.mock("../Organization/OrganizationSelector", () => () => (
   <div>OrgSel</div>
 ));
-
-jest.mock("../RoleGuard", () => ({
-  RoleGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
-interface FileUploaderProps {
-  onUploadSuccess?: (docs: Document[]) => void;
-  onClose?: () => void;
-}
-
-jest.mock("../FileUploader", () => ({
-  FileUploader: ({ onUploadSuccess, onClose }: FileUploaderProps) => (
-    <div>
-      <button
-        type="button"
-        onClick={() =>
-          onUploadSuccess &&
-          onUploadSuccess([{ id: "d1" } as unknown as Document])
-        }
-      >
-        mockUpload
-      </button>
-      <button type="button" onClick={() => onClose && onClose()}>
-        mockClose
-      </button>
-    </div>
-  ),
-}));
 
 describe("Header", () => {
   beforeEach(() => {
@@ -127,35 +85,15 @@ describe("Header", () => {
       markRead: mockMarkRead,
       markAllRead: mockMarkAllRead,
     });
-
-    // Default role allows upload (member)
-    mockUseOrganization.mockReturnValue({
-      activeOrganization: { role: "member", id: "org1" },
-      membership: { role: "member" },
-    });
   });
 
-  it("renders user info and main buttons (including upload when canUpload)", () => {
+  it("renders user info and main buttons", () => {
     render(<Header />);
 
     expect(screen.getByText("Pedro")).toBeInTheDocument();
     expect(screen.getByText("P")).toBeInTheDocument();
-    expect(screen.getByText("Subir")).toBeInTheDocument();
     expect(screen.getByText("Salir")).toBeInTheDocument();
     expect(screen.getByText("OrgSel")).toBeInTheDocument();
-  });
-
-  it("hides upload button and modal for viewer role (canUpload false branch)", () => {
-    mockUseOrganization.mockReturnValueOnce({
-      activeOrganization: { role: "viewer", id: "org1" },
-      membership: { role: "viewer" },
-    });
-
-    render(<Header />);
-
-    expect(screen.queryByText("Subir")).not.toBeInTheDocument();
-    // Modal content should not exist either
-    expect(screen.queryByText("mockUpload")).not.toBeInTheDocument();
   });
 
   it("navigates to /login on logout (even when logout succeeds)", async () => {
@@ -165,38 +103,6 @@ describe("Header", () => {
 
     await waitFor(() => expect(mockLogout).toHaveBeenCalledTimes(1));
     expect(mockNavigate).toHaveBeenCalledWith("/login");
-  });
-
-  it("opens upload modal and handles upload success (calls onDocumentsUploaded and closes modal)", async () => {
-    const onDocs = jest.fn<void, [Document[]]>();
-
-    render(<Header onDocumentsUploaded={onDocs} />);
-
-    fireEvent.click(screen.getByRole("button", { name: /Subir/i }));
-
-    const mockUploadBtn = await screen.findByText("mockUpload");
-    fireEvent.click(mockUploadBtn);
-
-    await waitFor(() => expect(onDocs).toHaveBeenCalledTimes(1));
-    expect(onDocs).toHaveBeenCalledWith([{ id: "d1" } as unknown as Document]);
-
-    // modal closed (uploader content gone)
-    await waitFor(() =>
-      expect(screen.queryByText("mockUpload")).not.toBeInTheDocument(),
-    );
-  });
-
-  it("closes upload modal when mockClose is clicked", async () => {
-    render(<Header />);
-
-    fireEvent.click(screen.getByRole("button", { name: /Subir/i }));
-
-    const mockCloseBtn = await screen.findByText("mockClose");
-    fireEvent.click(mockCloseBtn);
-
-    await waitFor(() =>
-      expect(screen.queryByText("mockUpload")).not.toBeInTheDocument(),
-    );
   });
 
   it("renders Dashboard button when user exists and not on /dashboard, and navigates when clicked", () => {
@@ -410,27 +316,5 @@ describe("Header", () => {
       screen.getByLabelText("120 notificaciones no leídas"),
     ).toBeInTheDocument();
     expect(screen.getByText("99+")).toBeInTheDocument();
-  });
-
-  it("treats role case-insensitively: VIEWER hides upload (branch)", () => {
-    mockUseOrganization.mockReturnValueOnce({
-      activeOrganization: { role: "member", id: "org1" },
-      membership: { role: "viewer" },
-    });
-
-    render(<Header />);
-
-    expect(screen.queryByText("Subir")).not.toBeInTheDocument();
-  });
-
-  it("uses activeOrganization.role when membership.role missing (branch)", () => {
-    mockUseOrganization.mockReturnValueOnce({
-      activeOrganization: { role: "viewer", id: "org1" },
-      membership: {},
-    });
-
-    render(<Header />);
-
-    expect(screen.queryByText("Subir")).not.toBeInTheDocument();
   });
 });

@@ -3,7 +3,6 @@ import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/jest-dom';
 import MainLayout from '../../MainLayout';
 import type { PageInfo } from '../../../types/page.types';
-import type { Document } from '../../../types/document.types';
 
 interface PageContextType {
   pageInfo: Partial<PageInfo>;
@@ -13,20 +12,12 @@ interface SidebarProps {
   activeItem?: string;
 }
 
-interface HeaderProps {
-  onDocumentsUploaded?: (docs: Document[]) => void;
-}
-
 const mockUsePageContext = jest.fn<PageContextType, []>();
 
 // Mock subcomponents and hooks
 jest.mock('../../../hooks/usePageContext', () => ({ usePageContext: () => mockUsePageContext() }));
 jest.mock('../../Sidebar', () => (props: SidebarProps) => <div data-testid="sidebar">S-{props.activeItem}</div>);
-jest.mock('../../Header', () => (props: HeaderProps) => (
-  <div>
-    <button data-testid="header-upload" onClick={() => props.onDocumentsUploaded && props.onDocumentsUploaded([{ id: 'd1' } as Document])}>upload</button>
-  </div>
-));
+jest.mock('../../Header', () => () => <div data-testid="header">Header</div>);
 
 describe('MainLayout branches', () => {
   beforeEach(() => {
@@ -57,14 +48,5 @@ describe('MainLayout branches', () => {
     mockUsePageContext.mockReturnValue({ pageInfo: { title: 'X', actions: <span>act</span> } });
     render(<MemoryRouter><MainLayout><div /></MainLayout></MemoryRouter>);
     expect(screen.getByText('act')).toBeInTheDocument();
-  });
-
-  it('passes onDocumentsUploaded to Header and is callable', () => {
-    const uploaded: Document[] = [];
-    render(<MemoryRouter><MainLayout onDocumentsUploaded={(docs: Document[]) => uploaded.push(...docs)}><div /></MainLayout></MemoryRouter>);
-    // header mock provides a button
-    const btn = screen.getByTestId('header-upload');
-    btn.click();
-    expect(uploaded.length).toBeGreaterThan(0);
   });
 });

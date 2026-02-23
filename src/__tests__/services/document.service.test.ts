@@ -245,11 +245,11 @@ describe('Document Service', () => {
           document: { id: '123', folderId: 'folder-456' },
         },
       };
-      (apiClient.patch as jest.Mock).mockResolvedValueOnce(mockResponse);
+      (apiClient.post as jest.Mock).mockResolvedValueOnce(mockResponse);
 
       const result = await moveDocument('123', 'folder-456');
 
-      expect(apiClient.patch).toHaveBeenCalledWith('/documents/123/move', {
+      expect(apiClient.post).toHaveBeenCalledWith('/documents/123/move', {
         targetFolderId: 'folder-456',
       });
       expect(result.success).toBe(true);

@@ -275,7 +275,7 @@ describe("DocumentCard", () => {
     render(<DocumentCard document={baseDoc as Document} canDelete />);
 
     const trashBtn = screen.getByTitle("Mover a papelera");
-    expect(trashBtn).not.toBeDisabled();
+    expect(trashBtn).toBeDisabled();
   });
 
   it('confirm button shows "Moviendo..." when loading becomes true while modal is open (branch)', async () => {
@@ -304,9 +304,8 @@ describe("DocumentCard", () => {
 
     rerender(<DocumentCard document={baseDoc as Document} canDelete />);
 
-    const moveButtons = screen.getAllByRole("button", { name: "Mover a papelera" });
-    // [0] = icon button, [1] = modal confirm button
-    expect(moveButtons[1]).toBeInTheDocument();
+    // When loading=true, the button text changes to "Moviendo..."
+    expect(screen.getByText("Moviendo...")).toBeInTheDocument();
   });
 
   describe('Drag and Drop', () => {

@@ -178,6 +178,8 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
     if (currentFolder) {
       console.log('[FileManagerView] Llamando a fetchContents para actualizar la lista...');
       fetchContents(currentFolder.id);
+      // También refrescar el árbol para actualizar los contadores
+      setRefreshTree(prev => prev + 1);
     } else {
       console.warn('[FileManagerView] No hay currentFolder, no se puede refrescar');
     }

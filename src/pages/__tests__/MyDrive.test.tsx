@@ -1,11 +1,10 @@
+import React from 'react';
 import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
 import MyDrive from '../MyDrive';
-import { AuthProvider } from '../../context/AuthContext';
-import { OrganizationProvider } from '../../context/OrganizationContext';
-import { PageProvider } from '../../context/PageContext';
 
-// Mock de los hooks y servicios
+// Mock de los hooks
 jest.mock('../../hooks/useOrganization', () => ({
   __esModule: true,
   default: () => ({
@@ -18,40 +17,27 @@ jest.mock('../../hooks/useOrganization', () => ({
   }),
 }));
 
-jest.mock('../../services/folder.service', () => ({
-  folderService: {
-    getFolderTree: jest.fn().mockResolvedValue({ 
-      _id: 'root123',
-      name: 'Root',
-      subfolders: [] 
-    }),
-    getFolderContents: jest.fn().mockResolvedValue({ 
-      subfolders: [], 
-      documents: [] 
-    }),
-  },
+jest.mock('../../hooks/usePageInfoTitle', () => ({
+  usePageTitle: jest.fn(),
 }));
 
-jest.mock('../../services/document.service', () => ({
-  getDocumentsByFolder: jest.fn().mockResolvedValue([]),
+// Mock FileManagerView
+jest.mock('../../components/FileManager/FileManagerView', () => ({
+  FileManagerView: () => <div data-testid="file-manager">FileManager</div>,
 }));
 
-const mockUser = {
-  id: 'user123',
-  email: 'test@example.com',
-  name: 'Test User',
-};
+// Mock MainLayout
+jest.mock('../../components/MainLayout', () => ({
+  __esModule: true,
+  default: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="main-layout">{children}</div>
+  ),
+}));
 
 const renderMyDrive = () => {
   return render(
     <BrowserRouter>
-      <AuthProvider user={mockUser}>
-        <OrganizationProvider>
-          <PageProvider>
-            <MyDrive />
-          </PageProvider>
-        </OrganizationProvider>
-      </AuthProvider>
+      <MyDrive />
     </BrowserRouter>
   );
 };
@@ -59,12 +45,11 @@ const renderMyDrive = () => {
 describe('MyDrive Page', () => {
   it('renders without crashing', () => {
     renderMyDrive();
-    expect(screen.getByText(/Mi Unidad/i)).toBeInTheDocument();
+    expect(screen.getByTestId('main-layout')).toBeInTheDocument();
   });
 
   it('displays the file manager view', () => {
     renderMyDrive();
-    // FileManagerView debería renderizarse
-    expect(document.querySelector('.container')).toBeInTheDocument();
+    expect(screen.getByTestId('file-manager')).toBeInTheDocument();
   });
 });

@@ -18,6 +18,7 @@ import OrganizationSettings from './pages/OrganizationSettings'
 import PendingInvitations from './pages/PendingInvitations'
 import TrashPage from './pages/TrashPage'
 import SearchPage from './pages/SearchPage'
+import MyDrive from './pages/MyDrive'
 
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
@@ -44,6 +45,16 @@ function App() {
               </RequireOrganization>
             </PrivateRoute>
           }
+      />
+      <Route
+        path="/my-drive"
+        element={
+          <PrivateRoute>
+            <RequireOrganization>
+              <MyDrive />
+            </RequireOrganization>
+          </PrivateRoute>
+        }
       />
       <Route
         path="/trash"

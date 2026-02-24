@@ -38,7 +38,7 @@ const Dashboard: React.FC = () => {
   }, []);
 
   return (
-    <MainLayout onDocumentsUploaded={handleDocumentsUploaded}>
+    <MainLayout>
       <Container fluid>
         <DashboardGrid
           role={role}

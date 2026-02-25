@@ -137,10 +137,6 @@ const SearchPage: React.FC = () => {
       <Container className={styles.searchContainer}>
         {/* Header con barra de búsqueda */}
         <div className={styles.searchHeader}>
-          <h2 className={styles.pageTitle}>
-            <Search className={styles.titleIcon} />
-            Buscar documentos
-          </h2>
 
           <Form onSubmit={handleSearch} className={styles.searchForm}>
             <div className={styles.searchInputWrapper}>

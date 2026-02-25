@@ -11,10 +11,17 @@ import useOrganization from '../hooks/useOrganization';
 import type { MembershipRole } from '../types/organization.types';
 import { useNotifications } from '../hooks/useNotifications';
 import { getNotificationTypeLabel } from '../constants/notificationTypes';
+import type { NotificationDTO, NotificationType } from '../types/notification.types';
 
 interface HeaderProps {
   /** Callback cuando se suben documentos exitosamente */
   onDocumentsUploaded?: (documents: Document[]) => void;
+}
+
+const INVITATION_TYPES: NotificationType[] = ['INVITATION_CREATED', 'MEMBER_INVITED'];
+
+function isInvitationNotification(n: NotificationDTO): boolean {
+  return INVITATION_TYPES.includes(n.type);
 }
 
 const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
@@ -114,9 +121,14 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
                       if (n.id) {
                         markRead(n.id).catch(() => {});
                       }
+
+                      if (isInvitationNotification(n)) {
+                        navigate('/invitations');
+                        return;
+                      }
+
                       // Optional: navigate to document
                       if (n.entity?.kind === 'document' && n.entity?.id) {
-                        // If you have a route for docs, navigate there.
                         // navigate(`/documents/${n.entity.id}`);
                       }
                     }}
@@ -166,7 +178,7 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
         </Popover.Body>
       </Popover>
     );
-  }, [markAllRead, markRead, navigate, notifLoading, notifications]);
+  }, [markAllRead, markRead, navigate, notifLoading, notifications, refresh]);
 
   return (
     <>

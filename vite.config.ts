@@ -68,6 +68,17 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       sourcemap: mode !== 'production',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom', 'react-router-dom'],
+            bootstrap: ['react-bootstrap', 'bootstrap'],
+            pdf: ['react-pdf'],
+            syntax: ['react-syntax-highlighter'],
+            socket: ['socket.io-client'],
+          },
+        },
+      },
     },
   }
 })

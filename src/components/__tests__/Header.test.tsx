@@ -44,9 +44,8 @@ const mockUseNotifications = jest.fn<
   []
 >();
 
-type OrganizationRole = "owner" | "admin" | "member" | "viewer";
-type MockMembership = { role?: OrganizationRole };
-type MockActiveOrg = { role?: OrganizationRole; id?: string };
+type MockMembership = { role?: string };
+type MockActiveOrg = { role?: string; id?: string };
 
 const mockUseOrganization = jest.fn<
   { activeOrganization?: MockActiveOrg; membership?: MockMembership },
@@ -77,6 +76,10 @@ jest.mock("../Organization/OrganizationSelector", () => () => (
 
 jest.mock("../RoleGuard", () => ({
   RoleGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+jest.mock("../../constants/notificationTypes", () => ({
+  getNotificationTypeLabel: (type: string) => `LABEL:${type}`,
 }));
 
 interface FileUploaderProps {
@@ -318,14 +321,6 @@ describe("Header", () => {
         readAt: null,
         actor: "u3",
       },
-      {
-        id: "n4",
-        type: "DOC_COMMENTED",
-        message: "Nuevo comentario",
-        createdAt: nowIso,
-        readAt: null,
-        actor: "u4",
-      },
     ];
 
     mockUseNotifications.mockReturnValueOnce({
@@ -341,16 +336,17 @@ describe("Header", () => {
 
     fireEvent.click(screen.getByTitle("Notificaciones"));
 
-    // Popover visible
     expect(await screen.findByText("Notificaciones")).toBeInTheDocument();
 
-    // Type labels
-    expect(screen.getByText("Documento subido")).toBeInTheDocument();
+    // Type labels from mocked getNotificationTypeLabel
+    expect(screen.getByText("LABEL:DOC_UPLOADED")).toBeInTheDocument();
+    expect(screen.getByText("LABEL:SOMETHING_ELSE")).toBeInTheDocument();
+    expect(screen.getByText("LABEL:DOC_EDITED")).toBeInTheDocument();
 
     // Unread badge "Nuevo" appears for unread items
     expect(screen.getAllByText("Nuevo").length).toBeGreaterThan(0);
 
-    // createdAt rendered (string varies by locale; just assert something from Date is present)
+    // createdAt rendered (locale-dependent), but should contain year
     const maybeDate = screen.getAllByText((t) => t.includes("2026"));
     expect(maybeDate.length).toBeGreaterThan(0);
 
@@ -361,6 +357,38 @@ describe("Header", () => {
     // Click second item -> no id, should not call markRead again
     fireEvent.click(screen.getByText("Tienes una notificación"));
     expect(mockMarkRead).toHaveBeenCalledTimes(1);
+  });
+
+  it("clicking an invitation notification navigates to /invitations (and marks read when id exists)", async () => {
+    const nowIso = new Date("2026-02-15T12:00:00.000Z").toISOString();
+
+    mockUseNotifications.mockReturnValueOnce({
+      notifications: [
+        {
+          id: "inv1",
+          type: "INVITATION_CREATED",
+          message: "Te invitaron a una organización",
+          createdAt: nowIso,
+          readAt: null,
+          actor: "u2",
+        },
+      ],
+      unreadCount: 1,
+      loading: false,
+      refresh: mockRefresh,
+      markRead: mockMarkRead,
+      markAllRead: mockMarkAllRead,
+    });
+
+    render(<Header />);
+
+    fireEvent.click(screen.getByTitle("Notificaciones"));
+    expect(await screen.findByText("Notificaciones")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText("Te invitaron a una organización"));
+
+    await waitFor(() => expect(mockMarkRead).toHaveBeenCalledWith("inv1"));
+    expect(mockNavigate).toHaveBeenCalledWith("/invitations");
   });
 
   it('clicking "Marcar todas como leídas" calls markAllRead (and does not throw on rejection)', async () => {
@@ -415,7 +443,7 @@ describe("Header", () => {
   it("treats role case-insensitively: VIEWER hides upload (branch)", () => {
     mockUseOrganization.mockReturnValueOnce({
       activeOrganization: { role: "member", id: "org1" },
-      membership: { role: "viewer" },
+      membership: { role: "VIEWER" },
     });
 
     render(<Header />);

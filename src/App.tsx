@@ -1,32 +1,35 @@
 
+import React, { Suspense } from 'react'
 import './App.css'
-import Dashboard from './pages/Dashboard'
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home';
-import { UserProfile } from './pages/UserProfile'
-import NotFound from './pages/NotFound';
-import Forbidden from './pages/Forbidden';
-import Register from './pages/Register';
 import LoginPage from './pages/LoginPage'
+import NotFound from './pages/NotFound';
+import ConfirmAccount from './pages/ConfirmAccount'
 import PrivateRoute from './components/PrivateRoute'
 import RequireRole from './components/RequireRole'
-import ConfirmAccount from './pages/ConfirmAccount'
-import CreateOrganization from './pages/CreateOrganization'
-import NoOrganization from './pages/NoOrganization'
 import RequireOrganization from './components/Organization/RequireOrganization'
-import OrganizationSettings from './pages/OrganizationSettings'
-import PendingInvitations from './pages/PendingInvitations'
-import TrashPage from './pages/TrashPage'
-import SearchPage from './pages/SearchPage'
+import { Loader } from './components/Loader';
 
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import ResetPasswordPage from './pages/ResetPasswordPage'
-import SharedDocs from './pages/SharedDocs';
-import Notifications from './pages/Notifications';
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const TrashPage = React.lazy(() => import('./pages/TrashPage'));
+const SearchPage = React.lazy(() => import('./pages/SearchPage'));
+const UserProfile = React.lazy(() => import('./pages/UserProfile').then(m => ({ default: m.UserProfile })));
+const Forbidden = React.lazy(() => import('./pages/Forbidden'));
+const Register = React.lazy(() => import('./pages/Register'));
+const CreateOrganization = React.lazy(() => import('./pages/CreateOrganization'));
+const NoOrganization = React.lazy(() => import('./pages/NoOrganization'));
+const OrganizationSettings = React.lazy(() => import('./pages/OrganizationSettings'));
+const PendingInvitations = React.lazy(() => import('./pages/PendingInvitations'));
+const ForgotPasswordPage = React.lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'));
+const SharedDocs = React.lazy(() => import('./pages/SharedDocs'));
+const Notifications = React.lazy(() => import('./pages/Notifications'));
 
 
 function App() {
   return (
+    <Suspense fallback={<Loader fullScreen message="Cargando..." />}>
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<LoginPage />} />
@@ -83,6 +86,7 @@ function App() {
       <Route path="/forbidden" element={<PrivateRoute><Forbidden /></PrivateRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </Suspense>
   );
 }
 

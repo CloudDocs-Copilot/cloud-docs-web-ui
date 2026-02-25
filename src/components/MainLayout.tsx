@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { usePageContext } from '../hooks/usePageContext';
 import Sidebar from './Sidebar';
 import Header from './Header';
@@ -16,19 +16,35 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, onDocumentsUploaded }
   const location = useLocation();
   const activeMenuItem = location.pathname.split('/')[1] || 'colecciones';
   const { pageInfo } = usePageContext();
+  const mainRef = useRef<HTMLElement>(null);
+
+  // Move focus to main content on route change for accessibility
+  useEffect(() => {
+    mainRef.current?.focus();
+  }, [location.pathname]);
 
   return (
     <div className={styles.layoutWrapper}>
+      {/* Skip to main content link for keyboard users */}
+      <a href="#main-content" className="visually-hidden-focusable">
+        Ir al contenido principal
+      </a>
       <Sidebar activeItem={activeMenuItem}  />
       
       <div className={styles.mainContent}>
         <Header onDocumentsUploaded={onDocumentsUploaded} />
         
-        <div className={styles.contentArea}>
+        <main
+          id="main-content"
+          ref={mainRef}
+          tabIndex={-1}
+          className={styles.contentArea}
+          style={{ outline: 'none' }}
+        >
           {pageInfo.title && (
             <div className={styles.contentHeader}>
               {pageInfo.breadcrumbs && (
-                <nav className={styles.breadcrumbs}>
+                <nav className={styles.breadcrumbs} aria-label="Ruta de navegación">
                   {pageInfo.breadcrumbs.map((crumb, i) => (
                     <span key={i}>{crumb.label}</span>
                   ))}
@@ -48,11 +64,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, onDocumentsUploaded }
             </div>
           )}
           {children}
-        </div>
+        </main>
 
         {/* Help Button */}
-        <button className={styles.helpButton}>
-          <span>?</span>
+        <button className={styles.helpButton} aria-label="Ayuda">
+          <span aria-hidden="true">?</span>
         </button>
       </div>
     </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Button, Alert, Spinner, Modal } from 'react-bootstrap';
-import { Trash, ArrowClockwise, TrashFill } from 'react-bootstrap-icons';
+import { Trash2, RotateCcw } from 'lucide-react';
 import MainLayout from '../components/MainLayout';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
 import { useTrash } from '../hooks/useTrash';
@@ -77,7 +77,7 @@ const TrashPage: React.FC = () => {
             <div className={styles.headerContent}>
               <div>
                 <h2 className={styles.headerTitle}>
-                  <Trash />
+                  <Trash2 />
                   Papelera
                 </h2>
                 <p className={styles.headerSubtitle}>
@@ -90,7 +90,7 @@ const TrashPage: React.FC = () => {
                   onClick={() => setShowEmptyModal(true)}
                   disabled={actionLoading}
                 >
-                  <TrashFill />
+                  <Trash2 />
                   Vaciar papelera
                 </button>
               )}
@@ -118,7 +118,7 @@ const TrashPage: React.FC = () => {
         {/* Empty State */}
         {!loading && trashDocuments.length === 0 && (
           <div className={styles.emptyState}>
-            <Trash size={64} className={styles.emptyIcon} />
+            <Trash2 size={64} className={styles.emptyIcon} />
             <h4 className={styles.emptyTitle}>La papelera está vacía</h4>
             <p className={styles.emptyMessage}>
               Los documentos eliminados aparecerán aquí
@@ -158,7 +158,7 @@ const TrashPage: React.FC = () => {
                         onClick={() => handleRestore(doc.id ?? doc._id ?? '')}
                         disabled={actionLoading}
                       >
-                        <ArrowClockwise />
+                        <RotateCcw />
                         Restaurar
                       </button>
                       <button
@@ -169,7 +169,7 @@ const TrashPage: React.FC = () => {
                         }}
                         disabled={actionLoading}
                       >
-                        <TrashFill />
+                        <Trash2 />
                         Eliminar permanentemente
                       </button>
                     </div>

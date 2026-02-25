@@ -218,5 +218,5 @@ export function getFileTypeName(mimeType: string): string {
  * Lista de tipos permitidos formateada para mostrar al usuario
  */
 export function getAllowedTypesDisplay(): string {
-  return 'PDF, DOCX, XLSX, PPTX, JPG, PNG';
+  return 'PDF, DOCX, XLSX, PPTX, JPG, PNG, TXT';
 }

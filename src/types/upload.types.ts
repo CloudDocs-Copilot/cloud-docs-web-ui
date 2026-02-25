@@ -37,6 +37,7 @@ export const ALLOWED_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   'image/jpeg',
   'image/png',
+  'text/plain',
 ] as const;
 
 /**
@@ -50,6 +51,7 @@ export const ALLOWED_EXTENSIONS = [
   '.jpg',
   '.jpeg',
   '.png',
+  '.txt',
 ] as const;
 
 /**
@@ -63,6 +65,7 @@ export const EXTENSION_TO_MIME: Record<string, string> = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.png': 'image/png',
+  '.txt': 'text/plain',
 };
 
 /**
@@ -75,6 +78,7 @@ export const FILE_TYPE_NAMES: Record<string, string> = {
   'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PowerPoint',
   'image/jpeg': 'Imagen JPEG',
   'image/png': 'Imagen PNG',
+  'text/plain': 'Texto',
 };
 
 // ============================================================================

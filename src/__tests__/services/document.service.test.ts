@@ -1,3 +1,4 @@
+// document.service.test.ts
 /**
  * Tests para document.service
  * @module document.service.test
@@ -11,6 +12,10 @@ import {
   downloadDocument,
   deleteDocument,
   moveDocument,
+  copyDocument,
+  shareDocument,
+  getActiveOrganizationId,
+  getOrganizationMembers,
 } from '../../services/document.service';
 import { apiClient } from '../../api';
 
@@ -75,11 +80,12 @@ describe('Document Service', () => {
     });
 
     it('debe llamar al callback de progreso durante la subida', async () => {
-      (apiClient.post as jest.Mock).mockImplementation((_url, _data, config) => {
-        // Simular llamada al callback de progreso
-        if (config?.onUploadProgress) {
-          config.onUploadProgress({ loaded: 50, total: 100 });
-          config.onUploadProgress({ loaded: 100, total: 100 });
+      (apiClient.post as jest.Mock).mockImplementation((_url: string, _data: FormData, config?: unknown) => {
+        const cfg = config as { onUploadProgress?: (evt: { loaded: number; total?: number }) => void } | undefined;
+
+        if (cfg?.onUploadProgress) {
+          cfg.onUploadProgress({ loaded: 50, total: 100 });
+          cfg.onUploadProgress({ loaded: 100, total: 100 });
         }
         return Promise.resolve(mockResponse);
       });
@@ -98,6 +104,22 @@ describe('Document Service', () => {
         total: 100,
         percentage: 100,
       });
+    });
+
+    it('NO debe llamar al callback de progreso si total no viene definido', async () => {
+      (apiClient.post as jest.Mock).mockImplementation((_url: string, _data: FormData, config?: unknown) => {
+        const cfg = config as { onUploadProgress?: (evt: { loaded: number; total?: number }) => void } | undefined;
+
+        if (cfg?.onUploadProgress) {
+          cfg.onUploadProgress({ loaded: 10 }); // total undefined
+        }
+        return Promise.resolve(mockResponse);
+      });
+
+      const onProgress = jest.fn();
+      await uploadDocument({ file: mockFile, onProgress });
+
+      expect(onProgress).not.toHaveBeenCalled();
     });
 
     it('debe pasar el signal de abort al cliente', async () => {
@@ -256,4 +278,98 @@ describe('Document Service', () => {
     });
   });
 
+  describe('copyDocument', () => {
+    it('debe copiar un documento a otra carpeta', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
+          message: 'Documento copiado',
+          document: { id: '123', folderId: 'folder-456' },
+        },
+      };
+      (apiClient.post as jest.Mock).mockResolvedValueOnce(mockResponse);
+
+      const result = await copyDocument('123', 'folder-456');
+
+      expect(apiClient.post).toHaveBeenCalledWith('/documents/123/copy', {
+        targetFolderId: 'folder-456',
+      });
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('shareDocument', () => {
+    it('debe compartir un documento con userIds', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
+          message: 'Documento compartido',
+          document: { id: '123' },
+        },
+      };
+      (apiClient.post as jest.Mock).mockResolvedValueOnce(mockResponse);
+
+      const result = await shareDocument('123', ['u1', 'u2']);
+
+      expect(apiClient.post).toHaveBeenCalledWith('/documents/123/share', {
+        userIds: ['u1', 'u2'],
+      });
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('getActiveOrganizationId', () => {
+    it('debe retornar el organizationId desde /memberships/active-organization', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
+          organizationId: 'org-123',
+        },
+      };
+      (apiClient.get as jest.Mock).mockResolvedValueOnce(mockResponse);
+
+      const result = await getActiveOrganizationId();
+
+      expect(apiClient.get).toHaveBeenCalledWith('/memberships/active-organization');
+      expect(result).toBe('org-123');
+    });
+  });
+
+  describe('getOrganizationMembers', () => {
+    it('debe retornar data cuando viene en la respuesta', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
+          count: 2,
+          data: [
+            { _id: 'm1', user: { _id: 'u1', email: 'a@a.com' } },
+            { _id: 'm2', user: { _id: 'u2', email: 'b@b.com' } },
+          ],
+        },
+      };
+      (apiClient.get as jest.Mock).mockResolvedValueOnce(mockResponse);
+
+      const result = await getOrganizationMembers('org-123');
+
+      expect(apiClient.get).toHaveBeenCalledWith('/memberships/organization/org-123/members');
+      expect(result).toHaveLength(2);
+      expect(result[0]._id).toBe('m1');
+    });
+
+    it('debe retornar [] cuando data viene undefined', async () => {
+      const mockResponse = {
+        data: {
+          success: true,
+          count: 0,
+          data: undefined,
+        },
+      };
+      (apiClient.get as jest.Mock).mockResolvedValueOnce(mockResponse);
+
+      const result = await getOrganizationMembers('org-123');
+
+      expect(apiClient.get).toHaveBeenCalledWith('/memberships/organization/org-123/members');
+      expect(result).toEqual([]);
+    });
+  });
 });

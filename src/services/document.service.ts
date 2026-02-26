@@ -60,17 +60,41 @@ export interface GetDocumentResponse {
   document: Document;
 }
 
+export interface GetActiveOrganizationResponse {
+  success: boolean;
+  organizationId: string;
+}
+
+export interface OrganizationMembersResponse<TMembership = unknown> {
+  success: boolean;
+  count: number;
+  data: TMembership[];
+}
+
+export interface OrganizationMemberUser {
+  _id: string;
+  name?: string;
+  email: string;
+  avatar?: string;
+}
+
+export interface OrganizationMember {
+  _id: string;
+  role?: string;
+  user: OrganizationMemberUser;
+}
+
 // ============================================================================
 // Funciones del Servicio
 // ============================================================================
 
 /**
  * Sube un documento al servidor
- * 
+ *
  * @param params - Parámetros de la subida
  * @returns Promesa con la respuesta del servidor incluyendo el documento creado
  * @throws Error si la subida falla
- * 
+ *
  * @example
  * ```typescript
  * const response = await uploadDocument({
@@ -89,7 +113,7 @@ export async function uploadDocument({
 }: UploadDocumentParams): Promise<UploadDocumentResponse> {
   const formData = new FormData();
   formData.append('file', file);
-  
+
   if (folderId) {
     formData.append('folderId', folderId);
   }
@@ -119,7 +143,7 @@ export async function uploadDocument({
 
 /**
  * Lista todos los documentos del usuario autenticado
- * 
+ *
  * @returns Promesa con la lista de documentos
  */
 export async function listDocuments(): Promise<ListDocumentsResponse> {
@@ -129,7 +153,7 @@ export async function listDocuments(): Promise<ListDocumentsResponse> {
 
 /**
  * Obtiene los documentos recientes del usuario en una organización
- * 
+ *
  * @param organizationId - ID de la organización
  * @param limit - Número máximo de documentos a retornar (default: 10)
  * @returns Promesa con los documentos recientes
@@ -147,7 +171,7 @@ export async function getRecentDocuments(
 
 /**
  * Obtiene los detalles de un documento por su ID
- * 
+ *
  * @param documentId - ID del documento
  * @returns Promesa con los detalles del documento
  */
@@ -158,7 +182,7 @@ export async function getDocument(documentId: string): Promise<GetDocumentRespon
 
 /**
  * Descarga un documento por su ID
- * 
+ *
  * @param documentId - ID del documento a descargar
  * @returns Promesa con el Blob del archivo
  */
@@ -171,7 +195,7 @@ export async function downloadDocument(documentId: string): Promise<Blob> {
 
 /**
  * Elimina un documento
- * 
+ *
  * @param documentId - ID del documento a eliminar
  * @returns Promesa con la respuesta del servidor
  */
@@ -184,7 +208,7 @@ export async function deleteDocument(documentId: string): Promise<{ success: boo
 
 /**
  * Mueve un documento a otra carpeta
- * 
+ *
  * @param documentId - ID del documento a mover
  * @param targetFolderId - ID de la carpeta destino
  * @returns Promesa con el documento actualizado
@@ -202,7 +226,7 @@ export async function moveDocument(
 
 /**
  * Copia un documento a otra carpeta
- * 
+ *
  * @param documentId - ID del documento a copiar
  * @param targetFolderId - ID de la carpeta destino
  * @returns Promesa con el nuevo documento creado
@@ -220,7 +244,7 @@ export async function copyDocument(
 
 /**
  * Comparte un documento con otros usuarios
- * 
+ *
  * @param documentId - ID del documento a compartir
  * @param userIds - Array de IDs de usuarios con quienes compartir
  * @returns Promesa con el documento actualizado
@@ -234,4 +258,22 @@ export async function shareDocument(
     { userIds }
   );
   return response.data;
+}
+
+/**
+ * Obtiene el ID de la organización activa del usuario
+ */
+export async function getActiveOrganizationId(): Promise<string> {
+  const response = await apiClient.get<GetActiveOrganizationResponse>('/memberships/active-organization');
+  return response.data.organizationId;
+}
+
+/**
+ * Obtiene la lista de miembros ACTivos de una organización
+ */
+export async function getOrganizationMembers(organizationId: string): Promise<OrganizationMember[]> {
+  const response = await apiClient.get<OrganizationMembersResponse<OrganizationMember>>(
+    `/memberships/organization/${organizationId}/members`
+  );
+  return response.data.data || [];
 }

@@ -36,24 +36,83 @@ type OrgMemberApi = {
   user?: string | OrgMemberUser | null;
 };
 
+function toIdString(value: UserIdLike | undefined): string {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object' && typeof value.toString === 'function') return value.toString();
+  return '';
+}
+
 function getDocumentOwnerId(doc: Document): string {
   const maybe = doc as unknown as { uploadedBy?: UserIdLike };
-  const v = maybe.uploadedBy;
-  if (typeof v === 'string') return v;
-  if (v && typeof v === 'object' && typeof v.toString === 'function') return v.toString();
-  return '';
+  return toIdString(maybe.uploadedBy);
+}
+
+function getSharedWithIds(doc: Document): string[] {
+  const maybe = doc as unknown as { sharedWith?: unknown };
+  const raw = maybe.sharedWith;
+
+  if (!Array.isArray(raw)) return [];
+
+  return raw
+    .map((v) => {
+      if (typeof v === 'string') return v;
+
+      if (typeof v === 'object' && v !== null) {
+        const obj = v as { id?: string; _id?: UserIdLike; toString?: () => string };
+        if (typeof obj.id === 'string') return obj.id;
+        const fromUnderscore = toIdString(obj._id);
+        if (fromUnderscore) return fromUnderscore;
+        if (typeof obj.toString === 'function') return obj.toString();
+      }
+
+      return '';
+    })
+    .filter((id) => /^[a-fA-F0-9]{24}$/.test(id));
 }
 
 function getUserIdFromUserRaw(userRaw: string | OrgMemberUser | null | undefined): string {
   if (!userRaw) return '';
   if (typeof userRaw === 'string') return userRaw;
 
-  const id = userRaw.id;
-  if (typeof id === 'string') return id;
+  if (typeof userRaw.id === 'string') return userRaw.id;
 
-  const _id = userRaw._id;
-  if (typeof _id === 'string') return _id;
-  if (_id && typeof _id === 'object' && typeof _id.toString === 'function') return _id.toString();
+  const fromUnderscore = toIdString(userRaw._id);
+  if (fromUnderscore) return fromUnderscore;
+
+  return '';
+}
+
+function readJsonFromStorage(key: string): unknown {
+  try {
+    const v = localStorage.getItem(key);
+    if (!v) return null;
+    return JSON.parse(v) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+function getCurrentUserIdFromStorage(): string {
+  const auth = localStorage.getItem('auth_user');
+  const direct = JSON.parse(auth!)?.id;
+  if (direct && /^[a-fA-F0-9]{24}$/.test(direct)) return direct;
+
+  const candidates = ['user', 'authUser', 'currentUser'];
+  for (const key of candidates) {
+    const parsed = readJsonFromStorage(key);
+    if (parsed && typeof parsed === 'object') {
+      const obj = parsed as { id?: string; _id?: UserIdLike; user?: { id?: string; _id?: UserIdLike } };
+      const nested = obj.user;
+      const id =
+        (typeof obj.id === 'string' ? obj.id : '') ||
+        toIdString(obj._id) ||
+        (nested && typeof nested.id === 'string' ? nested.id : '') ||
+        (nested ? toIdString(nested._id) : '');
+
+      if (id && /^[a-fA-F0-9]{24}$/.test(id)) return id;
+    }
+  }
 
   return '';
 }
@@ -72,6 +131,10 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDel
   const [members, setMembers] = useState<ShareMember[]>([]);
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [memberSearch, setMemberSearch] = useState('');
+
+  const ownerId = getDocumentOwnerId(document);
+  const currentUserId = getCurrentUserIdFromStorage();
+  const canShare = !!ownerId && (!currentUserId || ownerId === currentUserId);
 
   /**
    * Elimina el documento directamente
@@ -194,7 +257,8 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDel
       const activeOrgId = await getActiveOrganizationId();
       const rawMembers = (await getOrganizationMembers(activeOrgId)) as unknown as OrgMemberApi[];
 
-      const ownerId = getDocumentOwnerId(document);
+      const alreadySharedIds = new Set(getSharedWithIds(document));
+
       console.log('Document rawMembers:', rawMembers);
       const mapped: ShareMember[] = rawMembers
         .map((m) => {
@@ -208,8 +272,10 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDel
           return { userId, name, email };
         })
         .filter((m) => /^[a-fA-F0-9]{24}$/.test(m.userId))
-        .filter((m) => !ownerId || m.userId !== ownerId);
-        console.log('Mapped members for sharing:', mapped);
+        .filter((m) => !ownerId || m.userId !== ownerId)
+        .filter((m) => !alreadySharedIds.has(m.userId));
+
+      console.log('Mapped members for sharing:', mapped);
       setMembers(mapped);
     } catch (err: unknown) {
       console.error('Error loading members:', err);
@@ -221,6 +287,11 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDel
 
   const handleOpenShareModal = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (currentUserId && ownerId && currentUserId !== ownerId) {
+      setShareError('Solo el propietario del documento puede compartirlo.');
+      setShowShareModal(true);
+      return;
+    }
     setShowShareModal(true);
     setSelectedUserIds([]);
     setMemberSearch('');
@@ -340,20 +411,22 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDel
             </svg>
           </button>
 
-          <button
-            className={styles.optionBtn}
-            title="Compartir"
-            onClick={handleOpenShareModal}
-            disabled={membersLoading || shareLoading}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <circle cx="18" cy="5" r="3" strokeWidth="2" strokeLinecap="round" />
-              <circle cx="6" cy="12" r="3" strokeWidth="2" strokeLinecap="round" />
-              <circle cx="18" cy="19" r="3" strokeWidth="2" strokeLinecap="round" />
-              <line x1="8.7" y1="10.7" x2="15.3" y2="6.3" strokeWidth="2" strokeLinecap="round" />
-              <line x1="8.7" y1="13.3" x2="15.3" y2="17.7" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </button>
+          {canShare && (
+            <button
+              className={styles.optionBtn}
+              title="Compartir"
+              onClick={handleOpenShareModal}
+              disabled={membersLoading || shareLoading}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <circle cx="18" cy="5" r="3" strokeWidth="2" strokeLinecap="round" />
+                <circle cx="6" cy="12" r="3" strokeWidth="2" strokeLinecap="round" />
+                <circle cx="18" cy="19" r="3" strokeWidth="2" strokeLinecap="round" />
+                <line x1="8.7" y1="10.7" x2="15.3" y2="6.3" strokeWidth="2" strokeLinecap="round" />
+                <line x1="8.7" y1="13.3" x2="15.3" y2="17.7" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+          )}
 
           {canDelete && (
             <>

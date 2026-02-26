@@ -6,11 +6,10 @@ import { previewService } from '../../services/preview.service';
 import { PreviewHeader } from './PreviewHeader';
 import styles from './PDFViewer.module.css';
 
-// Configurar worker de PDF.js usando el paquete npm
+// Configurar worker de PDF.js usando copia local en public/
+// El archivo public/pdf.worker.min.mjs debe coincidir con la versión de pdfjs-dist instalada.
 try {
-  // Use a public CDN worker to avoid `import.meta.url` parsing issues
-  // during tests/coverage collection where TS may use CommonJS.
-  pdfjs.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@2.16.105/build/pdf.worker.min.js';
+  pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 } catch {
   // Best-effort: ignore if setting the worker fails in some envs
 }
@@ -50,7 +49,15 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ url, filename, onBack, fil
         if (!response.ok) {
           const errorText = await response.text();
           console.error('[PDFViewer] Error response:', errorText);
-          throw new Error(`HTTP error! status: ${response.status}`);
+          if (response.status === 404) {
+            throw new Error('No se pudo encontrar el documento. Es posible que haya sido eliminado o movido.');
+          } else if (response.status === 403) {
+            throw new Error('No tienes permisos para ver este documento.');
+          } else if (response.status >= 500) {
+            throw new Error('Error del servidor. Por favor, inténtalo de nuevo más tarde.');
+          } else {
+            throw new Error(`Error al cargar el documento (código ${response.status}).`);
+          }
         }
 
         const blob = await response.blob();
@@ -69,7 +76,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ url, filename, onBack, fil
         // No cambiar loading aquí, se cambiará en onDocumentLoadSuccess
       } catch (err) {
         console.error('[PDFViewer] Error loading PDF:', err);
-        setError(`Failed to load PDF: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        setError(err instanceof Error ? err.message : 'Error desconocido al cargar el documento.');
         setLoading(false);
       }
     };
@@ -99,7 +106,7 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ url, filename, onBack, fil
    */
   const onDocumentLoadError = (error: Error) => {
     console.error('Error loading PDF:', error);
-    setError('Failed to load PDF document. Please try again.');
+    setError('No se pudo cargar el documento PDF. Por favor, inténtalo de nuevo.');
     setLoading(false);
   };
 
@@ -170,8 +177,16 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ url, filename, onBack, fil
 
         {error && (
           <Alert variant="danger" className="m-3">
-            <Alert.Heading>Error Loading PDF</Alert.Heading>
+            <Alert.Heading>
+              <i className="bi bi-exclamation-triangle me-2"></i>
+              No se pudo cargar el documento
+            </Alert.Heading>
             <p>{error}</p>
+            {onBack && (
+              <Button variant="outline-danger" size="sm" onClick={onBack}>
+                <i className="bi bi-arrow-left me-1"></i> Volver
+              </Button>
+            )}
           </Alert>
         )}
 

@@ -21,12 +21,17 @@
   color: #1f2937;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
 }
 
 .brandIcon {
-  font-size: 1.75rem;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.brand:hover .brandIcon {
+  transform: scale(1.1);
 }
 
 .navLink {

@@ -9,9 +9,6 @@ import * as deletionHookModule from "../../hooks/useDocumentDeletion";
 import * as documentServiceModule from "../../services/document.service";
 
 const moveToTrashMock = jest.fn<Promise<boolean>, [string]>();
-const getActiveOrganizationIdMock = jest.fn<Promise<string>, []>();
-const getOrganizationMembersMock = jest.fn<Promise<unknown>, [string]>();
-const shareDocumentMock = jest.fn<Promise<void>, [string, string[]]>();
 
 jest.mock("../../hooks/useDocumentDeletion", () => ({
   useDocumentDeletion: jest.fn(),
@@ -27,13 +24,16 @@ jest.mock("../../services/preview.service", () => ({
   previewService: {
     canPreview: jest.fn(() => true),
     getDownloadUrl: jest.fn(
-      (doc: { id?: string; _id?: string }) => `/download/${doc.id || doc._id || "unknown"}`,
+      (doc: { id?: string; _id?: string }) =>
+        `/download/${doc.id || doc._id || "unknown"}`,
     ),
   },
 }));
 
 jest.mock("../../types/document.types", () => {
-  const actual = jest.requireActual("../../types/document.types") as typeof import("../../types/document.types");
+  const actual = jest.requireActual(
+    "../../types/document.types",
+  ) as typeof import("../../types/document.types");
   return {
     ...actual,
     getFileTypeFromMime: jest.fn(() => "pdf"),
@@ -93,27 +93,44 @@ describe("DocumentCard", () => {
     });
     moveToTrashMock.mockResolvedValue(true);
 
-    (previewServiceModule.previewService.canPreview as jest.Mock).mockReturnValue(true);
-    (previewServiceModule.previewService.getDownloadUrl as jest.Mock).mockImplementation(
-      (doc: { id?: string; _id?: string }) => `/download/${doc.id || doc._id || "unknown"}`,
+    (previewServiceModule.previewService.canPreview as jest.Mock).mockReturnValue(
+      true,
+    );
+    (
+      previewServiceModule.previewService.getDownloadUrl as jest.Mock
+    ).mockImplementation(
+      (doc: { id?: string; _id?: string }) =>
+        `/download/${doc.id || doc._id || "unknown"}`,
     );
 
-    (documentTypesModule.getFileTypeFromMime as jest.Mock).mockReturnValue("pdf");
+    (documentTypesModule.getFileTypeFromMime as jest.Mock).mockReturnValue(
+      "pdf",
+    );
     (documentTypesModule.formatFileSize as jest.Mock).mockReturnValue("1 KB");
 
-    (documentServiceModule.getActiveOrganizationId as jest.Mock) = getActiveOrganizationIdMock as unknown as jest.Mock;
-    (documentServiceModule.getOrganizationMembers as jest.Mock) = getOrganizationMembersMock as unknown as jest.Mock;
-    (documentServiceModule.shareDocument as jest.Mock) = shareDocumentMock as unknown as jest.Mock;
-
-    getActiveOrganizationIdMock.mockResolvedValue("org-1");
-    getOrganizationMembersMock.mockResolvedValue([]);
-    shareDocumentMock.mockResolvedValue(undefined);
+    // Configure the mocked service functions WITHOUT reassigning module exports
+    (
+      documentServiceModule.getActiveOrganizationId as unknown as jest.Mock
+    ).mockResolvedValue("org-1");
+    (
+      documentServiceModule.getOrganizationMembers as unknown as jest.Mock
+    ).mockResolvedValue([]);
+    (
+      documentServiceModule.shareDocument as unknown as jest.Mock
+    ).mockResolvedValue({
+      success: true,
+      message: "ok",
+      document: { id: DOC_ID },
+    });
   });
 
   it("renders document title and badge", () => {
     render(<DocumentCard document={baseDoc as Document} />);
     expect(
-      screen.getByRole("heading", { level: 3, name: /original\.pdf|file\.pdf/i }),
+      screen.getByRole("heading", {
+        level: 3,
+        name: /original\.pdf|file\.pdf/i,
+      }),
     ).toBeInTheDocument();
     expect(screen.getByText("Legal")).toBeInTheDocument();
     expect(screen.getByText("1 KB")).toBeInTheDocument();
@@ -151,8 +168,13 @@ describe("DocumentCard", () => {
     render(<DocumentCard document={baseDoc as Document} />);
     fireEvent.click(screen.getByTitle("Descargar"));
 
-    expect(previewServiceModule.previewService.getDownloadUrl).toHaveBeenCalled();
-    expect(openSpy).toHaveBeenCalledWith("/download/dddddddddddddddddddddddd", "_blank");
+    expect(
+      previewServiceModule.previewService.getDownloadUrl,
+    ).toHaveBeenCalled();
+    expect(openSpy).toHaveBeenCalledWith(
+      "/download/dddddddddddddddddddddddd",
+      "_blank",
+    );
 
     openSpy.mockRestore();
   });
@@ -169,7 +191,10 @@ describe("DocumentCard", () => {
 
     fireEvent.click(screen.getByTitle("Descargar"));
 
-    expect(openSpy).toHaveBeenCalledWith("/download/eeeeeeeeeeeeeeeeeeeeeeee", "_blank");
+    expect(openSpy).toHaveBeenCalledWith(
+      "/download/eeeeeeeeeeeeeeeeeeeeeeee",
+      "_blank",
+    );
     openSpy.mockRestore();
   });
 
@@ -178,7 +203,9 @@ describe("DocumentCard", () => {
 
     render(<DocumentCard document={baseDoc as Document} />);
 
-    fireEvent.click(screen.getByRole("heading", { level: 3, name: /original\.pdf|file\.pdf/i }));
+    fireEvent.click(
+      screen.getByRole("heading", { level: 3, name: /original\.pdf|file\.pdf/i }),
+    );
     expect(screen.getByTestId("preview-modal")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Close" }));
@@ -192,28 +219,40 @@ describe("DocumentCard", () => {
   });
 
   it("does not open preview modal when canPreview is false AND does not render preview option button", () => {
-    (previewServiceModule.previewService.canPreview as jest.Mock).mockReturnValueOnce(false);
+    (
+      previewServiceModule.previewService.canPreview as jest.Mock
+    ).mockReturnValueOnce(false);
 
     render(<DocumentCard document={baseDoc as Document} />);
 
     expect(screen.queryByTitle("Vista previa")).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("heading", { level: 3, name: /original\.pdf|file\.pdf/i }));
+    fireEvent.click(
+      screen.getByRole("heading", { level: 3, name: /original\.pdf|file\.pdf/i }),
+    );
     expect(screen.queryByTestId("preview-modal")).not.toBeInTheDocument();
   });
 
   it("renders different file icon branches (pdf, excel, default)", () => {
-    (documentTypesModule.getFileTypeFromMime as jest.Mock).mockReturnValueOnce("pdf");
+    (documentTypesModule.getFileTypeFromMime as jest.Mock).mockReturnValueOnce(
+      "pdf",
+    );
     const { unmount } = render(<DocumentCard document={baseDoc as Document} />);
     expect(document.querySelectorAll("svg").length).toBeGreaterThan(0);
     unmount();
 
-    (documentTypesModule.getFileTypeFromMime as jest.Mock).mockReturnValueOnce("excel");
-    const { unmount: unmount2 } = render(<DocumentCard document={baseDoc as Document} />);
+    (documentTypesModule.getFileTypeFromMime as jest.Mock).mockReturnValueOnce(
+      "excel",
+    );
+    const { unmount: unmount2 } = render(
+      <DocumentCard document={baseDoc as Document} />,
+    );
     expect(document.querySelectorAll("svg").length).toBeGreaterThan(0);
     unmount2();
 
-    (documentTypesModule.getFileTypeFromMime as jest.Mock).mockReturnValueOnce("word");
+    (documentTypesModule.getFileTypeFromMime as jest.Mock).mockReturnValueOnce(
+      "word",
+    );
     render(<DocumentCard document={baseDoc as Document} />);
     expect(document.querySelectorAll("svg").length).toBeGreaterThan(0);
   });
@@ -225,7 +264,9 @@ describe("DocumentCard", () => {
     } as unknown as Document;
 
     render(<DocumentCard document={doc} />);
-    expect(screen.getByRole("heading", { level: 3, name: /original\.pdf|file\.pdf/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 3, name: /original\.pdf|file\.pdf/i }),
+    ).toBeInTheDocument();
   });
 
   it("does not render delete button when canDelete is false", () => {
@@ -239,10 +280,16 @@ describe("DocumentCard", () => {
     render(<DocumentCard document={baseDoc as Document} canDelete />);
 
     await user.click(screen.getByTitle("Mover a papelera"));
-    expect(screen.getByText("¿Deseas mover este documento a la papelera?")).toBeInTheDocument();
+    expect(
+      screen.getByText("¿Deseas mover este documento a la papelera?"),
+    ).toBeInTheDocument();
 
+    // There are 2 "Cancelar" buttons in UI (share + delete) only when share modal open,
+    // but here only delete modal is open.
     await user.click(screen.getByRole("button", { name: "Cancelar" }));
-    expect(screen.queryByText("¿Deseas mover este documento a la papelera?")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("¿Deseas mover este documento a la papelera?"),
+    ).not.toBeInTheDocument();
   });
 
   it("confirm delete calls moveToTrash with document id, closes modal, and calls onDeleted", async () => {
@@ -252,7 +299,9 @@ describe("DocumentCard", () => {
     render(<DocumentCard document={baseDoc as Document} canDelete onDeleted={onDeleted} />);
 
     await user.click(screen.getByTitle("Mover a papelera"));
-    expect(screen.getByText("¿Deseas mover este documento a la papelera?")).toBeInTheDocument();
+    expect(
+      screen.getByText("¿Deseas mover este documento a la papelera?"),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Mover a papelera" }));
 
@@ -261,7 +310,9 @@ describe("DocumentCard", () => {
     });
 
     await waitFor(() => {
-      expect(screen.queryByText("¿Deseas mover este documento a la papelera?")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("¿Deseas mover este documento a la papelera?"),
+      ).not.toBeInTheDocument();
     });
 
     expect(onDeleted).toHaveBeenCalledTimes(1);
@@ -270,7 +321,9 @@ describe("DocumentCard", () => {
   it("renders Share button when current user is owner and opens Share modal (loads members)", async () => {
     const user = userEvent.setup();
 
-    getOrganizationMembersMock.mockResolvedValueOnce([
+    (
+      documentServiceModule.getOrganizationMembers as unknown as jest.Mock
+    ).mockResolvedValueOnce([
       { user: { id: OTHER_ID, name: "Alice", email: "alice@example.com" } },
       { user: { _id: THIRD_ID, name: "Bob", email: "bob@example.com" } },
     ]);
@@ -284,8 +337,8 @@ describe("DocumentCard", () => {
 
     expect(screen.getByText("Compartir documento")).toBeInTheDocument();
     await waitFor(() => {
-      expect(getActiveOrganizationIdMock).toHaveBeenCalledTimes(1);
-      expect(getOrganizationMembersMock).toHaveBeenCalledWith("org-1");
+      expect(documentServiceModule.getActiveOrganizationId).toHaveBeenCalledTimes(1);
+      expect(documentServiceModule.getOrganizationMembers).toHaveBeenCalledWith("org-1");
     });
 
     expect(await screen.findByText("Alice")).toBeInTheDocument();
@@ -297,14 +350,16 @@ describe("DocumentCard", () => {
 
     const doc: Partial<Document> = {
       ...baseDoc,
-      sharedWith: [OTHER_ID], // already shared => must not show
+      sharedWith: [OTHER_ID],
     };
 
-    getOrganizationMembersMock.mockResolvedValueOnce([
-      { user: { id: OWNER_ID, name: "Owner", email: "owner@example.com" } }, // filtered out (owner)
-      { user: { id: OTHER_ID, name: "AlreadyShared", email: "a@x.com" } }, // filtered out (already shared)
-      { user: { id: "not-a-valid-object-id", name: "Bad", email: "bad@x.com" } }, // filtered out (invalid)
-      { user: { id: THIRD_ID, name: "Keeps", email: "keeps@x.com" } }, // stays
+    (
+      documentServiceModule.getOrganizationMembers as unknown as jest.Mock
+    ).mockResolvedValueOnce([
+      { user: { id: OWNER_ID, name: "Owner", email: "owner@example.com" } },
+      { user: { id: OTHER_ID, name: "AlreadyShared", email: "a@x.com" } },
+      { user: { id: "not-a-valid-object-id", name: "Bad", email: "bad@x.com" } },
+      { user: { id: THIRD_ID, name: "Keeps", email: "keeps@x.com" } },
     ]);
 
     render(<DocumentCard document={doc as Document} />);
@@ -320,7 +375,9 @@ describe("DocumentCard", () => {
   it("share flow: select one member and confirm calls shareDocument with selected userIds and closes modal", async () => {
     const user = userEvent.setup();
 
-    getOrganizationMembersMock.mockResolvedValueOnce([
+    (
+      documentServiceModule.getOrganizationMembers as unknown as jest.Mock
+    ).mockResolvedValueOnce([
       { user: { id: OTHER_ID, name: "Alice", email: "alice@example.com" } },
       { user: { id: THIRD_ID, name: "Bob", email: "bob@example.com" } },
     ]);
@@ -330,7 +387,6 @@ describe("DocumentCard", () => {
     await user.click(screen.getByTitle("Compartir"));
     expect(await screen.findByText("Alice")).toBeInTheDocument();
 
-    // Select Alice by clicking row
     await user.click(screen.getByText("Alice"));
 
     const confirmBtn = screen.getByRole("button", { name: "Compartir (1)" });
@@ -339,7 +395,7 @@ describe("DocumentCard", () => {
     await user.click(confirmBtn);
 
     await waitFor(() => {
-      expect(shareDocumentMock).toHaveBeenCalledWith(DOC_ID, [OTHER_ID]);
+      expect(documentServiceModule.shareDocument).toHaveBeenCalledWith(DOC_ID, [OTHER_ID]);
     });
 
     await waitFor(() => {
@@ -347,10 +403,12 @@ describe("DocumentCard", () => {
     });
   });
 
-  it("share modal shows validation error when trying to confirm without selecting a member", async () => {
+  it("share modal confirm is disabled when no member selected", async () => {
     const user = userEvent.setup();
 
-    getOrganizationMembersMock.mockResolvedValueOnce([
+    (
+      documentServiceModule.getOrganizationMembers as unknown as jest.Mock
+    ).mockResolvedValueOnce([
       { user: { id: OTHER_ID, name: "Alice", email: "alice@example.com" } },
     ]);
 
@@ -359,7 +417,6 @@ describe("DocumentCard", () => {
     await user.click(screen.getByTitle("Compartir"));
     expect(await screen.findByText("Alice")).toBeInTheDocument();
 
-    // Confirm button should be disabled when nothing selected
     const confirmBtn = screen.getByRole("button", { name: "Compartir (0)" });
     expect(confirmBtn).toBeDisabled();
   });
@@ -367,7 +424,9 @@ describe("DocumentCard", () => {
   it("share member search filters the list by name/email", async () => {
     const user = userEvent.setup();
 
-    getOrganizationMembersMock.mockResolvedValueOnce([
+    (
+      documentServiceModule.getOrganizationMembers as unknown as jest.Mock
+    ).mockResolvedValueOnce([
       { user: { id: OTHER_ID, name: "Alice", email: "alice@example.com" } },
       { user: { id: THIRD_ID, name: "Bob", email: "bob@example.com" } },
     ]);
@@ -388,17 +447,19 @@ describe("DocumentCard", () => {
   it("when current user is NOT the owner, clicking Share opens modal with 'Solo el propietario...' and does not load members", async () => {
     const user = userEvent.setup();
 
-    localStorage.setItem("auth_user", JSON.stringify({ id: "ffffffffffffffffffffffff" })); // different user
+    localStorage.setItem("auth_user", JSON.stringify({ id: "ffffffffffffffffffffffff" }));
 
     render(<DocumentCard document={baseDoc as Document} />);
 
     await user.click(screen.getByTitle("Compartir"));
 
     expect(screen.getByText("Compartir documento")).toBeInTheDocument();
-    expect(screen.getByText("Solo el propietario del documento puede compartirlo.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Solo el propietario del documento puede compartirlo."),
+    ).toBeInTheDocument();
 
-    expect(getActiveOrganizationIdMock).not.toHaveBeenCalled();
-    expect(getOrganizationMembersMock).not.toHaveBeenCalled();
+    expect(documentServiceModule.getActiveOrganizationId).not.toHaveBeenCalled();
+    expect(documentServiceModule.getOrganizationMembers).not.toHaveBeenCalled();
   });
 
   it("does not render Share button when ownerId cannot be derived (uploadedBy invalid)", () => {

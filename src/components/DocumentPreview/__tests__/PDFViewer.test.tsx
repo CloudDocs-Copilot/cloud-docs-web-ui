@@ -48,7 +48,7 @@ describe('PDFViewer', () => {
   it('shows error when response not ok', async () => {
     global.fetch = jest.fn(() => Promise.resolve({ ok: false, status: 404, headers: new Headers(), text: () => Promise.resolve('no') } as Response));
     render(<PDFViewer url="/missing.pdf" filename="x.pdf" />);
-    await waitFor(() => expect(screen.getByText(/Error Loading PDF/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/No se pudo cargar el documento/i)).toBeInTheDocument());
     (global.fetch as jest.Mock | undefined)?.mockClear();
   });
 
@@ -56,7 +56,7 @@ describe('PDFViewer', () => {
     const blob = new Blob(['hello'], { type: 'text/plain' });
     global.fetch = jest.fn(() => Promise.resolve({ ok: true, status: 200, headers: new Headers(), blob: () => Promise.resolve(blob) } as Response));
     render(<PDFViewer url="/bad.pdf" filename="bad.pdf" />);
-    await waitFor(() => expect(screen.getByText(/Failed to load PDF/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/No se pudo cargar el documento/i)).toBeInTheDocument());
     (global.fetch as jest.Mock | undefined)?.mockClear();
   });
 

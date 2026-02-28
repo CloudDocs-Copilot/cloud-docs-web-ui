@@ -19,17 +19,19 @@
 }
 
 .backButton {
-  color: #212529;
+  color: #212529 !important;
   padding: 0.25rem 0.5rem;
-  text-decoration: none;
+  text-decoration: none !important;
   font-size: 1.5rem;
   line-height: 1;
   flex-shrink: 0;
+  background: transparent !important;
+  border: none !important;
 }
 
 .backButton:hover {
-  color: #000;
-  text-decoration: none;
+  color: #000 !important;
+  text-decoration: none !important;
 }
 
 .fileInfo {
@@ -70,22 +72,44 @@
 }
 
 .iconButton {
-  color: #212529;
+  color: #212529 !important;
   padding: 0.5rem;
-  text-decoration: none;
+  text-decoration: none !important;
   font-size: 1.25rem;
   line-height: 1;
   position: relative;
+  background: transparent !important;
+  border: none !important;
 }
 
 .iconButton:hover {
-  color: #000;
-  text-decoration: none;
+  color: #000 !important;
+  text-decoration: none !important;
 }
 
 .iconButton:disabled {
   opacity: 0.4;
   pointer-events: none;
+}
+
+.closeButton {
+  color: #6c757d !important;
+  padding: 0.5rem;
+  text-decoration: none !important;
+  font-size: 1.25rem;
+  line-height: 1;
+  margin-left: 0.25rem;
+  border-left: 1px solid #e0e0e0 !important;
+  padding-left: 0.75rem;
+  background: transparent !important;
+  border-top: none !important;
+  border-right: none !important;
+  border-bottom: none !important;
+}
+
+.closeButton:hover {
+  color: #dc3545 !important;
+  text-decoration: none !important;
 }
 
 /* Responsive */

@@ -9,6 +9,8 @@ import { useInvitations } from '../hooks/useInvitations';
 import { HOME_FEATURES } from '../constants/homeFeatures';
 import { HOME_STATS } from '../constants/homeStats';
 import ContactForm, { type ContactFormData } from '../components/ContactForm';
+import { CloudDocsLogo } from '../components/CloudDocsLogo';
+import { FloatingIcons } from '../components/FloatingIcons';
 import styles from './Home.module.css';
 
 const Home: React.FC = () => {
@@ -53,7 +55,7 @@ const Home: React.FC = () => {
       <Navbar className={styles.navbar} expand="lg">
         <Container fluid className="px-4">
           <Navbar.Brand className={styles.brand}>
-            <span className={styles.brandIcon}>📄</span>
+            <CloudDocsLogo size={32} className={styles.brandIcon} />
             CloudDocs Copilot
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="navbar-nav" />
@@ -165,9 +167,7 @@ const Home: React.FC = () => {
               </Col>
               <Col lg={6} className="d-none d-lg-block">
                 <div className={styles.heroIllustration}>
-                  <div className={styles.floatingCard}>📄</div>
-                  <div className={styles.floatingCard}>📊</div>
-                  <div className={styles.floatingCard}>📁</div>
+                  <FloatingIcons />
                 </div>
               </Col>
             </Row>

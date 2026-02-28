@@ -166,12 +166,11 @@ describe('DocumentPreviewModal', () => {
     });
   });
 
-  it('renders modal when show is true and renders Sidebar + comments panel', () => {
+  it('renders modal when show is true and renders comments panel', () => {
     const document = createMockDocument();
 
     render(<DocumentPreviewModal show={true} onHide={mockOnHide} document={document} />);
 
-    expect(screen.getByText('Sidebar')).toBeInTheDocument();
     expect(screen.getByTestId('comments-panel')).toBeInTheDocument();
   });
 

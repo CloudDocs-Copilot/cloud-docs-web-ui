@@ -8,7 +8,6 @@ import { ImageViewer } from './ImageViewer';
 import { VideoPlayer } from './VideoPlayer';
 import { TextViewer } from './TextViewer';
 import { OfficeViewer } from './OfficeViewer';
-import Sidebar from '../Sidebar';
 import styles from './DocumentPreviewModal.module.css';
 import DocumentCommentsPanel from '../Comments/DocumentCommentsPanel';
 import useOrganization from '../../hooks/useOrganization';
@@ -315,8 +314,6 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
       )}
 
       <Modal.Body className={styles.modalBody}>
-        <Sidebar activeItem="" />
-
         <div className={styles.contentRow}>
           <div className={styles.viewerWrapper}>
             {canReplaceFile && !showReplace && (

@@ -66,7 +66,7 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
     onSelect(folder);
   };
   
-  const handleDocumentSingleClick = (doc: any) => {
+  const handleDocumentSingleClick = (doc: Document) => {
     // Esperar 250ms para ver si es un doble click
     clickTimerRef.current = window.setTimeout(() => {
       if (!clickPreventRef.current && onDocumentClick) {
@@ -76,7 +76,7 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
     }, 250);
   };
   
-  const handleDocumentDoubleClick = (e: React.MouseEvent, doc: any) => {
+  const handleDocumentDoubleClick = (e: React.MouseEvent, doc: Document) => {
     e.stopPropagation();
     // Cancelar el timer del click simple
     if (clickTimerRef.current) {

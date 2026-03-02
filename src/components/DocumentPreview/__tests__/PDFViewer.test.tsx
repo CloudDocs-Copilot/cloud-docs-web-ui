@@ -51,7 +51,7 @@ describe('PDFViewer', () => {
       status: 200, 
       statusText: 'OK',
       headers: {},
-      config: {} as any
+      config: {} as Record<string, unknown>
     });
 
     render(<PDFViewer url="/doc.pdf" filename="f.pdf" fileSize={1024} />);
@@ -79,7 +79,7 @@ describe('PDFViewer', () => {
       status: 200,
       statusText: 'OK',
       headers: {},
-      config: {} as any
+      config: {} as Record<string, unknown>
     });
     
     render(<PDFViewer url="/bad.pdf" filename="bad.pdf" />);
@@ -93,7 +93,7 @@ describe('PDFViewer', () => {
       status: 200,
       statusText: 'OK',
       headers: {},
-      config: {} as any
+      config: {} as Record<string, unknown>
     });
     
     const { container } = render(<PDFViewer url="/doc.pdf" filename="f.pdf" fileSize={1024} />);

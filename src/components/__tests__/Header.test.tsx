@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
-import type { Document } from "../../types/document.types";
+
 import Header from "../Header";
 
 const mockNavigate = jest.fn<void, [string]>();

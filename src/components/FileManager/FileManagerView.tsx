@@ -63,7 +63,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       setItems({ subfolders: data.subfolders, documents: data.documents });
       // Update current folder details from response
       setCurrentFolder(data.folder);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('[FileManagerView] Error al cargar contenido:', error);
       alert(`Error al cargar carpeta: ${error.response?.data?.message || error.message}`);
       // Reset loading even on error
@@ -121,7 +121,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       // Refresh content and tree
       fetchContents(currentFolder.id);
       setRefreshTree(prev => prev + 1);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al crear carpeta:', error);
       const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Error creating folder';
       alert(`Error al crear carpeta: ${errorMessage}`);
@@ -154,7 +154,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
         fetchContents(currentFolder.id);
       }
       setRefreshTree(prev => prev + 1);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al renombrar carpeta:', error);
       const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Error renaming folder';
       alert(`Error al renombrar carpeta: ${errorMessage}`);
@@ -200,7 +200,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       if (currentFolder) {
         fetchContents(currentFolder.id);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al renombrar documento:', error);
       const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Error renaming document';
       alert(`Error al renombrar documento: ${errorMessage}`);
@@ -270,7 +270,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al subir archivo:', error);
       const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Error subiendo archivo';
       alert(`Error al subir archivo: ${errorMessage}`);
@@ -347,7 +347,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       }
       // Refresh tree to show new structure
       setRefreshTree(prev => prev + 1);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al mover carpeta', error);
       alert('Error al mover carpeta: ' + (error.response?.data?.message || error.message));
     } finally {

@@ -54,7 +54,7 @@ export interface FolderContentsResponse {
   contents: {
     folder: Folder;
     subfolders: Folder[];
-    documents: any[]; // Usar Document type cuando importemos
+    documents: Document[];
   };
 }
 

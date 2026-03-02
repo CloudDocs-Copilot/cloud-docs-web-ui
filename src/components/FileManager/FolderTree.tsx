@@ -75,16 +75,17 @@ export const FolderTree: React.FC<FolderTreeProps> = ({
 
   useEffect(() => {
     fetchTree();
-  }, [activeOrganization?.id, refreshTrigger]);
+  }, [activeOrganization?.id, refreshTrigger, fetchTree]);
 
   const handleMoveFolder = async (sourceId: string, targetId: string) => {
     try {
       setLoading(true);
       await folderService.move(sourceId, { targetFolderId: targetId });
       await fetchTree(); // Refrescar después de mover
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error al mover carpeta', err);
-      alert('Error al mover carpeta: ' + (err.response?.data?.message || err.message));
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      alert('Error al mover carpeta: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
     }

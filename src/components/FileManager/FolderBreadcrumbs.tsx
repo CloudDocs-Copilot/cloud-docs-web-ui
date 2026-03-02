@@ -10,7 +10,6 @@ interface FolderBreadcrumbsProps {
 }
 
 export const FolderBreadcrumbs: React.FC<FolderBreadcrumbsProps> = ({ 
-  currentFolder, 
   path, 
   onNavigate 
 }) => {

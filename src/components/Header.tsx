@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Form, Button, InputGroup, OverlayTrigger, Popover, Spinner } from 'react-bootstrap';
 import styles from './Header.module.css';
@@ -8,15 +8,13 @@ import { useNotifications } from '../hooks/useNotifications';
 import { getNotificationTypeLabel } from '../constants/notificationTypes';
 import type { NotificationDTO, NotificationType } from '../types/notification.types';
 
-interface HeaderProps {}
-
 const INVITATION_TYPES: NotificationType[] = ['INVITATION_CREATED', 'MEMBER_INVITED'];
 
 function isInvitationNotification(n: NotificationDTO): boolean {
   return INVITATION_TYPES.includes(n.type);
 }
 
-const Header: React.FC<HeaderProps> = () => {
+const Header: React.FC = () => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const location = useLocation();

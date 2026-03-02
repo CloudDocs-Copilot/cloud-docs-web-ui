@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect, useContext } from 'react';
 import type { FormEvent } from 'react';
 import { Container, Row, Col, Form, Button, Badge, Spinner, Alert } from 'react-bootstrap';
-import { Search, X, Clock, FileEarmark } from 'react-bootstrap-icons';
+import { Search, X, Clock, FileText } from 'lucide-react';
 import MainLayout from '../components/MainLayout';
 import DocumentCard from '../components/DocumentCard';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
@@ -137,10 +137,6 @@ const SearchPage: React.FC = () => {
       <Container className={styles.searchContainer}>
         {/* Header con barra de búsqueda */}
         <div className={styles.searchHeader}>
-          <h2 className={styles.pageTitle}>
-            <Search className={styles.titleIcon} />
-            Buscar documentos
-          </h2>
 
           <Form onSubmit={handleSearch} className={styles.searchForm}>
             <div className={styles.searchInputWrapper}>
@@ -173,7 +169,7 @@ const SearchPage: React.FC = () => {
                   {suggestions.length > 0 && (
                     <div className={styles.autocompleteSection}>
                       <div className={styles.autocompleteSectionTitle}>
-                        <FileEarmark size={14} />
+                        <FileText size={14} />
                         Sugerencias
                       </div>
                       {suggestions.map((suggestion, index) => (

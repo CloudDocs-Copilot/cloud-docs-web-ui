@@ -3,7 +3,7 @@ import { NotificationsContext } from './NotificationsContext';
 import { useAuth } from '../hooks/useAuth';
 import { useOrganization } from '../hooks/useOrganization';
 import { useToast } from '../hooks/useToast';
-import type { NotificationDTO } from '../types/notification.types';
+import type { NotificationDTO, NotificationType } from '../types/notification.types';
 import * as notificationApi from '../services/notification.service';
 import { connectSocket, disconnectSocket } from '../services/socket-client.service';
 
@@ -11,6 +11,12 @@ function safeDateDesc(a?: string, b?: string): number {
   const da = a ? new Date(a).getTime() : 0;
   const db = b ? new Date(b).getTime() : 0;
   return db - da;
+}
+
+const INVITATION_TYPES: NotificationType[] = ['INVITATION_CREATED'];
+
+function isInvitationNotification(n: NotificationDTO): boolean {
+  return INVITATION_TYPES.includes(n.type);
 }
 
 export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -25,27 +31,29 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<Error | null>(null);
   const [hasMore, setHasMore] = useState(false);
 
+  // Extra unread count for notifications that belong to other orgs (realtime only).
+  // We keep the list filtered to active org + invitations, but still show badge/toast.
+  const [extraUnreadCount, setExtraUnreadCount] = useState(0);
+
   // StrictMode guard (avoid double listeners in dev)
   const listenersAttachedRef = useRef(false);
 
   const recalcUnread = useCallback((items: NotificationDTO[]) => {
-    const orgId = activeOrganization?.id;
-    const filtered = orgId ? items.filter(n => String(n.organization) === String(orgId)) : items;
-    const unread = filtered.filter(n => !n.readAt).length;
+    const unread = items.filter(n => !n.readAt).length;
     setUnreadCount(unread);
-  }, [activeOrganization?.id]);
+  }, []);
 
   const refresh = useCallback(
     async (opts?: { unreadOnly?: boolean }) => {
       if (!isAuthenticated || !user) return;
-      if (!activeOrganization?.id) return;
 
       setLoading(true);
       setError(null);
 
       try {
         const r = await notificationApi.listNotifications({
-          organizationId: activeOrganization.id,
+          // backend returns: (active org notifications) OR (INVITATION_CREATED)
+          organizationId: activeOrganization?.id,
           unreadOnly: opts?.unreadOnly ?? false,
           limit: 20,
           skip: 0,
@@ -56,6 +64,10 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         setTotal(r.total ?? items.length);
         setHasMore(items.length < (r.total ?? 0));
         recalcUnread(items);
+
+        // Once we refresh, we consider the badge authoritative for the currently visible scope.
+        // Keep extraUnreadCount for other orgs as-is? In practice, resetting avoids confusion.
+        setExtraUnreadCount(0);
       } catch (e: unknown) {
         setError(e instanceof Error ? e : new Error(String(e)));
       } finally {
@@ -67,7 +79,6 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const loadMore = useCallback(async () => {
     if (!isAuthenticated || !user) return;
-    if (!activeOrganization?.id) return;
     if (loading) return;
 
     setLoading(true);
@@ -75,7 +86,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       const r = await notificationApi.listNotifications({
-        organizationId: activeOrganization.id,
+        organizationId: activeOrganization?.id,
         unreadOnly: false,
         limit: 20,
         skip: notifications.length,
@@ -87,8 +98,10 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
         recalcUnread(combined);
         return combined;
       });
-      setTotal(r.total ?? notifications.length + newItems.length);
-      setHasMore(notifications.length + newItems.length < (r.total ?? 0));
+
+      const nextTotal = r.total ?? (notifications.length + newItems.length);
+      setTotal(nextTotal);
+      setHasMore(notifications.length + newItems.length < nextTotal);
     } catch (e: unknown) {
       setError(e instanceof Error ? e : new Error(String(e)));
     } finally {
@@ -118,9 +131,6 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   const markAllRead = useCallback(async () => {
-    if (!activeOrganization?.id) return;
-
-    // Optimistic UI update
     setNotifications(prev => {
       const now = new Date().toISOString();
       const next = prev.map(n => (n.readAt ? n : { ...n, readAt: now }));
@@ -128,8 +138,11 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
       return next;
     });
 
+    // Marking all read in the visible scope shouldn't clear other-org realtime badge
+    setExtraUnreadCount(0);
+
     try {
-      await notificationApi.markAllNotificationsRead({ organizationId: activeOrganization.id });
+      await notificationApi.markAllNotificationsRead({ organizationId: activeOrganization?.id });
     } catch {
       await refresh();
     }
@@ -143,6 +156,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
       setNotifications([]);
       setTotal(0);
       setUnreadCount(0);
+      setExtraUnreadCount(0);
       setError(null);
       setLoading(false);
       return;
@@ -153,51 +167,72 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!listenersAttachedRef.current) {
       listenersAttachedRef.current = true;
 
-      socket.on('socket:connected', () => {
-        // Optional: you can refresh on connect once org is ready
-      });
+      socket.on('socket:connected', () => {});
 
       socket.on('reconnect', () => {
         refresh().catch(() => {});
       });
 
       socket.on('notification:new', (payload: NotificationDTO) => {
-        // Filter to current active org (if present)
         const activeOrgId = activeOrganization?.id;
-        if (activeOrgId && String(payload.organization) !== String(activeOrgId)) return;
+        const isInvite = isInvitationNotification(payload);
+        const isActiveOrgNotif = activeOrgId && String(payload.organization) === String(activeOrgId);
 
-        // Show toast
+        // Always toast in realtime (including other-org notifications)
         try {
-          const title = 'Notificación';
           const msg = payload.message || 'Tienes una nueva notificación';
+          const orgName =
+            typeof payload.metadata?.organizationName === 'string'
+              ? (payload.metadata.organizationName as string)
+              : '';
+          const title =
+            !isInvite && !isActiveOrgNotif && orgName
+              ? `Notificación (${orgName})`
+              : 'Notificación';
+
           showToast({ title, message: msg, variant: 'info' });
         } catch {
           // ignore toast failures
         }
 
-        // Insert into list (dedupe by id if provided)
-        setNotifications(prev => {
-          const exists = payload.id ? prev.some(p => p.id === payload.id) : false;
-          const next = exists ? prev : [payload, ...prev].slice(0, 20);
-          recalcUnread(next);
-          return next;
-        });
+        // Keep invitations always (regardless of org)
+        if (isInvite) {
+          setNotifications(prev => {
+            const exists = payload.id ? prev.some(p => p.id === payload.id) : false;
+            const next = exists ? prev : [payload, ...prev].slice(0, 20);
+            recalcUnread(next);
+            return next;
+          });
+          setTotal(prev => prev + 1);
+          return;
+        }
 
-        // total is best-effort client-side
+        // If it's for the active org, insert into list.
+        if (isActiveOrgNotif) {
+          setNotifications(prev => {
+            const exists = payload.id ? prev.some(p => p.id === payload.id) : false;
+            const next = exists ? prev : [payload, ...prev].slice(0, 20);
+            recalcUnread(next);
+            return next;
+          });
+          setTotal(prev => prev + 1);
+          return;
+        }
+
+        // Otherwise: other-org notification.
+        // Don't pollute the current org list, but do bump the badge so the user sees something arrived.
+        if (!payload.readAt) {
+          setExtraUnreadCount(c => c + 1);
+        }
         setTotal(prev => prev + 1);
       });
     }
 
-    return () => {
-      // we keep the singleton socket alive while authenticated, so no cleanup here
-      // listeners are kept attached (guarded by listenersAttachedRef)
-    };
-  }, [activeOrganization?.id, isAuthenticated, recalcUnread, showToast, user]);
+    return () => {};
+  }, [activeOrganization?.id, isAuthenticated, recalcUnread, refresh, showToast, user]);
 
-  // When active org changes, refresh list + reset view
   useEffect(() => {
     if (!isAuthenticated || !user) return;
-    if (!activeOrganization?.id) return;
     refresh().catch(() => {});
   }, [activeOrganization?.id, isAuthenticated, refresh, user]);
 
@@ -205,7 +240,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
     () => ({
       notifications,
       total,
-      unreadCount,
+      unreadCount: unreadCount + extraUnreadCount,
       loading,
       error,
       hasMore,
@@ -214,7 +249,7 @@ export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({
       markRead,
       markAllRead,
     }),
-    [notifications, total, unreadCount, loading, error, hasMore, refresh, loadMore, markRead, markAllRead]
+    [notifications, total, unreadCount, extraUnreadCount, loading, error, hasMore, refresh, loadMore, markRead, markAllRead]
   );
 
   return <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>;

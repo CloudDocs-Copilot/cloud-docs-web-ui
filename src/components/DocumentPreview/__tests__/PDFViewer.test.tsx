@@ -69,10 +69,7 @@ describe('PDFViewer', () => {
     mockApiGet.mockRejectedValueOnce(new Error('Network error'));
     
     render(<PDFViewer url="/missing.pdf" filename="x.pdf" />);
-    
-    await waitFor(() => {
-      expect(screen.getByText(/Error Loading PDF/i)).toBeInTheDocument();
-    }, { timeout: 2000 });
+    await waitFor(() => expect(screen.getByText(/No se pudo cargar el documento/i)).toBeInTheDocument());
   });
 
   it('errors for invalid blob type', async () => {
@@ -86,10 +83,7 @@ describe('PDFViewer', () => {
     });
     
     render(<PDFViewer url="/bad.pdf" filename="bad.pdf" />);
-    
-    await waitFor(() => {
-      expect(screen.getByText(/Failed to load PDF/i)).toBeInTheDocument();
-    }, { timeout: 2000 });
+    await waitFor(() => expect(screen.getByText(/No se pudo cargar el documento/i)).toBeInTheDocument());
   });
 
   it('zoom buttons update percentage', async () => {

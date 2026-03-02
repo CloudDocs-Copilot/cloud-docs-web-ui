@@ -26,21 +26,23 @@
 }
 
 .zoomButton {
-  color: #495057;
+  color: #495057 !important;
   padding: 0.25rem 0.5rem;
-  text-decoration: none;
+  text-decoration: none !important;
   font-size: 1.125rem;
   line-height: 1;
   min-width: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: transparent !important;
+  border: none !important;
 }
 
 .zoomButton:hover {
-  color: #212529;
-  text-decoration: none;
-  background-color: #f8f9fa;
+  color: #212529 !important;
+  text-decoration: none !important;
+  background-color: #f8f9fa !important;
   border-radius: 4px;
 }
 

@@ -12,6 +12,11 @@ type FilterTab = 'all' | 'unread' | 'documents' | 'comments';
 
 const DOCUMENT_TYPES: NotificationType[] = ['DOC_UPLOADED', 'DOC_EDITED'];
 const COMMENT_TYPES: NotificationType[] = ['DOC_COMMENTED'];
+const INVITATION_TYPES: NotificationType[] = ['INVITATION_CREATED', 'MEMBER_INVITED'];
+
+function isInvitationNotification(n: NotificationDTO): boolean {
+  return INVITATION_TYPES.includes(n.type);
+}
 
 function formatRelativeTime(dateStr?: string): string {
   if (!dateStr) return '';
@@ -63,6 +68,12 @@ const Notifications: React.FC = () => {
       if (notification.id && !notification.readAt) {
         await markRead(notification.id).catch(() => {});
       }
+
+      if (isInvitationNotification(notification)) {
+        navigate('/invitations');
+        return;
+      }
+
       if (notification.entity?.kind === 'document' && notification.entity?.id) {
         navigate('/dashboard');
       }

@@ -43,14 +43,6 @@
   display: flex;
   flex: 1;
   min-width: 0;
-  flex-direction: column;
-}
-
-/* Forzar el sidebar a comportarse como parte del layout flex del modal */
-.modalBody :global(.sidebar) {
-  position: relative !important;
-  flex-shrink: 0;
-  height: 100%;
 }
 
 .contentRow {

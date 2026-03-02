@@ -37,6 +37,7 @@ export const ALLOWED_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   'image/jpeg',
   'image/png',
+  'text/plain',
 ] as const;
 
 /**
@@ -50,6 +51,7 @@ export const ALLOWED_EXTENSIONS = [
   '.jpg',
   '.jpeg',
   '.png',
+  '.txt',
 ] as const;
 
 /**
@@ -63,6 +65,7 @@ export const EXTENSION_TO_MIME: Record<string, string> = {
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.png': 'image/png',
+  '.txt': 'text/plain',
 };
 
 /**
@@ -75,6 +78,7 @@ export const FILE_TYPE_NAMES: Record<string, string> = {
   'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PowerPoint',
   'image/jpeg': 'Imagen JPEG',
   'image/png': 'Imagen PNG',
+  'text/plain': 'Texto',
 };
 
 // ============================================================================
@@ -214,5 +218,5 @@ export function getFileTypeName(mimeType: string): string {
  * Lista de tipos permitidos formateada para mostrar al usuario
  */
 export function getAllowedTypesDisplay(): string {
-  return 'PDF, DOCX, XLSX, PPTX, JPG, PNG';
+  return 'PDF, DOCX, XLSX, PPTX, JPG, PNG, TXT';
 }

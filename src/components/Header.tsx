@@ -6,8 +6,15 @@ import { useAuth } from '../hooks/useAuth';
 import OrganizationSelector from './Organization/OrganizationSelector';
 import { useNotifications } from '../hooks/useNotifications';
 import { getNotificationTypeLabel } from '../constants/notificationTypes';
+import type { NotificationDTO, NotificationType } from '../types/notification.types';
 
 interface HeaderProps {}
+
+const INVITATION_TYPES: NotificationType[] = ['INVITATION_CREATED', 'MEMBER_INVITED'];
+
+function isInvitationNotification(n: NotificationDTO): boolean {
+  return INVITATION_TYPES.includes(n.type);
+}
 
 const Header: React.FC<HeaderProps> = () => {
   const navigate = useNavigate();
@@ -71,6 +78,12 @@ const Header: React.FC<HeaderProps> = () => {
                       if (n.id) {
                         markRead(n.id).catch(() => {});
                       }
+
+                      if (isInvitationNotification(n)) {
+                        navigate('/invitations');
+                        return;
+                      }
+
                       // Optional: navigate to document
                       if (n.entity?.kind === 'document' && n.entity?.id) {
                         // If you have a route for docs, navigate there.

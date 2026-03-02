@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
-import { Container } from 'react-bootstrap';
+import { Container, Modal } from 'react-bootstrap';
 import MainLayout from '../components/MainLayout';
+import { FileUploader } from '../components/FileUploader';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
 import useOrganization from '../hooks/useOrganization';
 import { useDashboardData } from '../hooks/useDashboardData';
@@ -28,12 +29,26 @@ const Dashboard: React.FC = () => {
   });
 
   const [docsRefreshKey, setDocsRefreshKey] = useState(0);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const handleDocumentsUploaded = useCallback(() => {
     setDocsRefreshKey((k) => k + 1);
   }, []);
 
   const handleDocumentDeleted = useCallback(() => {
+    setDocsRefreshKey((k) => k + 1);
+  }, []);
+
+  const handleOpenUploadModal = useCallback(() => {
+    setShowUploadModal(true);
+  }, []);
+
+  const handleCloseUploadModal = useCallback(() => {
+    setShowUploadModal(false);
+  }, []);
+
+  const handleUploadSuccess = useCallback(() => {
+    setShowUploadModal(false);
     setDocsRefreshKey((k) => k + 1);
   }, []);
 
@@ -49,10 +64,24 @@ const Dashboard: React.FC = () => {
           statsError={statsError}
           membersError={membersError}
           docsRefreshKey={docsRefreshKey}
-          onDocumentsUploaded={handleDocumentsUploaded}
+          onDocumentsUploaded={handleOpenUploadModal}
           onDocumentDeleted={handleDocumentDeleted}
         />
       </Container>
+
+      <Modal
+        show={showUploadModal}
+        onHide={handleCloseUploadModal}
+        size="lg"
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <FileUploader
+          onUploadSuccess={handleUploadSuccess}
+          onClose={handleCloseUploadModal}
+        />
+      </Modal>
     </MainLayout>
   );
 };

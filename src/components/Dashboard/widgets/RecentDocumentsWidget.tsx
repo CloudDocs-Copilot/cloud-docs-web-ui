@@ -83,7 +83,7 @@ export const RecentDocumentsWidget: React.FC<RecentDocumentsWidgetProps> = ({
           ) : (
             <Row className="g-3">
               {data.documents.map((doc, idx) => (
-                <Col key={doc.id ?? doc._id ?? idx} xs={12} sm={6} lg={4} xl={3}>
+                <Col key={doc.id ?? idx} xs={12} sm={6} lg={4} xl={3}>
                   <DocumentCard
                     document={doc}
                     onDeleted={handleDeleted}

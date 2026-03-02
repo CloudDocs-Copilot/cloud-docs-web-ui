@@ -225,7 +225,6 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
    */
   const previewDocument: PreviewDocument = {
     id: document.id,
-    _id: (document as unknown as { _id?: string })._id,
     filename: document.filename || document.originalname || 'unknown',
     originalname: document.originalname,
     mimeType: document.mimeType,
@@ -331,7 +330,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
   const handleConfirmShare = async () => {
     setShareError(null);
 
-    const documentId = document.id ?? document._id ?? '';
+    const documentId = document.id ?? '';
     if (!documentId) {
       setShareError('Documento inválido');
       return;

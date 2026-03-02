@@ -14,6 +14,15 @@ import type { Folder } from '../../types/folder.types';
 import type { Document } from '../../types/document.types';
 import type { PreviewDocument } from '../../types/preview.types';
 
+// Helper function to extract error message from unknown error
+const getErrorMessage = (error: unknown): string => {
+  if (error && typeof error === 'object') {
+    const err = error as { response?: { data?: { message?: string; error?: string } }; message?: string };
+    return err.response?.data?.message || err.response?.data?.error || err.message || 'Unknown error';
+  }
+  return 'Unknown error';
+};
+
 interface FileManagerViewProps {
   /** Trigger numérico para forzar la recarga del contenido desde fuera */
   externalRefresh?: number;
@@ -65,7 +74,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       setCurrentFolder(data.folder);
     } catch (error: unknown) {
       console.error('[FileManagerView] Error al cargar contenido:', error);
-      alert(`Error al cargar carpeta: ${error.response?.data?.message || error.message}`);
+      alert(`Error al cargar carpeta: ${getErrorMessage(error)}`);
       // Reset loading even on error
       setItems({ subfolders: [], documents: [] });
     } finally {
@@ -123,8 +132,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       setRefreshTree(prev => prev + 1);
     } catch (error: unknown) {
       console.error('Error al crear carpeta:', error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Error creating folder';
-      alert(`Error al crear carpeta: ${errorMessage}`);
+      alert(`Error al crear carpeta: ${getErrorMessage(error)}`);
     } finally {
       setCreatingFolder(false);
     }
@@ -156,8 +164,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       setRefreshTree(prev => prev + 1);
     } catch (error: unknown) {
       console.error('Error al renombrar carpeta:', error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Error renaming folder';
-      alert(`Error al renombrar carpeta: ${errorMessage}`);
+      alert(`Error al renombrar carpeta: ${getErrorMessage(error)}`);
     } finally {
       setRenamingFolder(false);
     }
@@ -202,8 +209,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       }
     } catch (error: unknown) {
       console.error('Error al renombrar documento:', error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Error renaming document';
-      alert(`Error al renombrar documento: ${errorMessage}`);
+      alert(`Error al renombrar documento: ${getErrorMessage(error)}`);
     } finally {
       setRenamingDoc(false);
     }
@@ -272,8 +278,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       }
     } catch (error: unknown) {
       console.error('Error al subir archivo:', error);
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || error.message || 'Error subiendo archivo';
-      alert(`Error al subir archivo: ${errorMessage}`);
+      alert(`Error al subir archivo: ${getErrorMessage(error)}`);
     } finally {
       setUploadingFile(false);
       setUploadProgress(0);
@@ -349,7 +354,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       setRefreshTree(prev => prev + 1);
     } catch (error: unknown) {
       console.error('Error al mover carpeta', error);
-      alert('Error al mover carpeta: ' + (error.response?.data?.message || error.message));
+      alert('Error al mover carpeta: ' + getErrorMessage(error));
     } finally {
       setLoading(false);
     }

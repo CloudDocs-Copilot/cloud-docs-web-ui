@@ -25,8 +25,8 @@ jest.mock("../../services/preview.service", () => ({
     canPreview: jest.fn(() => true),
     getPreviewUrl: jest.fn((doc: Document) => '/preview/' + doc.id),
     getDownloadUrl: jest.fn(
-      (doc: { id?: string; _id?: string }) =>
-        `/download/${doc.id || doc._id || "unknown"}`,
+      (doc: { id?: string }) =>
+        `/download/${doc.id || "unknown"}`,
     ),
   },
 }));
@@ -186,8 +186,7 @@ describe("DocumentCard", () => {
 
     const doc: Partial<Document> = {
       ...baseDoc,
-      id: undefined,
-      _id: "eeeeeeeeeeeeeeeeeeeeeeee",
+      id: "eeeeeeeeeeeeeeeeeeeeeeee",
     };
     render(<DocumentCard document={doc as Document} />);
 

@@ -2,15 +2,15 @@
 
 ## 📋 Resumen
 
-| Campo | Valor |
-|-------|-------|
-| **Fecha** | Enero 29, 2026 |
-| **Estado** | 📋 Propuesto |
-| **Issue** | [CloudDocs-Copilot/cloud-docs-web-ui#42](https://github.com/CloudDocs-Copilot/cloud-docs-web-ui/issues/42) |
-| **Épica** | Gestión de Documentos |
-| **Prioridad** | 🟠 Alta |
-| **Story Points** | 13 |
-| **Asignados** | @lucferbux, @JohanyFlores |
+| Campo            | Valor                                                                                                      |
+|------------------|------------------------------------------------------------------------------------------------------------|
+| **Fecha**        | Enero 29, 2026                                                                                             |
+| **Estado**       | 📋 Propuesto                                                                                              |
+| **Issue**        | [CloudDocs-Copilot/cloud-docs-web-ui#42](https://github.com/CloudDocs-Copilot/cloud-docs-web-ui/issues/42) |
+| **Épica**        | Gestión de Documentos                                                                                      |
+| **Prioridad**    | 🟠 Alta                                                                                                    | 
+| **Story Points** | 13                                                                                                         |
+| **Asignados**    | @lucferbux, @JohanyFlores                                                                                  |
 
 ---
 

@@ -2,6 +2,11 @@
  * Interfaz del modelo de Documento para el frontend
  * Basada en el modelo de Mongoose del backend
  */
+export type AIProcessingStatus = 'none' | 'pending' | 'processing' | 'completed' | 'failed';
+
+/** Categoría asignada por IA; puede ser libre (string) o un conjunto cerrado en el futuro */
+export type AICategory = string;
+
 export interface Document {
   /** ID único del documento (puede venir como `id` o `_id` desde el backend) */
   id?: string;
@@ -15,8 +20,8 @@ export interface Document {
   url?: string;
   /** ID del usuario que subió el archivo */
   uploadedBy: string;
-  /** ID de la organización a la que pertenece el documento */
-  organization: string;
+  /** ID de la organización a la que pertenece el documento (puede ser null para documentos personales) */
+  organization?: string | null;
   /** ID de la carpeta que contiene el documento */
   folder: string;
   /** Path completo del archivo en el filesystem */
@@ -25,10 +30,31 @@ export interface Document {
   size: number;
   /** Tipo MIME del archivo (ej: 'application/pdf', 'application/vnd.ms-excel') */
   mimeType: string;
-  /** Fecha de subida */
-  uploadedAt: Date | string;
+  /** Contenido de texto extraído del documento (para búsqueda) */
+  extractedContent?: string | null;
+  /** Fecha de subida (deprecated, usar createdAt) */
+  uploadedAt?: Date | string;
   /** IDs de usuarios con quienes se comparte el documento */
-  sharedWith: string[];
+  sharedWith?: string[];
+  /** AI processing metadata */
+  aiProcessingStatus?: AIProcessingStatus;
+  aiCategory?: AICategory | null;
+  aiConfidence?: number | null; // 0..1
+  aiTags?: string[];
+  aiSummary?: string | null;
+  aiKeyPoints?: string[];
+  /** Texto completo extraído (puede ser grande; no siempre viene en las respuestas) */
+  extractedText?: string | null;
+  aiProcessedAt?: Date | string | null;
+  aiError?: string | null;
+
+  /** Indica si el documento está marcado como eliminado (soft delete) */
+  isDeleted?: boolean;
+  deletedAt?: Date | string | null;
+  deletionReason?: string | null;
+  deletedBy?: string | null;
+  scheduledDeletionDate?: Date | string | null;
+
   /** Fecha de creación */
   createdAt: Date | string;
   /** Fecha de última actualización */

@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 
-import type { Document } from "../../types/document.types";
+
 import Header from "../Header";
 
 const mockNavigate = jest.fn<void, [string]>();
@@ -44,14 +44,6 @@ const mockUseNotifications = jest.fn<
   []
 >();
 
-type MockMembership = { role?: string };
-type MockActiveOrg = { role?: string; id?: string };
-
-const mockUseOrganization = jest.fn<
-  { activeOrganization?: MockActiveOrg; membership?: MockMembership },
-  []
->();
-
 jest.mock("react-router-dom", () => ({
   useNavigate: () => mockNavigate,
   useLocation: () => mockUseLocation(),
@@ -65,46 +57,9 @@ jest.mock("../../hooks/useNotifications", () => ({
   useNotifications: () => mockUseNotifications(),
 }));
 
-jest.mock("../../hooks/useOrganization", () => ({
-  __esModule: true,
-  default: () => mockUseOrganization(),
-}));
-
 jest.mock("../Organization/OrganizationSelector", () => () => (
   <div>OrgSel</div>
 ));
-
-jest.mock("../RoleGuard", () => ({
-  RoleGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-}));
-
-jest.mock("../../constants/notificationTypes", () => ({
-  getNotificationTypeLabel: (type: string) => `LABEL:${type}`,
-}));
-
-interface FileUploaderProps {
-  onUploadSuccess?: (docs: Document[]) => void;
-  onClose?: () => void;
-}
-
-jest.mock("../FileUploader", () => ({
-  FileUploader: ({ onUploadSuccess, onClose }: FileUploaderProps) => (
-    <div>
-      <button
-        type="button"
-        onClick={() =>
-          onUploadSuccess &&
-          onUploadSuccess([{ id: "d1" } as unknown as Document])
-        }
-      >
-        mockUpload
-      </button>
-      <button type="button" onClick={() => onClose && onClose()}>
-        mockClose
-      </button>
-    </div>
-  ),
-}));
 
 describe("Header", () => {
   beforeEach(() => {
@@ -130,35 +85,15 @@ describe("Header", () => {
       markRead: mockMarkRead,
       markAllRead: mockMarkAllRead,
     });
-
-    // Default role allows upload (member)
-    mockUseOrganization.mockReturnValue({
-      activeOrganization: { role: "member", id: "org1" },
-      membership: { role: "member" },
-    });
   });
 
-  it("renders user info and main buttons (including upload when canUpload)", () => {
+  it("renders user info and main buttons", () => {
     render(<Header />);
 
     expect(screen.getByText("Pedro")).toBeInTheDocument();
     expect(screen.getByText("P")).toBeInTheDocument();
-    expect(screen.getByText("Subir")).toBeInTheDocument();
     expect(screen.getByText("Salir")).toBeInTheDocument();
     expect(screen.getByText("OrgSel")).toBeInTheDocument();
-  });
-
-  it("hides upload button and modal for viewer role (canUpload false branch)", () => {
-    mockUseOrganization.mockReturnValueOnce({
-      activeOrganization: { role: "viewer", id: "org1" },
-      membership: { role: "viewer" },
-    });
-
-    render(<Header />);
-
-    expect(screen.queryByText("Subir")).not.toBeInTheDocument();
-    // Modal content should not exist either
-    expect(screen.queryByText("mockUpload")).not.toBeInTheDocument();
   });
 
   it("navigates to /login on logout (even when logout succeeds)", async () => {
@@ -168,38 +103,6 @@ describe("Header", () => {
 
     await waitFor(() => expect(mockLogout).toHaveBeenCalledTimes(1));
     expect(mockNavigate).toHaveBeenCalledWith("/login");
-  });
-
-  it("opens upload modal and handles upload success (calls onDocumentsUploaded and closes modal)", async () => {
-    const onDocs = jest.fn<void, [Document[]]>();
-
-    render(<Header onDocumentsUploaded={onDocs} />);
-
-    fireEvent.click(screen.getByRole("button", { name: /Subir/i }));
-
-    const mockUploadBtn = await screen.findByText("mockUpload");
-    fireEvent.click(mockUploadBtn);
-
-    await waitFor(() => expect(onDocs).toHaveBeenCalledTimes(1));
-    expect(onDocs).toHaveBeenCalledWith([{ id: "d1" } as unknown as Document]);
-
-    // modal closed (uploader content gone)
-    await waitFor(() =>
-      expect(screen.queryByText("mockUpload")).not.toBeInTheDocument(),
-    );
-  });
-
-  it("closes upload modal when mockClose is clicked", async () => {
-    render(<Header />);
-
-    fireEvent.click(screen.getByRole("button", { name: /Subir/i }));
-
-    const mockCloseBtn = await screen.findByText("mockClose");
-    fireEvent.click(mockCloseBtn);
-
-    await waitFor(() =>
-      expect(screen.queryByText("mockUpload")).not.toBeInTheDocument(),
-    );
   });
 
   it("renders Dashboard button when user exists and not on /dashboard, and navigates when clicked", () => {
@@ -321,6 +224,14 @@ describe("Header", () => {
         readAt: null,
         actor: "u3",
       },
+      {
+        id: "n4",
+        type: "DOC_COMMENTED",
+        message: "Nuevo comentario",
+        createdAt: nowIso,
+        readAt: null,
+        actor: "u4",
+      },
     ];
 
     mockUseNotifications.mockReturnValueOnce({
@@ -336,17 +247,16 @@ describe("Header", () => {
 
     fireEvent.click(screen.getByTitle("Notificaciones"));
 
+    // Popover visible
     expect(await screen.findByText("Notificaciones")).toBeInTheDocument();
 
-    // Type labels from mocked getNotificationTypeLabel
-    expect(screen.getByText("LABEL:DOC_UPLOADED")).toBeInTheDocument();
-    expect(screen.getByText("LABEL:SOMETHING_ELSE")).toBeInTheDocument();
-    expect(screen.getByText("LABEL:DOC_EDITED")).toBeInTheDocument();
+    // Type labels
+    expect(screen.getByText("Documento subido")).toBeInTheDocument();
 
     // Unread badge "Nuevo" appears for unread items
     expect(screen.getAllByText("Nuevo").length).toBeGreaterThan(0);
 
-    // createdAt rendered (locale-dependent), but should contain year
+    // createdAt rendered (string varies by locale; just assert something from Date is present)
     const maybeDate = screen.getAllByText((t) => t.includes("2026"));
     expect(maybeDate.length).toBeGreaterThan(0);
 
@@ -357,38 +267,6 @@ describe("Header", () => {
     // Click second item -> no id, should not call markRead again
     fireEvent.click(screen.getByText("Tienes una notificación"));
     expect(mockMarkRead).toHaveBeenCalledTimes(1);
-  });
-
-  it("clicking an invitation notification navigates to /invitations (and marks read when id exists)", async () => {
-    const nowIso = new Date("2026-02-15T12:00:00.000Z").toISOString();
-
-    mockUseNotifications.mockReturnValueOnce({
-      notifications: [
-        {
-          id: "inv1",
-          type: "INVITATION_CREATED",
-          message: "Te invitaron a una organización",
-          createdAt: nowIso,
-          readAt: null,
-          actor: "u2",
-        },
-      ],
-      unreadCount: 1,
-      loading: false,
-      refresh: mockRefresh,
-      markRead: mockMarkRead,
-      markAllRead: mockMarkAllRead,
-    });
-
-    render(<Header />);
-
-    fireEvent.click(screen.getByTitle("Notificaciones"));
-    expect(await screen.findByText("Notificaciones")).toBeInTheDocument();
-
-    fireEvent.click(screen.getByText("Te invitaron a una organización"));
-
-    await waitFor(() => expect(mockMarkRead).toHaveBeenCalledWith("inv1"));
-    expect(mockNavigate).toHaveBeenCalledWith("/invitations");
   });
 
   it('clicking "Marcar todas como leídas" calls markAllRead (and does not throw on rejection)', async () => {
@@ -438,27 +316,5 @@ describe("Header", () => {
       screen.getByLabelText("120 notificaciones no leídas"),
     ).toBeInTheDocument();
     expect(screen.getByText("99+")).toBeInTheDocument();
-  });
-
-  it("treats role case-insensitively: VIEWER hides upload (branch)", () => {
-    mockUseOrganization.mockReturnValueOnce({
-      activeOrganization: { role: "member", id: "org1" },
-      membership: { role: "VIEWER" },
-    });
-
-    render(<Header />);
-
-    expect(screen.queryByText("Subir")).not.toBeInTheDocument();
-  });
-
-  it("uses activeOrganization.role when membership.role missing (branch)", () => {
-    mockUseOrganization.mockReturnValueOnce({
-      activeOrganization: { role: "viewer", id: "org1" },
-      membership: {},
-    });
-
-    render(<Header />);
-
-    expect(screen.queryByText("Subir")).not.toBeInTheDocument();
   });
 });

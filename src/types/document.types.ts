@@ -3,10 +3,8 @@
  * Basada en el modelo de Mongoose del backend
  */
 export interface Document {
-  /** ID único del documento (puede venir como `id` o `_id` desde el backend) */
-  id?: string;
-  /** ID alternativo de MongoDB */
-  _id?: string;
+  /** ID único del documento */
+  id: string;
   /** Nombre del archivo en el sistema de archivos */
   filename?: string;
   /** Nombre original del archivo subido por el usuario */

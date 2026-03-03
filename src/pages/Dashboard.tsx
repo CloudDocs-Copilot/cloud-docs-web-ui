@@ -31,10 +31,6 @@ const Dashboard: React.FC = () => {
   const [docsRefreshKey, setDocsRefreshKey] = useState(0);
   const [showUploadModal, setShowUploadModal] = useState(false);
 
-  const handleDocumentsUploaded = useCallback(() => {
-    setDocsRefreshKey((k) => k + 1);
-  }, []);
-
   const handleDocumentDeleted = useCallback(() => {
     setDocsRefreshKey((k) => k + 1);
   }, []);
@@ -53,7 +49,7 @@ const Dashboard: React.FC = () => {
   }, []);
 
   return (
-    <MainLayout onDocumentsUploaded={handleDocumentsUploaded}>
+    <MainLayout>
       <Container fluid>
         <DashboardGrid
           role={role}

@@ -4,17 +4,29 @@ import { MemoryRouter } from 'react-router-dom';
 import TrashPage from '../../pages/TrashPage';
 import { useTrash } from '../../hooks/useTrash';
 import { useDocumentDeletion } from '../../hooks/useDocumentDeletion';
+import { PageProvider } from '../../context/PageProvider';
 import type { DeletedDocument } from '../../services/deletion.service';
 
 // Mock de los hooks
 jest.mock('../../hooks/useTrash');
 jest.mock('../../hooks/useDocumentDeletion');
 jest.mock('../../hooks/usePageInfoTitle');
+jest.mock('../../hooks/useOrganization', () => ({
+  useOrganization: () => ({
+    activeOrganization: { id: 'org-123', name: 'Test Organization' },
+    memberships: [],
+    setActiveOrganization: jest.fn(),
+    setMemberships: jest.fn(),
+    activeRole: 'member'
+  })
+}));
 
-// Wrapper component for router context
+// Wrapper component for router context and page context
 const RouterWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <MemoryRouter>
-    {children}
+    <PageProvider>
+      {children}
+    </PageProvider>
   </MemoryRouter>
 );
 

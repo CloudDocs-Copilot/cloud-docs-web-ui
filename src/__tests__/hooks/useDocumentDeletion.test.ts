@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { useDocumentDeletion } from '../../hooks/useDocumentDeletion';
 import { deletionService } from '../../services/deletion.service';
@@ -38,7 +39,7 @@ describe('useDocumentDeletion', () => {
 
   it('should handle successful moveToTrash', async () => {
     const mockDeletedDoc = { ...mockDocument, deletedAt: '2024-01-01T10:00:00.000Z' };
-    mockDeletionService.moveToTrash.mockResolvedValue(mockDeletedDoc as never);
+    mockDeletionService.moveToTrash.mockResolvedValue(mockDeletedDoc as any);
 
     const { result } = renderHook(() => useDocumentDeletion());
 

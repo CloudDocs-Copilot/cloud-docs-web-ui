@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import DocumentCard from '../../components/DocumentCard';
@@ -62,25 +63,25 @@ describe('DocumentCard', () => {
     render(<DocumentCard document={mockDocumentWithFolder} />);
     
     // Find the delete button by its title
-    const deleteButton = screen.getByTitle('Eliminar documento');
+    const deleteButton = screen.getByTitle('Mover a papelera');
     fireEvent.click(deleteButton);
     
-    expect(screen.getByText(/permanecerá en la papelera durante 30 días/)).toBeInTheDocument();
+    expect(screen.getByText(/se eliminará automáticamente después de 30 días/)).toBeInTheDocument();
   });
 
   it('calls moveToTrash when delete is confirmed', async () => {
-    mockMoveToTrash.mockResolvedValue(mockDocumentWithFolder as never);
+    mockMoveToTrash.mockResolvedValue(mockDocumentWithFolder as any);
     
     render(<DocumentCard document={mockDocumentWithFolder} onDeleted={mockOnDeleted} />);
     
     // Open delete modal
-    const deleteButton = screen.getByTitle('Eliminar documento');
+    const deleteButton = screen.getByTitle('Mover a papelera');
     fireEvent.click(deleteButton);
     
     // Confirm deletion - use role and filter by button class
     const buttons = screen.getAllByRole('button');
     const confirmButton = buttons.find(button => 
-      button.textContent === 'Mover a papelera' && button.className.includes('btn-warning')
+      button.textContent === 'Mover a papelera' && button.className.includes('btn-danger')
     );
     
     await act(async () => {
@@ -88,7 +89,7 @@ describe('DocumentCard', () => {
     });
     
     await waitFor(() => {
-      expect(mockMoveToTrash).toHaveBeenCalledWith('123', 'Eliminado desde el dashboard');
+      expect(mockMoveToTrash).toHaveBeenCalledWith('123');
     });
     
     expect(mockOnDeleted).toHaveBeenCalled();
@@ -101,12 +102,12 @@ describe('DocumentCard', () => {
     render(<DocumentCard document={mockDocumentWithFolder} />);
     
     // Open and confirm delete
-    const deleteButton = screen.getByTitle('Eliminar documento');
+    const deleteButton = screen.getByTitle('Mover a papelera');
     fireEvent.click(deleteButton);
     
     const buttons = screen.getAllByRole('button');
     const confirmButton = buttons.find(button => 
-      button.textContent === 'Mover a papelera' && button.className.includes('btn-warning')
+      button.textContent === 'Mover a papelera' && button.className.includes('btn-danger')
     );
     
     await act(async () => {
@@ -124,12 +125,12 @@ describe('DocumentCard', () => {
     
     render(<DocumentCard document={docWithoutId as Document} />);
     
-    const deleteButton = screen.getByTitle('Eliminar documento');
+    const deleteButton = screen.getByTitle('Mover a papelera');
     fireEvent.click(deleteButton);
     
     const buttons = screen.getAllByRole('button');
     const confirmButton = buttons.find(button => 
-      button.textContent === 'Mover a papelera' && button.className.includes('btn-warning')
+      button.textContent === 'Mover a papelera' && button.className.includes('btn-danger')
     );
     
     await act(async () => {
@@ -147,10 +148,10 @@ describe('DocumentCard', () => {
     render(<DocumentCard document={mockDocumentWithFolder} />);
     
     // Open modal
-    const deleteButton = screen.getByTitle('Eliminar documento');
+    const deleteButton = screen.getByTitle('Mover a papelera');
     fireEvent.click(deleteButton);
     
-    expect(screen.getByText(/permanecerá en la papelera durante 30 días/)).toBeInTheDocument();
+    expect(screen.getByText(/se eliminará automáticamente después de 30 días/)).toBeInTheDocument();
     
     // Cancel
     const cancelButton = screen.getByText('Cancelar');
@@ -161,7 +162,7 @@ describe('DocumentCard', () => {
     
     // Wait for modal to close
     await waitFor(() => {
-      expect(screen.queryByText(/permanecerá en la papelera durante 30 días/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/se eliminará automáticamente después de 30 días/)).not.toBeInTheDocument();
     }, { timeout: 3000 });
   });
 

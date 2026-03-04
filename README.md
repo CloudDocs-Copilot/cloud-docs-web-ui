@@ -2,7 +2,7 @@
 
 # CloudDocs Web UI
 
-Modern React application for cloud document management with real-time collaboration.
+Modern React application for cloud document management with real-time collaboration and AI-powered features.
 
 **Tech Stack:** React 19 · TypeScript · Vite · Bootstrap
 
@@ -21,6 +21,19 @@ Modern React application for cloud document management with real-time collaborat
 - **Multi-Organization** - Switch between organizations seamlessly
 - **Responsive Design** - Works on desktop and mobile devices
 - **Search** - Find documents quickly with full-text search
+
+### AI Features (Planned)
+
+The backend API supports AI-powered features (RAG, classification, summarization). The frontend integration is in design phase with the following RFE proposals:
+
+| RFE | Feature | Status |
+|-----|---------|--------|
+| [RFE-UI-001](docs/RFE/RFE-UI-001-AI-TYPES-SERVICE.md) | AI types, service layer, and hooks | Proposed |
+| [RFE-UI-002](docs/RFE/RFE-UI-002-DOCUMENT-CARD-AI.md) | AI badges on document cards | Proposed |
+| [RFE-UI-003](docs/RFE/RFE-UI-003-SEARCH-BAR-QA.md) | Search bar with AI Q&A mode | Proposed |
+| [RFE-UI-004](docs/RFE/RFE-UI-004-AI-DASHBOARD.md) | AI dashboard (stats, categories, tags) | Proposed |
+
+> The backend AI API is fully functional. See the [backend AI documentation](../cloud-docs-api-service/docs/AI-MODULE.md) for available endpoints.
 
 ## 🚀 Quick Start
 
@@ -45,7 +58,11 @@ npm run dev
 
 **That's it!** No `.env` setup required - the app automatically loads `.env.example` as defaults.
 
-> **Note:** The backend API must be running on port 4000. See [backend quickstart](../cloud-docs-api-service/README.md).
+> **Note:** To override any variable locally, create a `.env.local` file (git-ignored):
+> ```bash
+> cp .env.example .env.local
+> ```
+> The backend API must be running on port 4000. See [backend quickstart](../cloud-docs-api-service/README.md).
 
 ### Test Accounts
 
@@ -91,6 +108,15 @@ Key variables (see `.env.example` for full list):
 | [Architecture](docs/ARCHITECTURE.md) | Component structure and patterns |
 | [Contributing](CONTRIBUTING.md) | Development setup and guidelines |
 | [API Integration](src/api/README.md) | HTTP client configuration |
+
+### RFEs (AI Feature Enhancement Proposals)
+
+| Document | Description |
+|----------|-------------|
+| [RFE-UI-001](docs/RFE/RFE-UI-001-AI-TYPES-SERVICE.md) | AI types, hooks, and service layer |
+| [RFE-UI-002](docs/RFE/RFE-UI-002-DOCUMENT-CARD-AI.md) | AI badges on DocumentCard component |
+| [RFE-UI-003](docs/RFE/RFE-UI-003-SEARCH-BAR-QA.md) | Search bar with AI Q&A integration |
+| [RFE-UI-004](docs/RFE/RFE-UI-004-AI-DASHBOARD.md) | AI dashboard section with stats |
 
 ## 🛠️ Scripts
 

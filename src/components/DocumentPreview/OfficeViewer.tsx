@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Alert, Spinner, Button } from 'react-bootstrap';
 import { PreviewHeader } from './PreviewHeader';
 import { previewService } from '../../services/preview.service';
+import { ExcelPreview } from './ExcelPreview';
 import styles from './OfficeViewer.module.css';
 
 interface OfficeViewerProps {
   url: string;
   filename: string;
+  mimeType?: string;
   onBack?: () => void;
   fileSize?: number;
 }
@@ -18,6 +20,7 @@ interface OfficeViewerProps {
 export const OfficeViewer: React.FC<OfficeViewerProps> = ({ url, filename, onBack, fileSize }) => {
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [excelFile, setExcelFile] = useState<File | Blob | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [scale, setScale] = useState<number>(1.0);
 
@@ -47,7 +50,19 @@ export const OfficeViewer: React.FC<OfficeViewerProps> = ({ url, filename, onBac
     };
 
     loadDocument();
-  }, [url]);
+    // Detect Excel
+    if (filename.endsWith('.xlsx')) {
+      const fetchExcel = async () => {
+        const response = await fetch(url, { credentials: 'include' });
+        if (!response.ok) throw new Error(`Failed to load Excel: ${response.statusText}`);
+        const blob = await response.blob();
+        setExcelFile(blob);
+        setLoading(false);
+      };
+      fetchExcel();
+      return;
+    }
+  }, [url, filename]);
 
   /**
    * Aumentar zoom
@@ -65,6 +80,15 @@ export const OfficeViewer: React.FC<OfficeViewerProps> = ({ url, filename, onBac
 
   const formattedFileSize = fileSize ? previewService.formatFileSize(fileSize) : '';
 
+    // Render Excel preview
+    if (excelFile) {
+      return (
+        <div className={styles.viewerContainer}>
+          <PreviewHeader filename={filename} fileSize={fileSize} onBack={onBack} />
+          <ExcelPreview file={excelFile} />
+        </div>
+      );
+    }
   return (
     <div className={styles.viewerContainer}>
       <PreviewHeader

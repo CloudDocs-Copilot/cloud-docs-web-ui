@@ -78,14 +78,16 @@ export type DocumentFileType =
  * Helper para obtener el tipo de archivo desde el MIME type
  */
 export const getFileTypeFromMime = (mimeType: string): DocumentFileType => {
-  if (mimeType.includes('pdf')) return 'pdf';
-  if (mimeType.includes('word') || mimeType.includes('document')) return 'word';
-  if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'excel';
-  if (mimeType.startsWith('image/')) return 'image';
-  if (mimeType.startsWith('text/')) return 'text';
-  if (mimeType.startsWith('video/')) return 'video';
-  if (mimeType.startsWith('audio/')) return 'audio';
-  if (mimeType.includes('zip') || mimeType.includes('rar') || mimeType.includes('tar')) return 'archive';
+  const mime = mimeType.toLowerCase();
+  if (mime.includes('pdf')) return 'pdf';
+  // Check excel/spreadsheet BEFORE word/document (spreadsheetml contains 'document')
+  if (mime.includes('excel') || mime.includes('spreadsheet')) return 'excel';
+  if (mime.includes('word') || mime.includes('document')) return 'word';
+  if (mime.startsWith('image/')) return 'image';
+  if (mime.startsWith('text/')) return 'text';
+  if (mime.startsWith('video/')) return 'video';
+  if (mime.startsWith('audio/')) return 'audio';
+  if (mime.includes('zip') || mime.includes('rar') || mime.includes('tar')) return 'archive';
   return 'other';
 };
 

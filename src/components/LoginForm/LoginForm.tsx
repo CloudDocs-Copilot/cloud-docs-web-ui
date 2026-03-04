@@ -6,7 +6,19 @@ import { usePageTitle } from "../../hooks/usePageInfoTitle";
 import { useAuth } from "../../hooks/useAuth";
 import { useFormValidation } from "../../hooks/useFormValidation";
 import axios from "axios";
+import type { AxiosError } from 'axios';
 
+
+function extractMessageFromData(data: unknown): string | undefined {
+  if (!data) return undefined;
+  if (typeof data === 'string') return data;
+  if (typeof data === 'object') {
+    const record = data as Record<string, unknown>;
+    const maybeMsg = record.message ?? record.error;
+    if (typeof maybeMsg === 'string') return maybeMsg;
+  }
+  return undefined;
+}
 
 function getHumanLoginError(err: unknown): string {
   // Si NO es axios
@@ -14,17 +26,14 @@ function getHumanLoginError(err: unknown): string {
     return "Ocurrió un error inesperado. Intenta de nuevo.";
   }
 
-  const status = err.response?.status;
-  const data: any = err.response?.data;
+  // A partir de aquí, `err` es un `AxiosError`
+  const axiosErr = err as AxiosError;
+  const status = axiosErr.response?.status;
+  const data = axiosErr.response?.data;
 
   // Tu backend a veces manda { success:false, error:"Missing required fields" }
   // o { message:"..." }
-  const raw =
-    data?.message ||
-    data?.error ||
-    (typeof data === "string" ? data : "") ||
-    err.message ||
-    "";
+  const raw = extractMessageFromData(data) || axiosErr.message || '';
 
   const msg = String(raw).toLowerCase();
 

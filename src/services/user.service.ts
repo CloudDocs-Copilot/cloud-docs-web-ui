@@ -1,5 +1,5 @@
 import { apiClient } from '../api';
-import type { User } from '../types/user.types';
+import type { User, UserPreferences } from '../types/user.types';
 
 /**
  * Interfaz para la respuesta de la API al obtener el perfil del usuario
@@ -94,6 +94,14 @@ export const userService = {
         },
       }
     );
+    return response.data;
+  },
+
+  /**
+   * Actualiza las preferencias de notificación del usuario
+   */
+  updatePreferences: async (preferences: Partial<UserPreferences>): Promise<UpdateUserProfileResponse> => {
+    const response = await apiClient.put<UpdateUserProfileResponse>('/users/profile', { preferences });
     return response.data;
   },
 };

@@ -15,7 +15,7 @@ import { PreferencesSection } from '../components/UserProfile/PreferencesSection
 import { ImageUploadModal } from '../components/UserProfile/ImageUploadModal';
 // NotificationToast is provided by ToastProvider; use `useToast` to trigger toasts
 import { Loader } from '../components/Loader';
-import type { User } from '../types/user.types';
+import type { User, UserPreferences } from '../types/user.types';
 import styles from './UserProfile.module.css';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
@@ -67,6 +67,11 @@ export function UserProfile(props: UserProfileProps) {
   const [isProfileError, setIsProfileError] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [preferences, setPreferences] = useState<UserPreferences>({
+    emailNotifications: true,
+    documentUpdates: true,
+    aiAnalysis: true,
+  });
 
   // Cargar datos del perfil al montar el componente
   useEffect(() => {
@@ -110,6 +115,9 @@ export function UserProfile(props: UserProfileProps) {
       console.log('👤 Actualizando campos con:', profileData);
       setName(profileData.name);
       setEmail(profileData.email);
+      if (profileData.preferences) {
+        setPreferences(profileData.preferences);
+      }
       // Si el backend devuelve una URL de imagen de perfil
       // setProfileImage(profileData.user.profileImage || null);
     }
@@ -158,6 +166,27 @@ export function UserProfile(props: UserProfileProps) {
     setShowImageModal(false);
     setImagePreview(null);
     setSelectedFile(null);
+  };
+
+  const handlePreferenceChange = async (key: keyof UserPreferences, value: boolean) => {
+    // Capture current preferences snapshot for rollback if needed
+    const previousPreferences = { ...preferences };
+
+    // Optimistically update UI
+    setPreferences((prev) => ({ ...prev, [key]: value }));
+
+    // Build the updated preferences object from the current state snapshot
+    const updated: UserPreferences = { ...previousPreferences, [key]: value };
+
+    try {
+      await userService.updatePreferences(updated);
+      showToast({ message: 'Preferencias actualizadas.', variant: 'success', title: 'Éxito' });
+    } catch {
+      if (previousPreferences !== null) {
+        setPreferences(previousPreferences);
+      }
+      showToast({ message: 'Error al actualizar preferencias.', variant: 'danger', title: 'Error' });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -305,7 +334,10 @@ export function UserProfile(props: UserProfileProps) {
                   <hr className={styles.divider} />
 
                   {/* Preferences Component */}
-                  <PreferencesSection />
+                  <PreferencesSection
+                    preferences={preferences}
+                    onPreferenceChange={handlePreferenceChange}
+                  />
 
                   {/* Action Buttons */}
                   <div className={styles.buttonContainer}>

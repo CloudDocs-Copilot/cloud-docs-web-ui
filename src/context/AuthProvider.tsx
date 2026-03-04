@@ -24,7 +24,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handler = () => {
       setUser(null);
-      try { localStorage.removeItem('auth_user'); } catch {}
+      try { localStorage.removeItem('auth_user'); } catch {
+        // Ignore localStorage errors (e.g., in incognito mode)
+      }
     };
     window.addEventListener('app:unauthenticated', handler as EventListener);
     return () => window.removeEventListener('app:unauthenticated', handler as EventListener);

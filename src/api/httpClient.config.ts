@@ -4,52 +4,45 @@ import type { ApiErrorResponse } from '../types/api.types';
 /**
  * Configuración base de la instancia de axios
  */
-// Usar variable de entorno para tests (process.env) y fallback por defecto.
-// Priorizar `process.env` para Jest/Node; en Vite el build/dev puede inyectar
-// la URL real en tiempo de compilación. Evita errores de TypeScript sobre
-// `import.meta` cuando la configuración de tests usa CommonJS.
-const getEnvVar = (key: string): string | undefined => {
-  // 1) Usar `process.env` (vía globalThis) si está disponible (tests/Node)
+import { API_BASE_URL as CONFIG_API_BASE_URL } from '../config/env';
+
+function resolveApiBaseUrl(): string {
+  // Prefer any test-provided global process replacement
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const proc = (globalThis as any).process;
-    const v = proc?.env?.[key];
-    if (typeof v === 'string' && v !== '') {
-      console.debug(`env(process): ${key}=${v}`);
-      return v;
+    const maybeGlobalProcess = (globalThis as any).process as { env?: Record<string, string> } | undefined;
+    if (maybeGlobalProcess && maybeGlobalProcess.env && maybeGlobalProcess.env.VITE_API_BASE_URL) {
+      return maybeGlobalProcess.env.VITE_API_BASE_URL;
     }
   } catch {
-    console.debug('env(process): process.env not available');
+    // ignore
   }
 
-  // 2) Intentar la propiedad literal que Vite reemplaza en tiempo de compilación
+  // Then prefer real process.env
   try {
-   
-   
-    const viteEnv = (import.meta as unknown as { env?: Record<string, unknown> }).env;
-    const viteLiteral = typeof viteEnv?.VITE_API_BASE_URL === 'string'
-      ? (viteEnv.VITE_API_BASE_URL as string)
-      : undefined;
-    if (typeof viteLiteral === 'string' && viteLiteral !== '') {
-      console.debug(`env(import.meta): VITE_API_BASE_URL=${viteLiteral}`);
-      return viteLiteral;
-    }
-
-    // 3) Lectura dinámica como respaldo
-    const meta = (import.meta as unknown) as { env?: Record<string, unknown> } | undefined;
-    const value = meta?.env?.[key] ?? meta?.env?.[key.replace(/^VITE_/, '')];
-    if (typeof value === 'string' && value !== '') {
-      console.debug(`env(import.meta): ${key}=${value}`);
-      return value;
+    if (typeof process !== 'undefined' && process.env && (process.env as Record<string, string>).VITE_API_BASE_URL) {
+      return (process.env as Record<string, string>).VITE_API_BASE_URL;
     }
   } catch {
-    console.debug('env(import.meta): import.meta.env not available');
+    // ignore
   }
 
-  return undefined;
-};
+  // Then try global __VITE_ENV__ used by some tests
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const g = (globalThis as any).__VITE_ENV__;
+    if (g && g.VITE_API_BASE_URL) return g.VITE_API_BASE_URL;
+  } catch {
+    // ignore
+  }
 
-const API_BASE_URL = getEnvVar('VITE_API_BASE_URL') ?? 'http://localhost:4000/api';
+  // Fallback to canonical config which itself reads import.meta.env or defaults
+  if (CONFIG_API_BASE_URL) return CONFIG_API_BASE_URL;
+
+  return 'http://localhost:4000/api';
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 const REQUEST_TIMEOUT_MS = 30000; // 30 segundos
 
 /**

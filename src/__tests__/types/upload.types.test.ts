@@ -60,8 +60,8 @@ describe('Upload Types - Constantes', () => {
       expect(ALLOWED_MIME_TYPES).toContain('image/png');
     });
 
-    it('debe tener exactamente 6 tipos permitidos', () => {
-      expect(ALLOWED_MIME_TYPES).toHaveLength(6);
+    it('debe tener exactamente 7 tipos permitidos', () => {
+      expect(ALLOWED_MIME_TYPES).toHaveLength(7);
     });
   });
 
@@ -91,9 +91,12 @@ describe('Upload Types - Helper Functions', () => {
 
     it('debe retornar false para tipos MIME no permitidos', () => {
       expect(isAllowedMimeType('application/exe')).toBe(false);
-      expect(isAllowedMimeType('text/plain')).toBe(false);
       expect(isAllowedMimeType('application/javascript')).toBe(false);
       expect(isAllowedMimeType('')).toBe(false);
+    });
+
+    it('debe retornar true para archivos de texto', () => {
+      expect(isAllowedMimeType('text/plain')).toBe(true);
     });
 
     it('debe retornar false para tipos MIME de video', () => {
@@ -116,8 +119,12 @@ describe('Upload Types - Helper Functions', () => {
     it('debe retornar false para extensiones no permitidas', () => {
       expect(isAllowedExtension('virus.exe')).toBe(false);
       expect(isAllowedExtension('script.js')).toBe(false);
-      expect(isAllowedExtension('archivo.txt')).toBe(false);
       expect(isAllowedExtension('video.mp4')).toBe(false);
+    });
+
+    it('debe retornar true para archivos de texto', () => {
+      expect(isAllowedExtension('archivo.txt')).toBe(true);
+      expect(isAllowedExtension('DOCUMENTO.TXT')).toBe(true);
     });
 
     it('debe manejar mayúsculas y minúsculas', () => {
@@ -194,14 +201,17 @@ describe('Upload Types - Helper Functions', () => {
     it('debe retornar "Archivo" para tipos desconocidos', () => {
       expect(getFileTypeName('application/unknown')).toBe('Archivo');
       expect(getFileTypeName('')).toBe('Archivo');
-      expect(getFileTypeName('text/plain')).toBe('Archivo');
+    });
+
+    it('debe retornar nombre amigable para texto plano', () => {
+      expect(getFileTypeName('text/plain')).toBe('Texto');
     });
   });
 
   describe('getAllowedTypesDisplay', () => {
     it('debe retornar string con tipos permitidos', () => {
       const display = getAllowedTypesDisplay();
-      expect(display).toBe('PDF, DOCX, XLSX, PPTX, JPG, PNG');
+      expect(display).toBe('PDF, DOCX, XLSX, PPTX, JPG, PNG, TXT');
     });
   });
 });

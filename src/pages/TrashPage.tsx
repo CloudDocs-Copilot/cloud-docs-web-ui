@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Button, Alert, Spinner, Modal } from 'react-bootstrap';
-import { Trash, ArrowClockwise, TrashFill } from 'react-bootstrap-icons';
+import { Trash2, RotateCcw } from 'lucide-react';
 import MainLayout from '../components/MainLayout';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
 import { useTrash } from '../hooks/useTrash';
 import { useDocumentDeletion } from '../hooks/useDocumentDeletion';
+import { getDocumentDisplayName } from '../utils/documentHelper';
 import styles from './TrashPage.module.css';
 
 const TrashPage: React.FC = () => {
@@ -76,7 +77,7 @@ const TrashPage: React.FC = () => {
             <div className={styles.headerContent}>
               <div>
                 <h2 className={styles.headerTitle}>
-                  <Trash />
+                  <Trash2 />
                   Papelera
                 </h2>
                 <p className={styles.headerSubtitle}>
@@ -89,7 +90,7 @@ const TrashPage: React.FC = () => {
                   onClick={() => setShowEmptyModal(true)}
                   disabled={actionLoading}
                 >
-                  <TrashFill />
+                  <Trash2 />
                   Vaciar papelera
                 </button>
               )}
@@ -117,7 +118,7 @@ const TrashPage: React.FC = () => {
         {/* Empty State */}
         {!loading && trashDocuments.length === 0 && (
           <div className={styles.emptyState}>
-            <Trash size={64} className={styles.emptyIcon} />
+            <Trash2 size={64} className={styles.emptyIcon} />
             <h4 className={styles.emptyTitle}>La papelera está vacía</h4>
             <p className={styles.emptyMessage}>
               Los documentos eliminados aparecerán aquí
@@ -134,7 +135,7 @@ const TrashPage: React.FC = () => {
                   <Card.Body className={styles.cardBody}>
                     <div className={styles.cardHeader}>
                       <h5 className={styles.fileName}>
-                        {doc.filename}
+                        {getDocumentDisplayName(doc)}
                       </h5>
                       <span className={styles.deletedBadge}>Eliminado</span>
                     </div>
@@ -154,21 +155,21 @@ const TrashPage: React.FC = () => {
                     <div className={styles.cardActions}>
                       <button
                         className={styles.restoreBtn}
-                        onClick={() => handleRestore(doc.id)}
+                        onClick={() => handleRestore(doc.id ?? '')}
                         disabled={actionLoading}
                       >
-                        <ArrowClockwise />
+                        <RotateCcw />
                         Restaurar
                       </button>
                       <button
                         className={styles.permanentDeleteBtn}
                         onClick={() => {
-                          setSelectedDocId(doc.id);
+                          setSelectedDocId(doc.id ?? null);
                           setShowDeleteModal(true);
                         }}
                         disabled={actionLoading}
                       >
-                        <TrashFill />
+                        <Trash2 />
                         Eliminar permanentemente
                       </button>
                     </div>
@@ -216,6 +217,11 @@ const TrashPage: React.FC = () => {
             <p>
               ¿Estás seguro de que deseas eliminar permanentemente este documento?
             </p>
+            {selectedDocId && (
+              <div className={styles.modalDocument}>
+                <strong>{getDocumentDisplayName(trashDocuments.find(doc => doc.id === selectedDocId)!)}</strong>
+              </div>
+            )}
             <div className={styles.modalWarning}>
               <strong>⚠️ Esta acción no se puede deshacer</strong>
             </div>

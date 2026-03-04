@@ -75,6 +75,18 @@ export const PreviewHeader: React.FC<PreviewHeaderProps> = ({
             <i className="bi bi-share"></i>
           </Button>
         )}
+
+        {onBack && (
+          <Button
+            variant="link"
+            className={styles.closeButton}
+            onClick={onBack}
+            title="Cerrar"
+            aria-label="Cerrar vista previa"
+          >
+            <i className="bi bi-x-lg"></i>
+          </Button>
+        )}
       </div>
     </div>
   );

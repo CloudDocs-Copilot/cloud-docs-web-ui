@@ -1,6 +1,6 @@
 
 /// <reference types="jest" />
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
 import App from '../App';
@@ -24,8 +24,8 @@ const TestOrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     refreshOrganization: async () => {},
     clearOrganization: () => {},
     hasRole: () => false,
-    isAdmin: () => false,
-    isOwner: () => false,
+    isAdmin: false,
+    isOwner: false,
   };
 
   return <OrganizationContext.Provider value={value}>{children}</OrganizationContext.Provider>;
@@ -50,6 +50,11 @@ jest.mock('../hooks/useAuth', () => ({
   }),
 }));
 
+jest.mock('../pages/SharedDocs', () => ({
+  __esModule: true,
+  default: () => <div>SharedDocs Page</div>,
+}));
+
 // Mock child components to isolate App test from page complexity
 jest.mock('../pages/Home', () => ({
   __esModule: true,
@@ -66,6 +71,11 @@ jest.mock('../pages/UserProfile', () => ({
 jest.mock('../pages/NotFound', () => ({
   __esModule: true,
   default: () => <div>Página no encontrada</div>
+}));
+
+jest.mock('../pages/Notifications', () => ({
+  __esModule: true,
+  default: () => <div>Notifications Page</div>
 }));
 
 
@@ -87,7 +97,7 @@ describe('Componente App', () => {
     expect(screen.getByText('Home Page')).toBeInTheDocument();
   });
 
-  it('renderiza el componente Dashboard en la ruta /dashboard', () => {
+  it('renderiza el componente Dashboard en la ruta /dashboard', async () => {
     // simulate authenticated user in AuthProvider
     localStorage.setItem('auth_user', JSON.stringify({ id: 'u1', name: 'User', email: 'user@example.com' }));
     render(
@@ -103,10 +113,10 @@ describe('Componente App', () => {
         </ToastProvider>
       </AuthProvider>
     );
-    expect(screen.getByText('Dashboard Page')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Dashboard Page')).toBeInTheDocument());
   });
 
-   it('renderiza el componente UserProfile en la ruta /profile', () => {
+   it('renderiza el componente UserProfile en la ruta /profile', async () => {
     // simulate authenticated user in AuthProvider
     localStorage.setItem('auth_user', JSON.stringify({ id: 'u1', name: 'User', email: 'user@example.com' }));
     render(
@@ -122,7 +132,7 @@ describe('Componente App', () => {
         </ToastProvider>
       </AuthProvider>
     );
-    expect(screen.getByText('UserProfile Component')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('UserProfile Component')).toBeInTheDocument());
   });
 
 it('renderiza la página de error para una ruta desconocida', () => {
@@ -144,7 +154,23 @@ it('renderiza la página de error para una ruta desconocida', () => {
 
   });
 
-
+  it('renderiza la página de Notificaciones en la ruta /notifications', async () => {
+    localStorage.setItem('auth_user', JSON.stringify({ id: 'u1', name: 'User', email: 'user@example.com' }));
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/notifications']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    await waitFor(() => expect(screen.getByText('Notifications Page')).toBeInTheDocument());
+  });
 
 });
 

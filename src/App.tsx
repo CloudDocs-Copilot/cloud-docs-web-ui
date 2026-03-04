@@ -1,28 +1,36 @@
 
+import React, { Suspense } from 'react'
 import './App.css'
-import Dashboard from './pages/Dashboard'
 import { Routes, Route } from 'react-router-dom'
 import Home from './pages/Home';
-import { UserProfile } from './pages/UserProfile'
-import NotFound from './pages/NotFound';
-import Register from './pages/Register';
 import LoginPage from './pages/LoginPage'
-import PrivateRoute from './components/PrivateRoute'
+import NotFound from './pages/NotFound';
 import ConfirmAccount from './pages/ConfirmAccount'
-import CreateOrganization from './pages/CreateOrganization'
-import NoOrganization from './pages/NoOrganization'
+import PrivateRoute from './components/PrivateRoute'
+import RequireRole from './components/RequireRole'
 import RequireOrganization from './components/Organization/RequireOrganization'
-import OrganizationSettings from './pages/OrganizationSettings'
-import PendingInvitations from './pages/PendingInvitations'
-import TrashPage from './pages/TrashPage'
-import SearchPage from './pages/SearchPage'
+import { Loader } from './components/Loader';
 
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import ResetPasswordPage from './pages/ResetPasswordPage'
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const TrashPage = React.lazy(() => import('./pages/TrashPage'));
+const SearchPage = React.lazy(() => import('./pages/SearchPage'));
+const MyDrive = React.lazy(() => import('./pages/MyDrive'));
+const UserProfile = React.lazy(() => import('./pages/UserProfile').then(m => ({ default: m.UserProfile })));
+const Forbidden = React.lazy(() => import('./pages/Forbidden'));
+const Register = React.lazy(() => import('./pages/Register'));
+const CreateOrganization = React.lazy(() => import('./pages/CreateOrganization'));
+const NoOrganization = React.lazy(() => import('./pages/NoOrganization'));
+const OrganizationSettings = React.lazy(() => import('./pages/OrganizationSettings'));
+const PendingInvitations = React.lazy(() => import('./pages/PendingInvitations'));
+const ForgotPasswordPage = React.lazy(() => import('./pages/ForgotPasswordPage'));
+const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'));
+const SharedDocs = React.lazy(() => import('./pages/SharedDocs'));
+const Notifications = React.lazy(() => import('./pages/Notifications'));
 
 
 function App() {
   return (
+    <Suspense fallback={<Loader fullScreen message="Cargando..." />}>
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<LoginPage />} />
@@ -40,6 +48,16 @@ function App() {
               </RequireOrganization>
             </PrivateRoute>
           }
+      />
+      <Route
+        path="/my-drive"
+        element={
+          <PrivateRoute>
+            <RequireOrganization>
+              <MyDrive />
+            </RequireOrganization>
+          </PrivateRoute>
+        }
       />
       <Route
         path="/trash"
@@ -71,11 +89,15 @@ function App() {
       />
         <Route path="/create-organization" element={<PrivateRoute><CreateOrganization /></PrivateRoute>} />
         <Route path="/no-organization" element={<PrivateRoute><NoOrganization /></PrivateRoute>} />
-        <Route path="/organization/settings" element={<PrivateRoute><RequireOrganization><OrganizationSettings/></RequireOrganization></PrivateRoute>} />
+        <Route path="/organization/settings" element={<PrivateRoute><RequireOrganization><RequireRole roles={['admin', 'owner']}><OrganizationSettings/></RequireRole></RequireOrganization></PrivateRoute>} />
         <Route path="/invitations" element={<PrivateRoute><PendingInvitations /></PrivateRoute>} />
+        <Route path="/shared" element={<PrivateRoute><SharedDocs /></PrivateRoute>} />
+        <Route path="/notifications" element={<PrivateRoute><RequireOrganization><Notifications /></RequireOrganization></PrivateRoute>} />
       <Route path="/auth/confirmed" element={<ConfirmAccount />} />
+      <Route path="/forbidden" element={<PrivateRoute><Forbidden /></PrivateRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </Suspense>
   );
 }
 

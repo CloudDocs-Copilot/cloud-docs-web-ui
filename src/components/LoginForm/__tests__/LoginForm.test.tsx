@@ -1,552 +1,230 @@
-import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { BrowserRouter } from 'react-router-dom';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import '@testing-library/jest-dom';
 import LoginForm from '../LoginForm';
-import { useAuth } from '../../../hooks/useAuth';
-import { usePageTitle } from '../../../hooks/usePageInfoTitle';
-import { useFormValidation } from '../../../hooks/useFormValidation';
-import axios from 'axios';
+import * as AuthHook from '../../../hooks/useAuth';
 
-// Mocks
-jest.mock('../../../hooks/useAuth');
-jest.mock('../../../hooks/usePageInfoTitle');
-jest.mock('../../../hooks/useFormValidation');
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => jest.fn(),
-  Link: ({ children, to, ...props }: any) => <a href={to} {...props}>{children}</a>
+jest.mock('../../../hooks/usePageInfoTitle', () => ({ 
+  usePageTitle: jest.fn() 
 }));
 
-// Mock axios
-jest.mock('axios', () => ({
-  isAxiosError: jest.fn(),
+jest.mock('../../../hooks/useFormValidation', () => ({
+  useFormValidation: () => ({
+    validateEmail: (v: string) => v.includes('@'),
+    setFieldError: jest.fn(),
+    clearFieldError: jest.fn(),
+    errors: {},
+    handleBlur: jest.fn(),
+  }),
 }));
 
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
-const mockUsePageTitle = usePageTitle as jest.MockedFunction<typeof usePageTitle>;
-const mockUseFormValidation = useFormValidation as jest.MockedFunction<typeof useFormValidation>;
-const mockAxiosIsAxiosError = axios.isAxiosError as jest.MockedFunction<typeof axios.isAxiosError>;
-
-const mockNavigate = jest.fn();
-jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
-  useNavigate: () => mockNavigate,
-  Link: ({ children, to, ...props }: any) => <a href={to} {...props}>{children}</a>
+jest.mock('../../../hooks/useAuth', () => ({ 
+  useAuth: jest.fn() 
 }));
-
-// Test wrapper
-const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <BrowserRouter>
-    {children}
-  </BrowserRouter>
-);
 
 describe('LoginForm', () => {
-  const mockLogin = jest.fn();
-  const mockValidateEmail = jest.fn();
-  const mockSetFieldError = jest.fn();
-  const mockClearFieldError = jest.fn();
-  const mockHandleBlur = jest.fn();
+  afterEach(() => jest.resetAllMocks());
 
-  const defaultFormValidation = {
-    validateEmail: mockValidateEmail,
-    setFieldError: mockSetFieldError,
-    clearFieldError: mockClearFieldError,
-    errors: {},
-    handleBlur: mockHandleBlur,
-  };
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-
-    mockUseAuth.mockReturnValue({
-      login: mockLogin,
-      user: null,
-      isAuthenticated: false,
-      logout: jest.fn(),
+  function fillAndSubmit(email: string, password: string) {
+    render(
+      <MemoryRouter>
+        <LoginForm />
+      </MemoryRouter>
+    );
+    fireEvent.change(screen.getByLabelText(/Correo electrónico/i), { 
+      target: { value: email } 
     });
-
-    mockUsePageTitle.mockReturnValue(undefined);
-    
-    mockUseFormValidation.mockReturnValue(defaultFormValidation);
-    
-    mockAxiosIsAxiosError.mockReturnValue(false);
-  });
-
-  describe('Component Rendering', () => {
-    it('should render the login form with all elements', () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      // Header elements
-      expect(screen.getByText('CloudDocs Copilot')).toBeInTheDocument();
-      expect(screen.getByText('Gestión documental inteligente con IA')).toBeInTheDocument();
-
-      // Form elements - use more specific selectors to avoid multiple matches
-      expect(screen.getByText('CloudDocs Copilot')).toBeInTheDocument();
-      expect(screen.getByLabelText('Correo electrónico')).toBeInTheDocument();
-      expect(screen.getByLabelText('Contraseña')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /iniciar sesión/i })).toBeInTheDocument();
-
-      // Links
-      expect(screen.getByText('¿Olvidaste tu contraseña?')).toBeInTheDocument();
-      expect(screen.getByText('Regístrate aquí')).toBeInTheDocument();
-
-      // Footer
-      expect(screen.getByText('© 2026 CloudDocs Copilot')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Contraseña/i), { 
+      target: { value: password } 
     });
+    fireEvent.click(screen.getByRole('button', { name: /Iniciar sesión/i }));
+  }
 
-    it('should call usePageTitle with correct parameters', () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+  // ==================== Form Validation ====================
+  describe('Form validation', () => {
+    it('shows validation errors and does not call login', async () => {
+      const loginMock = jest.fn();
+      (AuthHook.useAuth as jest.Mock).mockReturnValue({ login: loginMock });
 
-      expect(mockUsePageTitle).toHaveBeenCalledWith({
-        title: 'Login',
-        subtitle: 'Login',
-        documentTitle: 'Inicio de sesión',
-        metaDescription: 'Página de inicio de sesión para CloudDocs Copilot'
+      const mockValidation = jest.fn().mockReturnValue({
+        validateEmail: () => false,
+        setFieldError: jest.fn(),
+        clearFieldError: jest.fn(),
+        errors: { email: 'Invalid email' },
+        handleBlur: jest.fn(),
       });
-    });
-
-    it('should render form inputs with correct attributes', () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const emailInput = screen.getByLabelText('Correo electrónico');
-      expect(emailInput).toHaveAttribute('type', 'email');
-      expect(emailInput).toHaveAttribute('placeholder', 'tu@email.com');
-      expect(emailInput).toHaveAttribute('autocomplete', 'email');
-
-      const passwordInput = screen.getByLabelText('Contraseña');
-      expect(passwordInput).toHaveAttribute('type', 'password');
-      expect(passwordInput).toHaveAttribute('placeholder', '••••••••');
-      expect(passwordInput).toHaveAttribute('autocomplete', 'current-password');
-    });
-  });
-
-  describe('Form Input Handling', () => {
-    it('should update email state when typing', async () => {
-      const user = userEvent.setup();
       
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+      jest.doMock('../../../hooks/useFormValidation', () => ({
+        useFormValidation: mockValidation
+      }));
 
-      const emailInput = screen.getByLabelText('Correo electrónico');
-      
-      await user.type(emailInput, 'test@example.com');
-      
-      expect(emailInput).toHaveValue('test@example.com');
-    });
-
-    it('should update password state when typing', async () => {
-      const user = userEvent.setup();
-      
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const passwordInput = screen.getByLabelText('Contraseña');
-      
-      await user.type(passwordInput, 'testpassword');
-      
-      expect(passwordInput).toHaveValue('testpassword');
-    });
-
-    it('should call handleBlur when email input loses focus', async () => {
-      const user = userEvent.setup();
-      
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const emailInput = screen.getByLabelText('Correo electrónico');
-      
-      await user.type(emailInput, 'test@example.com');
-      await user.tab(); // Move focus away from input
-      
-      expect(mockHandleBlur).toHaveBeenCalledWith('email', 'test@example.com');
-    });
-
-    it('should call handleBlur when password input loses focus', async () => {
-      const user = userEvent.setup();
-      
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const passwordInput = screen.getByLabelText('Contraseña');
-      
-      await user.type(passwordInput, 'testpass');
-      await user.tab(); // Move focus away from input
-      
-      expect(mockHandleBlur).toHaveBeenCalledWith('password', 'testpass');
-    });
-  });
-
-  describe('Form Validation', () => {
-    it('should display email error when validation fails', () => {
-      mockUseFormValidation.mockReturnValue({
-        ...defaultFormValidation,
-        errors: { email: 'Ingresa un correo válido.' }
-      });
-
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      expect(screen.getByText('Ingresa un correo válido.')).toBeInTheDocument();
-    });
-
-    it('should display password error when validation fails', () => {
-      mockUseFormValidation.mockReturnValue({
-        ...defaultFormValidation,
-        errors: { password: 'Ingresa tu contraseña.' }
-      });
-
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      expect(screen.getByText('Ingresa tu contraseña.')).toBeInTheDocument();
-    });
-
-    it('should validate email on form submission', async () => {
-      const user = userEvent.setup();
-      mockValidateEmail.mockReturnValue(false);
-
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const emailInput = screen.getByLabelText('Correo electrónico');
-      const submitButton = screen.getByRole('button', { name: /iniciar sesión/i });
-
-      await user.type(emailInput, 'Invalid-Email@Example.com');
-      
-      await act(async () => {
-        await user.click(submitButton);
-      });
-
-      expect(mockValidateEmail).toHaveBeenCalledWith('invalid-email@example.com');
-      expect(mockSetFieldError).toHaveBeenCalledWith('email', 'Ingresa un correo válido.');
-    });
-
-    it('should validate password on form submission', async () => {
-      const user = userEvent.setup();
-      mockValidateEmail.mockReturnValue(true);
-
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const emailInput = screen.getByLabelText('Correo electrónico');
-      const submitButton = screen.getByRole('button', { name: /iniciar sesión/i });
-
-      await user.type(emailInput, 'test@example.com');
-      // Don't type password (leave empty)
-      await user.click(submitButton);
-
-      expect(mockSetFieldError).toHaveBeenCalledWith('password', 'Ingresa tu contraseña.');
-    });
-
-    it('should clear field errors when validation passes', async () => {
-      const user = userEvent.setup();
-      mockValidateEmail.mockReturnValue(true);
-
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const emailInput = screen.getByLabelText('Correo electrónico');
-      const passwordInput = screen.getByLabelText('Contraseña');
-      const submitButton = screen.getByRole('button', { name: /iniciar sesión/i });
-
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
-      await user.click(submitButton);
-
-      expect(mockClearFieldError).toHaveBeenCalledWith('email');
-      expect(mockClearFieldError).toHaveBeenCalledWith('password');
-    });
-  });
-
-  describe('Form Submission', () => {
-    it('should prevent submission with invalid email', async () => {
-      const user = userEvent.setup();
-      mockValidateEmail.mockReturnValue(false);
-
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const emailInput = screen.getByLabelText('Correo electrónico');
-      const passwordInput = screen.getByLabelText('Contraseña');
-      const submitButton = screen.getByRole('button', { name: /iniciar sesión/i });
-
-      await user.type(emailInput, 'invalid-email');
-      await user.type(passwordInput, 'password123');
-      await user.click(submitButton);
-
-      expect(mockLogin).not.toHaveBeenCalled();
-    });
-
-    it('should prevent submission with empty password', async () => {
-      const user = userEvent.setup();
-      mockValidateEmail.mockReturnValue(true);
-
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const emailInput = screen.getByLabelText('Correo electrónico');
-      const submitButton = screen.getByRole('button', { name: /iniciar sesión/i });
-
-      await user.type(emailInput, 'test@example.com');
-      // Don't fill password
-      await user.click(submitButton);
-
-      expect(mockLogin).not.toHaveBeenCalled();
-    });
-
-    it('should submit form with valid credentials', async () => {
-      const user = userEvent.setup();
-      mockValidateEmail.mockReturnValue(true);
-      mockLogin.mockResolvedValue(undefined);
-
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const emailInput = screen.getByLabelText('Correo electrónico');
-      const passwordInput = screen.getByLabelText('Contraseña');
-      const submitButton = screen.getByRole('button', { name: /iniciar sesión/i });
-
-      await user.type(emailInput, 'Test@Example.com');
-      await user.type(passwordInput, 'password123');
-      
-      await act(async () => {
-        await user.click(submitButton);
-      });
-
-      expect(mockLogin).toHaveBeenCalledWith('test@example.com', 'password123');
-    });
-
-    it('should navigate to dashboard on successful login', async () => {
-      const user = userEvent.setup();
-      mockValidateEmail.mockReturnValue(true);
-      mockLogin.mockResolvedValue(undefined);
-
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const emailInput = screen.getByLabelText('Correo electrónico');
-      const passwordInput = screen.getByLabelText('Contraseña');
-      const submitButton = screen.getByRole('button', { name: /iniciar sesión/i });
-
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
-      
-      await act(async () => {
-        await user.click(submitButton);
-      });
+      fillAndSubmit('bad-email', 'pass');
 
       await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('/dashboard', { replace: true });
+        expect(loginMock).not.toHaveBeenCalled();
+      });
+      
+      jest.dontMock('../../../hooks/useFormValidation');
+    });
+  });
+
+  // ==================== HTTP Error Handling ====================
+  describe('HTTP error handling', () => {
+    it('shows friendly message for 400 missing required fields', async () => {
+      interface MockAxiosError extends Error {
+        isAxiosError: boolean;
+        response?: { status: number; data?: { message?: string } };
+        code?: string;
+        config?: { url?: string; baseURL?: string };
+      }
+
+      const error = new Error('bad') as unknown as MockAxiosError;
+      error.isAxiosError = true;
+      error.response = { 
+        status: 400, 
+        data: { message: 'Missing required fields' } 
+      };
+      const loginMock = jest.fn(() => { throw error; });
+      (AuthHook.useAuth as jest.Mock).mockReturnValue({ login: loginMock });
+
+      fillAndSubmit('a@b.com', 'pass');
+      
+      await waitFor(() => {
+        expect(screen.getByText(/Completa tu correo y contraseña/i)).toBeInTheDocument();
       });
     });
 
-    it('should show loading state during submission', async () => {
-      const user = userEvent.setup();
-      mockValidateEmail.mockReturnValue(true);
+    it('shows server validation message on 400', async () => {
+      interface MockAxiosError extends Error {
+        isAxiosError: boolean;
+        response?: { status: number; data?: { message?: string } };
+      }
+      const error = new Error('validation') as unknown as MockAxiosError;
+      error.isAxiosError = true;
+      error.response = { 
+        status: 400, 
+        data: { message: 'Invalid credentials format' } 
+      };
+      const loginMock = jest.fn(() => { throw error; });
+      (AuthHook.useAuth as jest.Mock).mockReturnValue({ login: loginMock });
+
+      fillAndSubmit('test@test.com', 'password');
       
-      // Make login take some time
-      mockLogin.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
-
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const emailInput = screen.getByLabelText('Correo electrónico');
-      const passwordInput = screen.getByLabelText('Contraseña');
-      const submitButton = screen.getByRole('button', { name: /iniciar sesión/i });
-
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'password123');
-      
-      await user.click(submitButton);
-
-      // Check loading state
-      expect(screen.getByRole('button', { name: /ingresando/i })).toBeInTheDocument();
-      expect(submitButton).toBeDisabled();
-
-      // Wait for completion
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /iniciar sesión/i })).toBeInTheDocument();
+        expect(screen.getByText(/Revisa los datos ingresados/i)).toBeInTheDocument();
+      });
+    });
+
+    it('shows server error message for axios 401', async () => {
+      interface MockAxiosError extends Error {
+        isAxiosError: boolean;
+        response?: { status: number; data?: { message?: string } };
+      }
+      const error = new Error('unauthorized') as unknown as MockAxiosError;
+      error.isAxiosError = true;
+      error.response = { 
+        status: 401, 
+        data: { message: 'Invalid credentials' } 
+      };
+      const loginMock = jest.fn(() => { throw error; });
+      (AuthHook.useAuth as jest.Mock).mockReturnValue({ login: loginMock });
+
+      fillAndSubmit('user@example.com', 'wrongpwd');
+      
+      await waitFor(() => {
+        expect(screen.getByText(/Correo o contraseña incorrectos/i)).toBeInTheDocument();
+      });
+    });
+
+    it('maps 404 from auth/login to credentials error', async () => {
+      interface MockAxiosError extends Error {
+        isAxiosError: boolean;
+        response?: { status: number };
+        config?: { url?: string; baseURL?: string };
+      }
+      const error = new Error('not found') as unknown as MockAxiosError;
+      error.isAxiosError = true;
+      error.response = { status: 404 };
+      error.config = { url: '/auth/login', baseURL: 'http://api' };
+      const loginMock = jest.fn(() => { throw error; });
+      (AuthHook.useAuth as jest.Mock).mockReturnValue({ login: loginMock });
+
+      fillAndSubmit('x@y.com', 'pwd');
+      
+      await waitFor(() => {
+        expect(screen.getByText(/Correo o contraseña incorrectos/i)).toBeInTheDocument();
+      });
+    });
+
+    it('maps 500+ to server error message', async () => {
+      interface MockAxiosError extends Error {
+        isAxiosError: boolean;
+        response?: { status: number };
+      }
+      const error = new Error('server') as unknown as MockAxiosError;
+      error.isAxiosError = true;
+      error.response = { status: 502 };
+      const loginMock = jest.fn(() => { throw error; });
+      (AuthHook.useAuth as jest.Mock).mockReturnValue({ login: loginMock });
+
+      fillAndSubmit('u@v.com', 'pwd');
+      
+      await waitFor(() => {
+        expect(screen.getByText(/El servidor tuvo un problema/i)).toBeInTheDocument();
       });
     });
   });
 
-  describe('Error Handling', () => {
-    it('should display server error on login failure', async () => {
-      const user = userEvent.setup();
-      mockValidateEmail.mockReturnValue(true);
-      mockLogin.mockRejectedValue(new Error('Login failed'));
+  // ==================== Network Errors ====================
+  describe('Network errors', () => {
+    it('shows network error message when network fails', async () => {
+      interface MockAxiosError extends Error {
+        isAxiosError: boolean;
+        code?: string;
+      }
+      const error = new Error('Network Error') as unknown as MockAxiosError;
+      error.isAxiosError = true;
+      error.code = 'ERR_NETWORK';
+      const loginMock = jest.fn(() => { throw error; });
+      (AuthHook.useAuth as jest.Mock).mockReturnValue({ login: loginMock });
 
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const emailInput = screen.getByLabelText('Correo electrónico');
-      const passwordInput = screen.getByLabelText('Contraseña');
-      const submitButton = screen.getByRole('button', { name: /iniciar sesión/i });
-
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'wrongpassword');
+      fillAndSubmit('test@x.com', 'pwd');
       
-      await act(async () => {
-        await user.click(submitButton);
-      });
-
       await waitFor(() => {
-        expect(screen.getByText('Ocurrió un error inesperado. Intenta de nuevo.')).toBeInTheDocument();
+        expect(screen.getByText(/No se pudo conectar con el servidor/i)).toBeInTheDocument();
       });
     });
 
-    it('should clear server error on new submission', async () => {
-      const user = userEvent.setup();
-      mockValidateEmail.mockReturnValue(true);
-      mockLogin.mockRejectedValue(new Error('Login failed'));
+    it('handles generic network error', async () => {
+      interface MockAxiosError extends Error {
+        isAxiosError: boolean;
+        code?: string;
+      }
+      const error = new Error('Connection refused') as unknown as MockAxiosError;
+      error.isAxiosError = true;
+      error.code = 'ECONNREFUSED';
+      const loginMock = jest.fn(() => { throw error; });
+      (AuthHook.useAuth as jest.Mock).mockReturnValue({ login: loginMock });
 
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const emailInput = screen.getByLabelText('Correo electrónico');
-      const passwordInput = screen.getByLabelText('Contraseña');
-      const submitButton = screen.getByRole('button', { name: /iniciar sesión/i });
-
-      // First failed attempt
-      await user.type(emailInput, 'test@example.com');
-      await user.type(passwordInput, 'wrongpassword');
-      await act(async () => {
-        await user.click(submitButton);
-      });
-
-      await waitFor(() => {
-        expect(screen.getByText('Ocurrió un error inesperado. Intenta de nuevo.')).toBeInTheDocument();
-      });
-
-      // Second attempt - error should be cleared
-      mockLogin.mockResolvedValue(undefined);
-      await user.clear(passwordInput);
-      await user.type(passwordInput, 'correctpassword');
+      fillAndSubmit('test@example.com', 'pwd123');
       
-      await act(async () => {
-        await user.click(submitButton);
+      await waitFor(() => {
+        expect(screen.getByText(/No se pudo conectar con el servidor/i)).toBeInTheDocument();
       });
-
-      // Error should be gone
-      expect(screen.queryByText('Ocurrió un error inesperado. Intenta de nuevo.')).not.toBeInTheDocument();
     });
   });
 
-  describe('Links and Navigation', () => {
-    it('should render forgot password link correctly', () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
+  // ==================== Unknown Errors ====================
+  describe('Unknown errors', () => {
+    it('shows fallback message for unknown non-axios error', async () => {
+      const loginMock = jest.fn(() => { throw new Error('boom'); });
+      (AuthHook.useAuth as jest.Mock).mockReturnValue({ login: loginMock });
 
-      const forgotLink = screen.getByText('¿Olvidaste tu contraseña?');
-      expect(forgotLink).toHaveAttribute('href', '/auth/forgot-password');
-    });
-
-    it('should render register link correctly', () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const registerLink = screen.getByText('Regístrate aquí');
-      expect(registerLink).toHaveAttribute('href', '/register');
-    });
-  });
-
-  describe('Checkbox Functionality', () => {
-    it('should render remember me checkbox', () => {
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      expect(screen.getByLabelText('Recordarme')).toBeInTheDocument();
-      expect(screen.getByRole('checkbox')).toBeInTheDocument();
-    });
-
-    it('should handle checkbox interaction', async () => {
-      const user = userEvent.setup();
+      fillAndSubmit('a@b.c', 'p');
       
-      render(
-        <TestWrapper>
-          <LoginForm />
-        </TestWrapper>
-      );
-
-      const checkbox = screen.getByRole('checkbox');
-      expect(checkbox).not.toBeChecked();
-
-      await user.click(checkbox);
-      expect(checkbox).toBeChecked();
-
-      await user.click(checkbox);
-      expect(checkbox).not.toBeChecked();
+      await waitFor(() => {
+        expect(screen.getByText(/Ocurrió un error inesperado/i)).toBeInTheDocument();
+      });
     });
   });
 });

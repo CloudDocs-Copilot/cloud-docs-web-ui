@@ -1,0 +1,91 @@
+.treeItemContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.treeItem {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  user-select: none;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+/* Cursor grab para elementos draggable */
+.treeItem[draggable="true"] {
+  cursor: grab;
+}
+
+.treeItem:hover {
+  background-color: #e9ecef;
+}
+
+.selected {
+  background-color: #e7f1ff;
+  color: #0d6efd;
+  font-weight: 500;
+}
+
+.selected:hover {
+  background-color: #d0e1fd;
+}
+
+.dragOver {
+  background-color: #ffecd4; /* Highlight drop target */
+  border: 2px dashed #ffc107;
+}
+
+.dragging {
+  opacity: 0.5;
+  cursor: grabbing !important;
+}
+
+/* Drag handle - oculto por defecto */
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  margin-right: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+/* Mostrar el handle en hover */
+.treeItem:hover .dragHandle {
+  opacity: 1;
+}
+
+.toggleIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: 4px;
+  color: #6c757d;
+  cursor: pointer;
+}
+
+.toggleIcon:hover {
+  color: #343a40;
+}
+
+.folderIcon {
+  display: flex;
+  align-items: center;
+}
+
+.itemCount {
+  font-size: 0.75rem;
+  color: #adb5bd;
+}
+
+.childrenContainer {
+  display: flex;
+  flex-direction: column;
+}

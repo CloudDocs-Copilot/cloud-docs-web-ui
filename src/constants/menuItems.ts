@@ -11,6 +11,7 @@ export const SIDEBAR_MENU_ITEMS: MenuItem[] = [
   { id: 'mi-unidad', label: 'Mi Unidad', icon: '🗄️', path: '/my-drive' },
   { id: 'compartido', label: 'Compartido', icon: '👥', path: '/shared' },
   { id: 'colecciones', label: 'Colecciones Inteligentes', icon: '✨', path: '/collections' },
+  { id: 'notifications', label: 'Notificaciones', icon: '🔔', path: '/notifications' },
   { id: 'invitations', label: 'Invitaciones', icon: '📨', path: '/invitations' },
   { id: 'trash', label: 'Papelera', icon: '🗑️', path: '/trash' }
 ];

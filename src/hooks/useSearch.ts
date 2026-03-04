@@ -46,13 +46,13 @@ export const useSearch = () => {
       searchParams.append('q', filters.query.trim());
       
       if (filters.mimeType) {
-        searchParams.append('type', filters.mimeType);
+        searchParams.append('mimeType', filters.mimeType);
       }
       if (filters.fromDate) {
-        searchParams.append('from', filters.fromDate);
+        searchParams.append('fromDate', filters.fromDate);
       }
       if (filters.toDate) {
-        searchParams.append('to', filters.toDate);
+        searchParams.append('toDate', filters.toDate);
       }
       if (filters.organizationId) {
         searchParams.append('organizationId', filters.organizationId);

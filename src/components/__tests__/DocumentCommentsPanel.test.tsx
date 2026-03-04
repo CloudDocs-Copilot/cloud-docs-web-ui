@@ -99,7 +99,7 @@ describe("DocumentCommentsPanel", () => {
     );
 
     await waitFor(() => expect(listByDocumentMock).toHaveBeenCalledWith("d1"));
-    expect(screen.getByText("Failed to load comments")).toBeInTheDocument();
+    expect(screen.getByText("Fallo al cargar los comentarios")).toBeInTheDocument();
   });
 
   it("refresh button calls fetch again and is disabled during loading", async () => {
@@ -245,7 +245,7 @@ describe("DocumentCommentsPanel", () => {
     await user.click(screen.getByRole("button", { name: "Comentar" }));
 
     await waitFor(() => expect(createMock).toHaveBeenCalled());
-    expect(screen.getByText("Failed to create comment")).toBeInTheDocument();
+    expect(screen.getByText("Fallo al crear el comentario")).toBeInTheDocument();
   });
 
   it("renders author name from createdBy object and shows Edit for owner; edit -> save updates content (success branch)", async () => {
@@ -503,7 +503,7 @@ describe("DocumentCommentsPanel", () => {
     await user.click(screen.getByRole("button", { name: "Guardar" }));
 
     await waitFor(() => expect(updateMock).toHaveBeenCalled());
-    expect(screen.getByText("Failed to update comment")).toBeInTheDocument();
+    expect(screen.getByText("Fallo al actualizar el comentario")).toBeInTheDocument();
 
     expect(screen.getByRole("button", { name: "Guardar" })).toBeInTheDocument();
   });

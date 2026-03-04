@@ -37,7 +37,7 @@ export const ImageViewer: React.FC<ImageViewerProps> = ({ url, filename, alt, on
         setImageLoaded(true);
       } catch (err) {
         console.error('Error loading image:', err);
-        setError('Failed to load image');
+        setError('Carga de imagen fallida');
       }
     };
 

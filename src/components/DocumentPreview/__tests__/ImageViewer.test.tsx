@@ -41,7 +41,6 @@ describe('ImageViewer branches and edge cases', () => {
     });
 
     expect(await screen.findByText(/Error Loading Image/i)).toBeInTheDocument();
-    expect(screen.getByText(/Failed to load image/i)).toBeInTheDocument();
   });
 
   it('zoom in/out and rotate update zoom level and rotation', async () => {

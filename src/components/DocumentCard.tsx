@@ -153,7 +153,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
       }
     } catch (err: unknown) {
       console.error('Error deleting document:', err);
-      setError(err instanceof Error ? err.message : 'Error al eliminar el documento');
+      setError('Error al eliminar el documento');
     }
   };
 

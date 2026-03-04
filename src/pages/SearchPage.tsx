@@ -26,7 +26,7 @@ const FILE_TYPE_COLORS: Record<string, string> = {
 
 const SearchPage: React.FC = () => {
   // Contexto de organización
-  const { organization } = useOrganization();
+  const { activeOrganization } = useOrganization();
 
   // Estados del formulario
   const [query, setQuery] = useState('');
@@ -99,8 +99,8 @@ const SearchPage: React.FC = () => {
       searchParams.append('q', query.trim());
       
       // Agregar organización si existe
-      if (organization?.id) {
-        searchParams.append('organizationId', organization.id);
+      if (activeOrganization?.id) {
+        searchParams.append('organizationId', activeOrganization.id);
       }
       
       // Usar los nombres correctos de parámetros
@@ -120,7 +120,7 @@ const SearchPage: React.FC = () => {
       console.log('🔍 Iniciando búsqueda con parámetros:', {
         query: query.trim(),
         mimeType: mimeType || 'todos',
-        organizationId: organization?.id || 'ninguna',
+        organizationId: activeOrganization?.id || 'ninguna',
         fromDate,
         toDate
       });
@@ -153,7 +153,7 @@ const SearchPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [query, mimeType, fromDate, toDate, organization?.id]);
+  }, [query, mimeType, fromDate, toDate, activeOrganization?.id]);
 
   /**
    * Maneja la vista previa del documento

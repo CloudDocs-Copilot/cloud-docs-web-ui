@@ -23,6 +23,8 @@ export interface Document {
   size: number;
   /** Tipo MIME del archivo (ej: 'application/pdf', 'application/vnd.ms-excel') */
   mimeType: string;
+  /** Contenido extraído del documento (para búsqueda) */
+  extractedContent?: string;
   /** Fecha de subida */
   uploadedAt: Date | string;
   /** IDs de usuarios con quienes se comparte el documento */

@@ -132,7 +132,7 @@ const SearchPage: React.FC = () => {
       console.log(`✅ Respuesta de búsqueda:`, {
         total,
         took,
-        documents: documents.map((d: any) => ({
+        documents: documents.map((d: Document) => ({
           id: d.id,
           filename: d.filename || d.originalname,
           mimeType: d.mimeType
@@ -143,9 +143,9 @@ const SearchPage: React.FC = () => {
       setTotalResults(total);
       setSearchTime(took);
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error en búsqueda:', err);
-      const errorMessage = err.response?.data?.message || err.message || 'Error desconocido en la búsqueda';
+      const errorMessage = err instanceof Error && 'response' in err ? (err as { response?: { data?: { message?: string } } }).response?.data?.message || err.message : 'Error desconocido en la búsqueda';
       setError(errorMessage);
       setResults([]);
       setTotalResults(0);
@@ -189,9 +189,10 @@ const SearchPage: React.FC = () => {
         window.URL.revokeObjectURL(url);
       }, 30000); // 30 segundos para dar tiempo a que cargue
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error al previsualizar documento:', error);
-      setError(`Error al previsualizar el documento: ${error.response?.data?.message || error.message}`);
+      const errorMsg = error instanceof Error && 'response' in error ? (error as { response?: { data?: { message?: string } }; message: string }).response?.data?.message || error.message : 'Error desconocido';
+      setError(`Error al previsualizar el documento: ${errorMsg}`);
     }
   }, []);
 

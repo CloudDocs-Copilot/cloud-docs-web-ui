@@ -21,7 +21,7 @@ describe('getViteEnvVar', () => {
     // Restore original globals
     global.process = originalProcess;
     global.window = originalWindow;
-    delete (global as any).importMetaEnv;
+    delete (global as Record<string, unknown>).importMetaEnv;
     mockImportMeta.env = {};
   });
 
@@ -34,12 +34,12 @@ describe('getViteEnvVar', () => {
           ...originalProcess?.env,
           JEST_WORKER_ID: '1'
         }
-      } as any;
+      } as NodeJS.Process;
     });
 
     it('should return value from global.importMetaEnv when key exists', () => {
       // Set up global.importMetaEnv
-      (global as any).importMetaEnv = {
+      (global as Record<string, unknown>).importMetaEnv = {
         VITE_API_URL: 'https://test-api.example.com'
       };
 
@@ -68,7 +68,7 @@ describe('getViteEnvVar', () => {
     });
 
     it('should prioritize global.importMetaEnv over fallback', () => {
-      (global as any).importMetaEnv = {
+      (global as Record<string, unknown>).importMetaEnv = {
         VITE_TEST_VAR: 'global-value'
       };
 
@@ -87,11 +87,11 @@ describe('getViteEnvVar', () => {
           NODE_ENV: 'test',
           CUSTOM_VAR: 'custom-value'
         }
-      } as any;
-      delete (global.process as any).env.JEST_WORKER_ID;
+      } as NodeJS.Process;
+      delete (global.process as NodeJS.Process & { env: Record<string, string | undefined> }).env.JEST_WORKER_ID;
 
       // No window
-      delete (global as any).window;
+      delete (global as Record<string, unknown>).window;
     });
 
     it('should return value from process.env when key exists', () => {
@@ -116,8 +116,8 @@ describe('getViteEnvVar', () => {
   describe('No environment available', () => {
     beforeEach(() => {
       // Mock environment with no process or window
-      delete (global as any).process;
-      delete (global as any).window;
+      delete (global as Record<string, unknown>).process;
+      delete (global as Record<string, unknown>).window;
     });
 
     it('should return undefined when no environment is available', () => {
@@ -133,12 +133,12 @@ describe('getViteEnvVar', () => {
       global.process = {
         ...originalProcess,
         env: {}
-      } as any;
-      delete (global.process as any).env.JEST_WORKER_ID;
+      } as NodeJS.Process;
+      delete (global.process as NodeJS.Process & { env: Record<string, string | undefined> }).env.JEST_WORKER_ID;
     });
 
     it('should handle empty string key', () => {
-      (global.process as any).env[''] = 'empty-key-value';
+      (global.process as NodeJS.Process & { env: Record<string, string> }).env[''] = 'empty-key-value';
 
       const result = getViteEnvVar('');
       
@@ -146,7 +146,7 @@ describe('getViteEnvVar', () => {
     });
 
     it('should handle special characters in key', () => {
-      (global.process as any).env['VITE_API_URL_2024'] = 'special-key-value';
+      (global.process as NodeJS.Process & { env: Record<string, string> }).env['VITE_API_URL_2024'] = 'special-key-value';
 
       const result = getViteEnvVar('VITE_API_URL_2024');
       
@@ -154,7 +154,7 @@ describe('getViteEnvVar', () => {
     });
 
     it('should handle undefined key parameter', () => {
-      const result = getViteEnvVar(undefined as any);
+      const result = getViteEnvVar(undefined as unknown as string);
       
       expect(result).toBeUndefined();
     });
@@ -169,7 +169,7 @@ describe('getViteEnvVar', () => {
           NODE_ENV: 'production',
           CUSTOM_SETTING: 'enabled'
         }
-      } as any;
+      } as NodeJS.Process;
 
       expect(getViteEnvVar('VITE_APP_VERSION')).toBe('1.0.0');
       expect(getViteEnvVar('NODE_ENV')).toBe('production');
@@ -185,7 +185,7 @@ describe('getViteEnvVar', () => {
           VITE_DEBUG: 'true',
           VITE_TIMEOUT: '0'
         }
-      } as any;
+      } as NodeJS.Process;
 
       expect(getViteEnvVar('VITE_PORT')).toBe('3000');
       expect(getViteEnvVar('VITE_DEBUG')).toBe('true');

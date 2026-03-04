@@ -69,7 +69,7 @@ describe('DocumentCard', () => {
   });
 
   it('calls moveToTrash when delete is confirmed', async () => {
-    mockMoveToTrash.mockResolvedValue(mockDocumentWithFolder as any);
+    mockMoveToTrash.mockResolvedValue(mockDocumentWithFolder as never);
     
     render(<DocumentCard document={mockDocumentWithFolder} onDeleted={mockOnDeleted} />);
     

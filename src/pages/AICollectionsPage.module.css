@@ -1,0 +1,199 @@
+.page {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+/* ── Historia lateral ── */
+.historySidebar {
+  flex-shrink: 0;
+  width: 300px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e2e8f0;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+  transition: width 0.25s ease;
+}
+
+/* ── Área principal ── */
+.main {
+  flex: 1;
+  min-width: 0;       /* prevent flex blowout horizontally */
+  min-height: 0;      /* critical: allows column children to shrink + scroll */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Encabezado */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+  flex-shrink: 0;
+  gap: 8px;
+  flex-wrap: nowrap;
+  min-height: 0;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.headerIcon {
+  font-size: 1.3rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.headerTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.headerActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.iconBtn {
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.82rem;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.iconBtn:hover {
+  background: #f1f5f9;
+  color: #6366f1;
+  border-color: #a5b4fc;
+}
+
+/* ── Área de mensajes (desplazable) ── */
+.messagesArea {
+  flex: 1;
+  min-height: 0;      /* critical: lets flex child shrink and scroll */
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
+}
+
+.messagesArea::-webkit-scrollbar { width: 5px; }
+.messagesArea::-webkit-scrollbar-track { background: transparent; }
+.messagesArea::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+
+/* ── Bienvenida centrada ── */
+.welcomeWrapper {
+  flex: 1;
+  min-height: 0;      /* critical: allows shrink */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 24px;
+  overflow-y: auto;
+}
+
+/* ── Input fijo abajo ── */
+.inputArea {
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 14px 20px;
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────
+   Responsive
+───────────────────────────────────── */
+
+/* Tablet landscape */
+@media (max-width: 1024px) {
+  .historySidebar {
+    width: 260px;
+  }
+}
+
+/* Tablet portrait */
+@media (max-width: 768px) {
+  .historySidebar {
+    display: none;
+  }
+  .header {
+    padding: 8px 14px;
+  }
+  .messagesArea {
+    padding: 14px;
+  }
+  .inputArea {
+    padding: 10px 14px;
+  }
+}
+
+/* Large mobile */
+@media (max-width: 640px) {
+  .header {
+    padding: 7px 10px;
+  }
+  .headerTitle {
+    font-size: 0.85rem;
+  }
+  .headerActions {
+    gap: 4px;
+  }
+  .iconBtn {
+    padding: 4px 8px;
+    font-size: 0.78rem;
+    gap: 4px;
+  }
+  .messagesArea {
+    padding: 10px;
+  }
+  .inputArea {
+    padding: 8px 10px;
+  }
+}
+
+/* Small mobile — hide button labels, keep icons */
+@media (max-width: 480px) {
+  .headerTitle {
+    display: none;
+  }
+  .btnLabel {
+    display: none;
+  }
+  .iconBtn {
+    padding: 5px 8px;
+    min-width: 32px;
+    justify-content: center;
+    gap: 0;
+  }
+}

@@ -69,7 +69,7 @@ export const DocumentCommentsPanel: React.FC<Props> = ({
       const res = await commentsService.listByDocument(documentId);
       setItems(res.comments || []);
     } catch {
-      setError('Failed to load comments');
+      setError('Fallo al cargar los comentarios');
     } finally {
       setLoading(false);
     }
@@ -89,7 +89,7 @@ export const DocumentCommentsPanel: React.FC<Props> = ({
       setItems((prev) => [res.comment, ...prev]);
       setContent('');
     } catch {
-      setError('Failed to create comment');
+      setError('Fallo al crear el comentario');
     } finally {
       setSaving(false);
     }
@@ -135,7 +135,7 @@ export const DocumentCommentsPanel: React.FC<Props> = ({
       );
       cancelEdit();
     } catch {
-      setError('Failed to update comment');
+      setError('Fallo al actualizar el comentario');
     } finally {
       setSaving(false);
     }

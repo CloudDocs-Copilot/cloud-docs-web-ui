@@ -36,3 +36,4 @@ export const REQUEST_TIMEOUT_MS = 30000; // 30 segundos
  * Entorno de la aplicación
  */
 export const APP_ENV = getEnvVar('VITE_APP_ENV', 'development');
+

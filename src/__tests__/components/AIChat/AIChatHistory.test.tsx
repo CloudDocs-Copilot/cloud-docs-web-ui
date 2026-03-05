@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AIChatHistory } from '../../../components/AIChat/AIChatHistory';
 import type { HistoryItem } from '../../../types/ai.types';
 
@@ -109,7 +109,7 @@ describe('AIChatHistory', () => {
     expect(activeBtn).toHaveAttribute('aria-current', 'page');
   });
 
-  it('llama a onDelete con el id al hacer clic en el botón eliminar', () => {
+  it('llama a onDelete con el id al hacer clic en el botón eliminar', async () => {
     const history = [makeItem()];
     render(
       <AIChatHistory
@@ -123,7 +123,11 @@ describe('AIChatHistory', () => {
     fireEvent.click(
       screen.getByRole('button', { name: /Eliminar conversación: Pregunta sobre facturas/i }),
     );
-    expect(onDelete).toHaveBeenCalledWith('conv-1');
+    // confirm in the modal
+    fireEvent.click(screen.getByRole('button', { name: /^Eliminar$/i }));
+    await waitFor(() => {
+      expect(onDelete).toHaveBeenCalledWith('conv-1');
+    });
     expect(onSelect).not.toHaveBeenCalled();
   });
 

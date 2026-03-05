@@ -34,6 +34,7 @@ export const ALLOWED_MIME_TYPES = [
   'application/pdf',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-powerpoint',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   'image/jpeg',
   'image/png',
@@ -47,6 +48,7 @@ export const ALLOWED_EXTENSIONS = [
   '.pdf',
   '.docx',
   '.xlsx',
+  '.ppt',
   '.pptx',
   '.jpg',
   '.jpeg',
@@ -61,6 +63,7 @@ export const EXTENSION_TO_MIME: Record<string, string> = {
   '.pdf': 'application/pdf',
   '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.ppt': 'application/vnd.ms-powerpoint',
   '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
@@ -75,6 +78,7 @@ export const FILE_TYPE_NAMES: Record<string, string> = {
   'application/pdf': 'PDF',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Excel',
+  'application/vnd.ms-powerpoint': 'PowerPoint',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PowerPoint',
   'image/jpeg': 'Imagen JPEG',
   'image/png': 'Imagen PNG',
@@ -218,5 +222,5 @@ export function getFileTypeName(mimeType: string): string {
  * Lista de tipos permitidos formateada para mostrar al usuario
  */
 export function getAllowedTypesDisplay(): string {
-  return 'PDF, DOCX, XLSX, PPTX, JPG, PNG, TXT';
+  return 'PDF, DOCX, XLSX, PPT, PPTX, JPG, PNG, TXT';
 }

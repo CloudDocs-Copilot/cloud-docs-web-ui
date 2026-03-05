@@ -35,14 +35,14 @@ export const TextViewer: React.FC<TextViewerProps> = ({ url, filename, mimeType,
         });
         
         if (!response.ok) {
-          throw new Error('Failed to fetch file content');
+          throw new Error('Fallo al cargar el contenido del archivo');
         }
 
         const text = await response.text();
         setContent(text);
       } catch (err) {
         console.error('Error loading text file:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load file');
+        setError(err instanceof Error ? err.message : 'Fallo al cargar el archivo');
       } finally {
         setLoading(false);
       }

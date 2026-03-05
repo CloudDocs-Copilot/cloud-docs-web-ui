@@ -32,7 +32,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, mimeType, filenam
         });
 
         if (!response.ok) {
-          throw new Error('Failed to load video');
+          throw new Error('Fallo al cargar el video');
         }
 
         const blob = await response.blob();
@@ -41,7 +41,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, mimeType, filenam
         setLoading(false);
       } catch (err) {
         console.error('Error loading video:', err);
-        setError('Failed to load video');
+        setError('Fallo al cargar el video.');
         setLoading(false);
       }
     };
@@ -202,7 +202,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ url, mimeType, filenam
    * Manejo de errores
    */
   const handleError = () => {
-    setError('Failed to load video. The format might not be supported.');
+    setError('Fallo al cargar el video. El formato podría no ser compatible.');
   };
 
   return (

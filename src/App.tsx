@@ -14,6 +14,7 @@ import { Loader } from './components/Loader';
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const TrashPage = React.lazy(() => import('./pages/TrashPage'));
 const SearchPage = React.lazy(() => import('./pages/SearchPage'));
+const MyDrive = React.lazy(() => import('./pages/MyDrive'));
 const UserProfile = React.lazy(() => import('./pages/UserProfile').then(m => ({ default: m.UserProfile })));
 const Forbidden = React.lazy(() => import('./pages/Forbidden'));
 const Register = React.lazy(() => import('./pages/Register'));
@@ -48,6 +49,16 @@ function App() {
               </RequireOrganization>
             </PrivateRoute>
           }
+      />
+      <Route
+        path="/my-drive"
+        element={
+          <PrivateRoute>
+            <RequireOrganization>
+              <MyDrive />
+            </RequireOrganization>
+          </PrivateRoute>
+        }
       />
       <Route
         path="/trash"

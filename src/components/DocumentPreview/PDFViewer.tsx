@@ -4,6 +4,7 @@ import { Button, Spinner, Alert } from 'react-bootstrap';
 import type { PDFViewerProps } from '../../types/preview.types';
 import { previewService } from '../../services/preview.service';
 import { PreviewHeader } from './PreviewHeader';
+import { apiClient } from '../../api/httpClient.config';
 import styles from './PDFViewer.module.css';
 
 // Configurar worker de PDF.js usando copia local en public/
@@ -38,33 +39,20 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ url, filename, onBack, fil
 
         console.log('[PDFViewer] Loading PDF from URL:', url);
         
-        // Usar credentials: 'include' para enviar cookies de autenticación
-        const response = await fetch(url, {
-          credentials: 'include'
+        // Usar apiClient que ya tiene configuradas las cookies y CSRF
+        const response = await apiClient.get(url, {
+          responseType: 'blob' // Importante: recibir como blob
         });
 
         console.log('[PDFViewer] Response status:', response.status);
-        console.log('[PDFViewer] Response headers:', Object.fromEntries(response.headers.entries()));
+        console.log('[PDFViewer] Response headers:', response.headers);
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('[PDFViewer] Error response:', errorText);
-          if (response.status === 404) {
-            throw new Error('No se pudo encontrar el documento. Es posible que haya sido eliminado o movido.');
-          } else if (response.status === 403) {
-            throw new Error('No tienes permisos para ver este documento.');
-          } else if (response.status >= 500) {
-            throw new Error('Error del servidor. Por favor, inténtalo de nuevo más tarde.');
-          } else {
-            throw new Error(`Error al cargar el documento (código ${response.status}).`);
-          }
-        }
-
-        const blob = await response.blob();
+        // apiClient con responseType 'blob' devuelve el blob directamente en data
+        const blob = response.data;
         console.log('[PDFViewer] Blob created, size:', blob.size, 'type:', blob.type);
         
         // Verificar que es realmente un PDF
-        if (!blob.type.includes('pdf')) {
+        if (blob.type && !blob.type.includes('pdf')) {
           console.error('[PDFViewer] Invalid blob type:', blob.type);
           throw new Error(`Expected PDF but got ${blob.type}`);
         }

@@ -39,7 +39,7 @@ describe('VideoPlayer branches and controls', () => {
       render(<VideoPlayer url="/bad.mp4" mimeType="video/mp4" filename="bad.mp4" onBack={() => {}} fileSize={0} />);
     });
 
-    expect(await screen.findByText(/Failed to load video/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Fallo al cargar el video/i)).toBeInTheDocument();
   });
 
   it('togglePlay calls play/pause on video element', async () => {

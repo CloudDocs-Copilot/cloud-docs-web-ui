@@ -1,22 +1,12 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Form, Button, InputGroup, Modal, OverlayTrigger, Popover, Spinner } from 'react-bootstrap';
+import { Form, Button, InputGroup, OverlayTrigger, Popover, Spinner } from 'react-bootstrap';
 import styles from './Header.module.css';
 import { useAuth } from '../hooks/useAuth';
-import { FileUploader } from './FileUploader';
-import { RoleGuard } from './RoleGuard';
-import type { Document } from '../types/document.types';
 import OrganizationSelector from './Organization/OrganizationSelector';
-import useOrganization from '../hooks/useOrganization';
-import type { MembershipRole } from '../types/organization.types';
 import { useNotifications } from '../hooks/useNotifications';
 import { getNotificationTypeLabel } from '../constants/notificationTypes';
 import type { NotificationDTO, NotificationType } from '../types/notification.types';
-
-interface HeaderProps {
-  /** Callback cuando se suben documentos exitosamente */
-  onDocumentsUploaded?: (documents: Document[]) => void;
-}
 
 const INVITATION_TYPES: NotificationType[] = ['INVITATION_CREATED', 'MEMBER_INVITED'];
 
@@ -24,11 +14,10 @@ function isInvitationNotification(n: NotificationDTO): boolean {
   return INVITATION_TYPES.includes(n.type);
 }
 
-const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
+const Header: React.FC = () => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const location = useLocation();
-  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const { notifications, unreadCount, loading: notifLoading, refresh, markRead, markAllRead } = useNotifications();
 
@@ -42,40 +31,6 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
 
   const avatarLetter = (user?.name?.[0] || user?.email?.[0] || 'U').toUpperCase();
   const displayName = user?.name || user?.email || 'Usuario';
-
-  // Role-based permission: hide upload for viewers
-  const { activeOrganization, membership } = useOrganization();
-  
-    // Permission: delete only for owner/admin
-    const orgRole = (membership?.role ||
-      activeOrganization?.role ||
-      'member') as MembershipRole;
-  
-    const normalizedRole = typeof orgRole === 'string' ? orgRole.toLowerCase() : orgRole;
-    const canUpload = normalizedRole !== 'viewer';
-
-  /**
-   * Abre el modal de subida de archivos
-   */
-  const handleOpenUploadModal = useCallback(() => {
-    if (!canUpload) return;
-    setShowUploadModal(true);
-  }, [canUpload]);
-
-  /**
-   * Cierra el modal de subida de archivos
-   */
-  const handleCloseUploadModal = useCallback(() => {
-    setShowUploadModal(false);
-  }, []);
-
-  /**
-   * Maneja la subida exitosa de documentos
-   */
-  const handleUploadSuccess = useCallback((documents: Document[]) => {
-    onDocumentsUploaded?.(documents);
-    setShowUploadModal(false);
-  }, [onDocumentsUploaded]);
 
   const notificationPopover = useMemo(() => {
     return (
@@ -129,6 +84,7 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
 
                       // Optional: navigate to document
                       if (n.entity?.kind === 'document' && n.entity?.id) {
+                        // If you have a route for docs, navigate there.
                         // navigate(`/documents/${n.entity.id}`);
                       }
                     }}
@@ -178,7 +134,7 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
         </Popover.Body>
       </Popover>
     );
-  }, [markAllRead, markRead, navigate, notifLoading, notifications, refresh]);
+  }, [markAllRead, markRead, navigate, notifLoading, notifications]);
 
   return (
     <>
@@ -202,8 +158,8 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
 
         <div className={styles.headerActions}>
           {user && !location.pathname.startsWith('/dashboard') && (
-            <Button variant="link" className={styles.iconBtn} onClick={() => navigate('/dashboard')} title="Dashboard" aria-label="Ir al Dashboard">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <Button variant="link" className={styles.iconBtn} onClick={() => navigate('/dashboard')} title="Dashboard">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M3 13h8V3H3v10zM3 21h8v-6H3v6zM13 21h8V11h-8v10zM13 3v6h8V3h-8z" strokeWidth="1.5" />
               </svg>
             </Button>
@@ -224,8 +180,8 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
               }
             }}
           >
-            <Button variant="link" className={styles.iconBtn} title="Notificaciones" aria-label="Ver notificaciones" style={{ position: 'relative' }}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+            <Button variant="link" className={styles.iconBtn} title="Notificaciones" style={{ position: 'relative' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeWidth="2" />
                 <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeWidth="2" />
               </svg>
@@ -258,8 +214,8 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
             </Button>
           </OverlayTrigger>
 
-          <Button variant="link" className={styles.iconBtn} aria-label="Configuración">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <Button variant="link" className={styles.iconBtn}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <circle cx="12" cy="12" r="3" strokeWidth="2" />
               <path d="M12 1v6m0 6v6M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24M1 12h6m6 0h6M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24" strokeWidth="2" />
             </svg>
@@ -274,31 +230,6 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
             <span>{displayName}</span>
           </div>
 
-          {canUpload && (
-            <RoleGuard requiredPermission="documents:create">
-              <Button
-                variant="primary"
-                className={styles.btnUpload}
-                onClick={handleOpenUploadModal}
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  style={{ marginRight: '6px' }}
-                  aria-hidden="true"
-                >
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" strokeWidth="2" />
-                  <polyline points="17 8 12 3 7 8" strokeWidth="2" />
-                  <line x1="12" y1="3" x2="12" y2="15" strokeWidth="2" />
-                </svg>
-                Subir
-              </Button>
-            </RoleGuard>
-          )}
-
           <Button variant="danger" className={styles.btnLogout} onClick={handleLogout}>
             <svg
               width="16"
@@ -307,7 +238,6 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
               fill="none"
               stroke="currentColor"
               style={{ marginRight: '6px' }}
-              aria-hidden="true"
             >
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" strokeWidth="2" />
               <polyline points="16 17 21 12 16 7" strokeWidth="2" />
@@ -317,23 +247,6 @@ const Header: React.FC<HeaderProps> = ({ onDocumentsUploaded }) => {
           </Button>
         </div>
       </header>
-
-      {/* Modal de Subida de Documentos */}
-      {canUpload && (
-        <Modal
-          show={showUploadModal}
-          onHide={handleCloseUploadModal}
-          size="lg"
-          centered
-          backdrop="static"
-          keyboard={false}
-        >
-          <FileUploader
-            onUploadSuccess={handleUploadSuccess}
-            onClose={handleCloseUploadModal}
-          />
-        </Modal>
-      )}
     </>
   );
 };

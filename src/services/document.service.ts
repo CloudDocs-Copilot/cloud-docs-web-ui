@@ -217,9 +217,27 @@ export async function moveDocument(
   documentId: string,
   targetFolderId: string
 ): Promise<{ success: boolean; message: string; document: Document }> {
-  const response = await apiClient.patch<{ success: boolean; message: string; document: Document }>(
+  const response = await apiClient.post<{ success: boolean; message: string; document: Document }>(
     `/documents/${documentId}/move`,
     { targetFolderId }
+  );
+  return response.data;
+}
+
+/**
+ * Renombra un documento
+ * 
+ * @param documentId - ID del documento a renombrar
+ * @param filename - Nuevo nombre del archivo (con extensión)
+ * @returns Promesa con el documento actualizado
+ */
+export async function renameDocument(
+  documentId: string,
+  filename: string
+): Promise<{ success: boolean; message: string; document: Document }> {
+  const response = await apiClient.patch<{ success: boolean; message: string; document: Document }>(
+    `/documents/${documentId}/rename`,
+    { filename }
   );
   return response.data;
 }

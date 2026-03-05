@@ -23,9 +23,10 @@ jest.mock("../../services/document.service", () => ({
 jest.mock("../../services/preview.service", () => ({
   previewService: {
     canPreview: jest.fn(() => true),
+    getPreviewUrl: jest.fn((doc: Document) => '/preview/' + doc.id),
     getDownloadUrl: jest.fn(
-      (doc: { id?: string; _id?: string }) =>
-        `/download/${doc.id || doc._id || "unknown"}`,
+      (doc: { id?: string }) =>
+        `/download/${doc.id || "unknown"}`,
     ),
   },
 }));
@@ -90,6 +91,7 @@ describe("DocumentCard", () => {
 
     (deletionHookModule.useDocumentDeletion as jest.Mock).mockReturnValue({
       moveToTrash: moveToTrashMock,
+      loading: false,
     });
     moveToTrashMock.mockResolvedValue(true);
 
@@ -179,13 +181,12 @@ describe("DocumentCard", () => {
     openSpy.mockRestore();
   });
 
-  it("uses _id if id is missing for download url", () => {
+  it("uses id for download url", () => {
     const openSpy = jest.spyOn(window, "open").mockImplementation(() => null);
 
     const doc: Partial<Document> = {
       ...baseDoc,
-      id: undefined,
-      _id: "eeeeeeeeeeeeeeeeeeeeeeee",
+      id: "eeeeeeeeeeeeeeeeeeeeeeee",
     };
     render(<DocumentCard document={doc as Document} />);
 
@@ -302,7 +303,6 @@ describe("DocumentCard", () => {
     expect(
       screen.getByText("¿Deseas mover este documento a la papelera?"),
     ).toBeInTheDocument();
-
   });
 
   it("renders Share button when current user is owner and opens Share modal (loads members)", async () => {
@@ -406,6 +406,79 @@ describe("DocumentCard", () => {
 
     const confirmBtn = screen.getByRole("button", { name: "Compartir (0)" });
     expect(confirmBtn).toBeDisabled();
+  });
+
+  describe('Drag and Drop', () => {
+    it('is draggable', () => {
+      const { container } = render(<DocumentCard document={baseDoc as Document} />);
+      const card = container.querySelector('.card');
+      expect(card).toHaveAttribute('draggable', 'true');
+    });
+
+    it('has grab cursor by default', () => {
+      const { container } = render(<DocumentCard document={baseDoc as Document} />);
+      const card = container.querySelector('.card') as HTMLElement;
+      expect(card.style.cursor).toBe('grab');
+    });
+
+    it('handles drag start event', () => {
+      const { container } = render(<DocumentCard document={baseDoc as Document} />);
+      const card = container.querySelector('.card')!;
+      
+      const dataTransfer = {
+        setData: jest.fn(),
+        effectAllowed: ''
+      };
+
+      fireEvent.dragStart(card, { dataTransfer });
+
+      expect(dataTransfer.setData).toHaveBeenCalledWith(
+        'application/json',
+        JSON.stringify({ type: 'document', id: DOC_ID })
+      );
+      expect(dataTransfer.effectAllowed).toBe('move');
+    });
+
+    it('applies dragging class when being dragged', () => {
+      const { container } = render(<DocumentCard document={baseDoc as Document} />);
+      const card = container.querySelector('.card')!;
+      
+      const dataTransfer = {
+        setData: jest.fn(),
+        effectAllowed: ''
+      };
+
+      fireEvent.dragStart(card, { dataTransfer });
+
+      // La clase dragging debería aplicarse
+      expect(card.className).toContain('dragging');
+    });
+
+    it('removes dragging class when drag ends', () => {
+      const { container } = render(<DocumentCard document={baseDoc as Document} />);
+      const card = container.querySelector('.card')!;
+      
+      const dataTransfer = {
+        setData: jest.fn(),
+        effectAllowed: ''
+      };
+
+      // Iniciar drag
+      fireEvent.dragStart(card, { dataTransfer });
+      expect(card.className).toContain('dragging');
+
+      // Terminar drag
+      fireEvent.dragEnd(card, { preventDefault: jest.fn() });
+
+      // La clase dragging debería removerse
+      expect(card.className).not.toContain('dragging');
+    });
+
+    it('renders grip handle icon', () => {
+      const { container } = render(<DocumentCard document={baseDoc as Document} />);
+      const dragHandle = container.querySelector('.dragHandle');
+      expect(dragHandle).toBeInTheDocument();
+    });
   });
 
   it("share member search filters the list by name/email", async () => {

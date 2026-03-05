@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Card, Badge, Modal, Button } from 'react-bootstrap';
+import { GripVertical } from 'react-bootstrap-icons';
 import type { Document } from '../types/document.types';
 import { getFileTypeFromMime, formatFileSize } from '../types/document.types';
 
@@ -14,6 +15,7 @@ import { getActiveOrganizationId, getOrganizationMembers, shareDocument } from '
 interface DocumentCardProps {
   document: Document;
   onDeleted?: () => void;
+  onRename?: (document: Document) => void;
   canDelete?: boolean;
 }
 
@@ -117,11 +119,11 @@ function getCurrentUserIdFromStorage(): string {
   return '';
 }
 
-const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDelete = true }) => {
-  const [loading, setLoading] = useState(false);
+const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRename, canDelete = true }) => {
+  const { moveToTrash, loading } = useDocumentDeletion();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const { moveToTrash} = useDocumentDeletion();
+  const [isDragging, setIsDragging] = useState(false);
   const [, setError] = useState<string | null>(null);
 
   const [showShareModal, setShowShareModal] = useState(false);
@@ -141,19 +143,17 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDel
    */
   const handleMoveToTrash = async () => {
     try {
-    const documentId = document.id ?? document._id ?? '';
-    const deleted = await moveToTrash(documentId);
-    if (deleted) {
-      setShowDeleteModal(false);
-      onDeleted?.();
-    } else {
-      setError('No se pudo mover el documento a la papelera');
-    }
+      const documentId = document.id || '';
+      const deleted = await moveToTrash(documentId);
+      if (deleted) {
+        setShowDeleteModal(false);
+        onDeleted?.();
+      } else {
+        setError('No se pudo mover el documento a la papelera');
+      }
     } catch (err: unknown) {
       console.error('Error deleting document:', err);
-      setError(err instanceof Error ? err.message : 'Error al eliminar el documento');
-    } finally {
-      setLoading(false);
+      setError('Error al eliminar el documento');
     }
   };
 
@@ -206,11 +206,25 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDel
   const fileType = getFileTypeFromMime(document.mimeType);
   const folderName = getFolderName(document.folder);
 
+  const handleDragStart = (e: React.DragEvent) => {
+    setIsDragging(true);
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      type: 'document',
+      id: document.id
+    }));
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnd = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
   /**
    * Convertir Document a PreviewDocument para el modal de preview
    */
   const previewDocument: PreviewDocument = {
-    id: document.id ?? document._id ?? '', // Usar _id si id no existe (MongoDB)
+    id: document.id,
     filename: document.filename || document.originalname || 'unknown',
     originalname: document.originalname,
     mimeType: document.mimeType,
@@ -316,7 +330,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDel
   const handleConfirmShare = async () => {
     setShareError(null);
 
-    const documentId = document.id ?? document._id ?? '';
+    const documentId = document.id ?? '';
     if (!documentId) {
       setShareError('Documento inválido');
       return;
@@ -348,7 +362,18 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDel
 
   return (
     <>
-      <Card className={styles.documentCard} onClick={handlePreviewClick} style={{ cursor: canPreview ? 'pointer' : 'default' }}>
+      <Card 
+        className={`${styles.documentCard} ${isDragging ? styles.dragging : ''}`}
+        onClick={handlePreviewClick} 
+        style={{ cursor: 'grab' }}
+        draggable={true}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        {/* Indicador de arrastre */}
+        <div className={styles.dragHandle}>
+          <GripVertical size={14} className="text-muted" />
+        </div>
         <Card.Body className={styles.cardBody}>
           {/* Ícono del documento */}
           <div className={styles.iconWrapper}>
@@ -411,6 +436,22 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDel
             </svg>
           </button>
 
+          {onRename && (
+            <button 
+              className={styles.optionBtn} 
+              title="Renombrar"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRename(document);
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </button>
+          )}
+
           {canShare && (
             <button
               className={styles.optionBtn}
@@ -429,23 +470,20 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDel
           )}
 
           {canDelete && (
-            <>
-              <button
-                className={styles.optionBtn}
-                title="Mover a papelera"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowDeleteModal(true);
-                } }
-                disabled={loading}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round" />
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </button>
-              {/* <h6 className={styles.documentName}>{document.originalname || document.filename}</h6> */}
-            </>
+            <button
+              className={styles.optionBtn}
+              title="Mover a papelera"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteModal(true);
+              }}
+              disabled={loading}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <polyline points="3 6 5 6 21 6" strokeWidth="2" strokeLinecap="round" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
           )}
         </div>
       </Card>
@@ -557,12 +595,14 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, canDel
         </Modal>
       )}
 
-      {/* Modal de preview */}
-      <DocumentPreviewModal
-        show={showPreview}
-        onHide={handleClosePreview}
-        document={previewDocument}
-      />
+      {/* Modal de preview - solo renderizar cuando se muestra */}
+      {showPreview && (
+        <DocumentPreviewModal
+          show={showPreview}
+          onHide={handleClosePreview}
+          document={previewDocument}
+        />
+      )}
     </>
   );
 };

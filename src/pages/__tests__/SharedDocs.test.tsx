@@ -49,23 +49,11 @@ jest.mock('../../hooks/useOrganization', () => ({
   default: () => mockOrgState,
 }));
 
-// MainLayout: expose a way to trigger onDocumentsUploaded
+// MainLayout: simple wrapper
 jest.mock('../../components/MainLayout', () => ({
   __esModule: true,
-  default: ({
-    children,
-    onDocumentsUploaded,
-  }: {
-    children: React.ReactNode;
-    onDocumentsUploaded?: () => void;
-  }) => (
+  default: ({ children }: { children: React.ReactNode }) => (
     <div>
-      <button
-        type="button"
-        onClick={() => onDocumentsUploaded && onDocumentsUploaded()}
-      >
-        trigger-uploaded
-      </button>
       <div>{children}</div>
     </div>
   ),
@@ -222,7 +210,7 @@ describe('SharedDocs (Dashboard)', () => {
     expect(screen.getAllByText('canDelete:false')).toHaveLength(2);
   });
 
-  it('canDelete=true for owner role (case-insensitive) and refreshes when upload/delete callbacks fire', () => {
+  it('canDelete=true for owner role (case-insensitive) and refreshes when delete callback fires', () => {
     // Role normalization branch: membership wins; case-insensitive
     setOrg({
       membership: { role: 'OWNER' },
@@ -257,13 +245,9 @@ describe('SharedDocs (Dashboard)', () => {
     // owner -> can delete
     expect(screen.getByText('canDelete:true')).toBeInTheDocument();
 
-    // trigger MainLayout onDocumentsUploaded -> should fetch again
-    fireEvent.click(screen.getByText('trigger-uploaded'));
-    expect(mockExecute).toHaveBeenCalledTimes(2);
-
     // trigger DocumentCard onDeleted -> should fetch again
     fireEvent.click(screen.getByText('trigger-deleted'));
-    expect(mockExecute).toHaveBeenCalledTimes(3);
+    expect(mockExecute).toHaveBeenCalledTimes(2);
 
     // and always same request shape
     expect(mockExecute).toHaveBeenLastCalledWith({

@@ -1,0 +1,591 @@
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Container, Row, Col, Button, Spinner, Form, Modal } from 'react-bootstrap';
+import { FolderPlus, FileEarmarkPlus } from 'react-bootstrap-icons';
+import { FolderTree } from './FolderTree';
+import { FolderCard } from './FolderCard';
+import { FolderBreadcrumbs } from './FolderBreadcrumbs';
+import DocumentCard from '../DocumentCard';
+import { DocumentPreviewModal } from '../DocumentPreview';
+import { folderService } from '../../services/folder.service';
+import * as documentService from '../../services/document.service';
+import { previewService } from '../../services/preview.service';
+import useOrganization from '../../hooks/useOrganization';
+import type { Folder } from '../../types/folder.types';
+import type { Document } from '../../types/document.types';
+import type { PreviewDocument } from '../../types/preview.types';
+
+// Helper function to extract error message from unknown error
+const getErrorMessage = (error: unknown): string => {
+  if (error && typeof error === 'object') {
+    const err = error as { response?: { data?: { message?: string; error?: string } }; message?: string };
+    return err.response?.data?.message || err.response?.data?.error || err.message || 'Unknown error';
+  }
+  return 'Unknown error';
+};
+
+interface FileManagerViewProps {
+  /** Trigger numérico para forzar la recarga del contenido desde fuera */
+  externalRefresh?: number;
+}
+
+export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefresh = 0 }) => {
+  const { activeOrganization } = useOrganization();
+  const [currentFolder, setCurrentFolder] = useState<Folder | null>(null);
+  const [items, setItems] = useState<{ subfolders: Folder[]; documents: Document[] }>({ subfolders: [], documents: [] });
+  const [loading, setLoading] = useState(false);
+  const [refreshTree, setRefreshTree] = useState(0);
+  const [folderTree, setFolderTree] = useState<Folder | null>(null);
+
+  // New Folder Modal State
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [creatingFolder, setCreatingFolder] = useState(false);
+  
+  // Preview Modal State
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewDocument, setPreviewDocument] = useState<PreviewDocument | null>(null);
+
+  // Rename Folder Modal State
+  const [showRenameModal, setShowRenameModal] = useState(false);
+  const [folderToRename, setFolderToRename] = useState<Folder | null>(null);
+  const [renameFolderValue, setRenameFolderValue] = useState('');
+  const [renamingFolder, setRenamingFolder] = useState(false);
+
+  // Rename Document Modal State
+  const [showRenameDocModal, setShowRenameDocModal] = useState(false);
+  const [documentToRename, setDocumentToRename] = useState<Document | null>(null);
+  const [renameDocValue, setRenameDocValue] = useState('');
+  const [renamingDoc, setRenamingDoc] = useState(false);
+
+  // File Upload State
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Helper to find path in tree (would handle breadcrumbs)
+  // For now, simpler breadcrumbs: just Current Folder name, or we rely on Tree selection highlight
+  
+  const fetchContents = useCallback(async (folderId: string) => {
+    setLoading(true);
+    try {
+      const data = await folderService.getContents(folderId);
+      setItems({ subfolders: data.subfolders, documents: data.documents });
+      // Update current folder details from response
+      setCurrentFolder(data.folder);
+    } catch (error: unknown) {
+      console.error('[FileManagerView] Error al cargar contenido:', error);
+      alert(`Error al cargar carpeta: ${getErrorMessage(error)}`);
+      // Reset loading even on error
+      setItems({ subfolders: [], documents: [] });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Effect to handle external refresh triggers (e.g. from File Upload in Header)
+  useEffect(() => {
+    if (externalRefresh > 0 && currentFolder) {
+       fetchContents(currentFolder.id);
+       setRefreshTree(prev => prev + 1);
+    } else if (externalRefresh > 0 && !currentFolder && activeOrganization) {
+       // Refresh root if we are at root (NOTE: fetchContents needs an ID, if null is root we might need logic adjustment)
+       // Assuming folders have valid IDs. If root is implicit, we might rely on FolderTree's onLoad.
+       // For now, if currentFolder is null, we might not be able to easy refresh without an ID, 
+       // but typically we start with a selected folder or root.
+       setRefreshTree(prev => prev + 1); // At least refresh the tree
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalRefresh, activeOrganization]);
+
+  const handleSelectFolder = useCallback((folder: Folder) => {
+    setCurrentFolder(folder);
+    fetchContents(folder.id);
+  }, [fetchContents]);
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName) {
+      alert('El nombre de la carpeta es requerido');
+      return;
+    }
+    
+    if (!currentFolder?.id) {
+      alert('Por favor selecciona una carpeta primero');
+      return;
+    }
+    
+    if (!activeOrganization?.id) {
+      alert('No hay organización activa');
+      return;
+    }
+    
+    setCreatingFolder(true);
+    try {
+      await folderService.create({
+        name: newFolderName,
+        parentId: currentFolder.id,
+        organizationId: activeOrganization.id
+      });
+      setShowCreateModal(false);
+      setNewFolderName('');
+      // Refresh content and tree
+      fetchContents(currentFolder.id);
+      setRefreshTree(prev => prev + 1);
+    } catch (error: unknown) {
+      console.error('Error al crear carpeta:', error);
+      alert(`Error al crear carpeta: ${getErrorMessage(error)}`);
+    } finally {
+      setCreatingFolder(false);
+    }
+  };
+
+  const handleRenameFolder = (folder: Folder) => {
+    setFolderToRename(folder);
+    setRenameFolderValue(folder.displayName || folder.name);
+    setShowRenameModal(true);
+  };
+
+  const handleConfirmRenameFolder = async () => {
+    if (!folderToRename || !renameFolderValue.trim()) {
+      return;
+    }
+    
+    setRenamingFolder(true);
+    try {
+      await folderService.rename(folderToRename.id, { 
+        displayName: renameFolderValue.trim() 
+      });
+      setShowRenameModal(false);
+      setFolderToRename(null);
+      setRenameFolderValue('');
+      // Refresh content and tree
+      if (currentFolder) {
+        fetchContents(currentFolder.id);
+      }
+      setRefreshTree(prev => prev + 1);
+    } catch (error: unknown) {
+      console.error('Error al renombrar carpeta:', error);
+      alert(`Error al renombrar carpeta: ${getErrorMessage(error)}`);
+    } finally {
+      setRenamingFolder(false);
+    }
+  };
+
+  const handleRenameDocument = (doc: Document) => {
+    setDocumentToRename(doc);
+    // Mostrar el nombre original del archivo (no el ID del sistema)
+    setRenameDocValue(doc.originalname || doc.filename || '');
+    setShowRenameDocModal(true);
+  };
+
+  const handleDocumentDeleted = useCallback(() => {
+    console.log('[FileManagerView] handleDocumentDeleted ejecutado');
+    console.log('[FileManagerView] currentFolder:', currentFolder?.id, currentFolder?.name);
+    
+    // Refrescar el contenido de la carpeta actual después de eliminar
+    if (currentFolder) {
+      console.log('[FileManagerView] Llamando a fetchContents para actualizar la lista...');
+      fetchContents(currentFolder.id);
+      // También refrescar el árbol para actualizar los contadores
+      setRefreshTree(prev => prev + 1);
+    } else {
+      console.warn('[FileManagerView] No hay currentFolder, no se puede refrescar');
+    }
+  }, [currentFolder, fetchContents]);
+
+  const handleConfirmRenameDocument = async () => {
+    if (!documentToRename || !renameDocValue.trim()) {
+      return;
+    }
+    
+    setRenamingDoc(true);
+    try {
+      await documentService.renameDocument(documentToRename.id, renameDocValue.trim());
+      setShowRenameDocModal(false);
+      setDocumentToRename(null);
+      setRenameDocValue('');
+      // Refresh content
+      if (currentFolder) {
+        fetchContents(currentFolder.id);
+      }
+    } catch (error: unknown) {
+      console.error('Error al renombrar documento:', error);
+      alert(`Error al renombrar documento: ${getErrorMessage(error)}`);
+    } finally {
+      setRenamingDoc(false);
+    }
+  };
+
+  const handleDocumentClick = (doc: Document) => {
+    // Convertir Document a PreviewDocument
+    const docToPreview: PreviewDocument = {
+      id: doc.id,
+      filename: doc.filename || doc.originalname || 'unknown',
+      originalname: doc.originalname,
+      mimeType: doc.mimeType,
+      size: doc.size,
+      url: doc.url,
+      path: doc.path
+    };
+    
+    // Verificar si se puede previsualizar
+    if (previewService.canPreview(docToPreview)) {
+      setPreviewDocument(docToPreview);
+      setShowPreview(true);
+    }
+  };
+
+  const handleClosePreview = () => {
+    setShowPreview(false);
+    setPreviewDocument(null);
+  };
+
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!currentFolder?.id) {
+      alert('Por favor selecciona una carpeta primero');
+      return;
+    }
+
+    console.log('[FileManagerView] Subiendo archivo a carpeta:', currentFolder.id, 'Nombre de carpeta:', currentFolder.name);
+
+    setUploadingFile(true);
+    setUploadProgress(0);
+
+    try {
+      const response = await documentService.uploadDocument({
+        file,
+        folderId: currentFolder.id,
+        onProgress: (progress) => {
+          setUploadProgress(progress.percentage);
+        },
+      });
+
+      console.log('[FileManagerView] Carga exitosa, documento:', response.document);
+
+      // Refrescar contenido
+      fetchContents(currentFolder.id);
+      setRefreshTree(prev => prev + 1);
+      
+      // Resetear input de archivo
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error: unknown) {
+      console.error('Error al subir archivo:', error);
+      alert(`Error al subir archivo: ${getErrorMessage(error)}`);
+    } finally {
+      setUploadingFile(false);
+      setUploadProgress(0);
+    }
+  };
+
+  // Construir el path completo del breadcrumb buscando en el árbol
+  const buildBreadcrumbPath = (folderId: string | undefined, tree: Folder | null): Folder[] => {
+    if (!folderId || !tree) return [];
+    
+    const path: Folder[] = [];
+    
+    const findPath = (node: Folder, targetId: string): boolean => {
+      // Si encontramos el nodo, agregarlo al path
+      if (node.id === targetId) {
+        path.push(node);
+        return true;
+      }
+      
+      // Si tiene hijos, buscar recursivamente
+      if (node.children && node.children.length > 0) {
+        for (const child of node.children) {
+          if (findPath(child, targetId)) {
+            // Si se encontró en un hijo, agregar este nodo al inicio del path
+            path.unshift(node);
+            return true;
+          }
+        }
+      }
+      
+      return false;
+    };
+    
+    findPath(tree, folderId);
+    return path;
+  };
+
+  const breadcrumbPath = buildBreadcrumbPath(currentFolder?.id, folderTree);
+
+  /**
+   * Maneja el movimiento de documentos desde Drag & Drop
+   */
+  const handleMoveDocument = async (documentId: string, targetFolderId: string) => {
+    try {
+      setLoading(true);
+      await documentService.moveDocument(documentId, targetFolderId);
+      // Refresh current folder view as the document might have moved OUT of it
+      if (currentFolder) {
+        fetchContents(currentFolder.id);
+      }
+      // Also refresh tree in case counts update (if we implement counts)
+      setRefreshTree(prev => prev + 1);
+    } catch (error) {
+      console.error('Error al mover documento', error);
+      // alert('Error al mover documento'); // Opcional: reemplazar con Toast
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /**
+   * Maneja el movimiento de carpetas desde Drag & Drop
+   */
+  const handleMoveFolder = async (sourceFolderId: string, targetFolderId: string) => {
+    try {
+      setLoading(true);
+      await folderService.move(sourceFolderId, { targetFolderId });
+      // Refresh current folder view
+      if (currentFolder) {
+        fetchContents(currentFolder.id);
+      }
+      // Refresh tree to show new structure
+      setRefreshTree(prev => prev + 1);
+    } catch (error: unknown) {
+      console.error('Error al mover carpeta', error);
+      alert('Error al mover carpeta: ' + getErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Container fluid className="vh-100 d-flex flex-column overflow-hidden p-0">
+      {/* Input de archivo oculto */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+        disabled={uploadingFile}
+      />
+
+      {/* Barra de herramientas */}
+      <div className="bg-white border-bottom p-2 d-flex justify-content-between align-items-center">
+        <h5 className="m-0 ps-2">Archivos</h5>
+        <div className="d-flex gap-2">
+          <Button 
+            variant="outline-primary" 
+            size="sm" 
+            onClick={() => setShowCreateModal(true)}
+            disabled={!currentFolder}
+          >
+            <FolderPlus className="me-2" /> Nueva Carpeta
+          </Button>
+          <Button 
+            variant="primary" 
+            size="sm" 
+            onClick={handleUploadClick}
+            disabled={!currentFolder || uploadingFile}
+          >
+            <FileEarmarkPlus className="me-2" /> 
+            {uploadingFile ? `Subiendo... ${uploadProgress}%` : 'Subir Archivo'}
+          </Button>
+        </div>
+      </div>
+
+      <Row className="flex-grow-1 g-0 overflow-hidden">
+        {/* Árbol lateral */}
+        <Col md={3} lg={2} className="border-end bg-light overflow-auto h-100">
+          <FolderTree 
+            onSelectFolder={handleSelectFolder} 
+            selectedFolderId={currentFolder?.id}
+            refreshTrigger={refreshTree}
+            onMoveDocument={handleMoveDocument}
+            onDocumentClick={handleDocumentClick}
+            onRenameFolder={handleRenameFolder}
+            onRenameDocument={handleRenameDocument}
+            onTreeLoaded={setFolderTree}
+          />
+        </Col>
+
+        {/* Contenido principal */}
+        <Col md={9} lg={10} className="d-flex flex-column h-100 overflow-hidden">
+          {/* Área de navegación (breadcrumbs) */}
+          <div className="p-2 border-bottom bg-white">
+            <FolderBreadcrumbs 
+              currentFolder={currentFolder} 
+              path={breadcrumbPath}
+              onNavigate={(id) => fetchContents(id)}
+            />
+          </div>
+
+          {/* Cuadrícula de archivos */}
+          <div className="flex-grow-1 overflow-auto p-3 bg-white">
+            {loading ? (
+              <div className="d-flex justify-content-center pt-5">
+                <Spinner animation="border" variant="primary" />
+              </div>
+            ) : (
+              <>
+                 {/* Cuadrícula de subcarpetas */}
+                 {items.subfolders.length > 0 && (
+                  <div className="mb-4">
+                     <h6 className="text-muted mb-3">Carpetas ({items.subfolders.length})</h6>
+                     <Row className="g-3">
+                       {items.subfolders.map(subfolder => (
+                         <Col key={subfolder.id} xs={6} sm={4} md={3} lg={2}>
+                           <FolderCard 
+                              folder={subfolder}
+                              onSelect={handleSelectFolder}
+                              onMoveDocument={handleMoveDocument}
+                              onMoveFolder={handleMoveFolder}
+                              onRename={handleRenameFolder}
+                           />
+                         </Col>
+                       ))}
+                     </Row>
+                  </div>
+                 )}
+
+                 {/* Cuadrícula de documentos */}
+                 <div>
+                    <h6 className="text-muted mb-3">Archivos ({items.documents.length})</h6>
+                    <Row className="g-3">
+                      {items.documents.map(doc => (
+                        <Col key={doc.id} xs={12} sm={6} md={4} lg={3}>
+                          <DocumentCard 
+                            document={doc} 
+                            onRename={handleRenameDocument}
+                            onDeleted={handleDocumentDeleted}
+                          />
+                        </Col>
+                      ))}
+                      {items.documents.length === 0 && items.subfolders.length === 0 && (
+                        <div className="text-center text-muted py-5">
+                          <div className="fs-1 mb-2">📂</div>
+                          <p>Esta carpeta está vacía</p>
+                        </div>
+                      )}
+                    </Row>
+                 </div>
+              </>
+            )}
+          </div>
+        </Col>
+      </Row>
+
+      {/* Modal de crear carpeta */}
+      <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Nueva Carpeta</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group>
+            <Form.Label>Nombre</Form.Label>
+            <Form.Control 
+              type="text" 
+              placeholder="Ej: Proyectos 2024" 
+              value={newFolderName}
+              onChange={e => setNewFolderName(e.target.value)}
+              autoFocus
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowCreateModal(false)}>Cancelar</Button>
+          <Button 
+            variant="primary" 
+            onClick={handleCreateFolder}
+            disabled={!newFolderName.trim() || creatingFolder}
+          >
+            {creatingFolder ? <Spinner size="sm" animation="border" /> : 'Crear Carpeta'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal de renombrar carpeta */}
+      <Modal show={showRenameModal} onHide={() => setShowRenameModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Renombrar Carpeta</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group>
+            <Form.Label>Nombre</Form.Label>
+            <Form.Control 
+              type="text" 
+              placeholder="Nuevo nombre" 
+              value={renameFolderValue}
+              onChange={e => setRenameFolderValue(e.target.value)}
+              autoFocus
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleConfirmRenameFolder();
+                }
+              }}
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowRenameModal(false)}>Cancelar</Button>
+          <Button 
+            variant="primary" 
+            onClick={handleConfirmRenameFolder}
+            disabled={!renameFolderValue.trim() || renamingFolder}
+          >
+            {renamingFolder ? <Spinner size="sm" animation="border" /> : 'Renombrar'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal de renombrar documento */}
+      <Modal show={showRenameDocModal} onHide={() => setShowRenameDocModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Renombrar Documento</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group>
+            <Form.Label>Nombre del archivo</Form.Label>
+            <Form.Control 
+              type="text" 
+              placeholder="Nuevo nombre con extensión" 
+              value={renameDocValue}
+              onChange={e => setRenameDocValue(e.target.value)}
+              autoFocus
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleConfirmRenameDocument();
+                }
+              }}
+            />
+            <Form.Text className="text-muted">
+              Incluye la extensión del archivo (ej: documento.pdf)
+            </Form.Text>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowRenameDocModal(false)}>Cancelar</Button>
+          <Button 
+            variant="primary" 
+            onClick={handleConfirmRenameDocument}
+            disabled={!renameDocValue.trim() || renamingDoc}
+          >
+            {renamingDoc ? <Spinner size="sm" animation="border" /> : 'Renombrar'}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal de previsualización de documento */}
+      {previewDocument && (
+        <DocumentPreviewModal
+          document={previewDocument}
+          show={showPreview}
+          onHide={handleClosePreview}
+        />
+      )}
+    </Container>
+  );
+};

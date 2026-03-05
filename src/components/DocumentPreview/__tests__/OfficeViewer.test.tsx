@@ -104,4 +104,19 @@ describe('OfficeViewer', () => {
     // No debe intentar hacer fetch del contenido HTML
     expect(global.fetch).not.toHaveBeenCalled();
   });
+
+  it('renders download interface for old Word (.doc) files to avoid infinite loop', async () => {
+    render(<OfficeViewer url="/preview/documento.doc" filename="documento.doc" fileSize={1024} />);
+    
+    // Debe mostrar la interfaz de descarga
+    await waitFor(() => {
+      expect(screen.getAllByText(/documento.doc/i).length).toBeGreaterThan(0);
+      expect(screen.getByRole('button', { name: /descargar documento/i })).toBeInTheDocument();
+      // Verificar mensaje informativo
+      expect(screen.getByText(/formato word antiguo/i)).toBeInTheDocument();
+    });
+
+    // No debe intentar hacer fetch del contenido HTML (evitar loop infinito)
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
 });

@@ -29,10 +29,17 @@ export const OfficeViewer: React.FC<OfficeViewerProps> = ({ url, filename, onBac
   // Detectar tipo de archivo
   const isPowerPoint = filename.toLowerCase().endsWith('.ppt') || filename.toLowerCase().endsWith('.pptx');
   const isExcel = filename.toLowerCase().endsWith('.xlsx') || filename.toLowerCase().endsWith('.xls');
+  const isOldWord = filename.toLowerCase().endsWith('.doc'); // Word antiguo (.doc) - no soporta conversión
 
   useEffect(() => {
     // PowerPoint: no cargar contenido, solo mostrar interfaz de descarga
     if (isPowerPoint) {
+      setLoading(false);
+      return;
+    }
+
+    // Word antiguo (.doc): no intentar cargar, evitar loop infinito
+    if (isOldWord) {
       setLoading(false);
       return;
     }
@@ -82,7 +89,7 @@ export const OfficeViewer: React.FC<OfficeViewerProps> = ({ url, filename, onBac
     };
 
     loadDocument();
-  }, [url, filename, isPowerPoint, isExcel]);
+  }, [url, filename, isPowerPoint, isExcel, isOldWord]);
 
   /**
    * Aumentar zoom
@@ -154,6 +161,67 @@ export const OfficeViewer: React.FC<OfficeViewerProps> = ({ url, filename, onBac
               <i className="bi bi-lock-fill me-1"></i>
               Tus documentos permanecen en tu infraestructura. Nunca compartimos datos con terceros.
             </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Word antiguo (.doc): Interfaz de descarga (evitar loop infinito)
+  if (isOldWord && !loading) {
+    return (
+      <div className={styles.viewerContainer}>
+        <PreviewHeader
+          filename={filename}
+          fileSize={fileSize}
+          fileInfo={formattedFileSize}
+          onBack={onBack}
+        />
+        
+        <div className={styles.documentContainer}>
+          <div className={styles.powerPointContainer}>
+            <div className={styles.powerPointIcon}>
+              <i className="bi bi-file-earmark-word" style={{ fontSize: '4rem', color: '#2B579A' }}></i>
+            </div>
+            
+            <h4 className="mt-3">{filename}</h4>
+            {fileSize && <p className="text-muted">{formattedFileSize}</p>}
+            
+            <Alert variant="info" className="mt-4 text-start">
+              <Alert.Heading>
+                <i className="bi bi-info-circle me-2"></i>
+                Formato Word Antiguo (.doc)
+              </Alert.Heading>
+              <p>
+                Los archivos <strong>.doc</strong> (Word 97-2003) requieren conversión especial. 
+                Por el momento, descarga el archivo para visualizarlo.
+              </p>
+              <p className="mb-0">
+                Puedes abrir este archivo con:
+              </p>
+              <ul className="mt-2">
+                <li><strong>Microsoft Word</strong> (Windows/Mac)</li>
+                <li><strong>Google Docs</strong> (Web/Gratis - sube el archivo)</li>
+                <li><strong>LibreOffice Writer</strong> (Gratis/Open Source)</li>
+                <li><strong>Pages</strong> (Mac/iOS)</li>
+              </ul>
+              <p className="mt-2 mb-0">
+                <small className="text-muted">
+                  <i className="bi bi-lightbulb me-1"></i>
+                  <strong>Sugerencia:</strong> Considera convertir el archivo a formato .docx para mejor compatibilidad.
+                </small>
+              </p>
+            </Alert>
+            
+            <Button 
+              variant="primary" 
+              size="lg" 
+              className="mt-3"
+              onClick={() => window.open(url.replace('/preview/', '/download/'), '_blank')}
+            >
+              <i className="bi bi-download me-2"></i>
+              Descargar Documento
+            </Button>
           </div>
         </div>
       </div>

@@ -5,6 +5,11 @@ jest.mock('../../../services/preview.service', () => ({
   previewService: { formatFileSize: (n:number) => `${n} bytes` },
 }));
 
+// Mock ExcelPreview component
+jest.mock('../ExcelPreview', () => ({
+  ExcelPreview: () => <div>Excel Preview</div>,
+}));
+
 import { OfficeViewer } from '../OfficeViewer';
 
 describe('OfficeViewer', () => {
@@ -68,5 +73,33 @@ describe('OfficeViewer', () => {
     global.fetch = jest.fn(() => Promise.resolve({ ok: true, text: () => Promise.resolve('<p>ok</p>') } as Response));
     render(<OfficeViewer url="/doc.html" filename="file.docx" fileSize={2048} />);
     await waitFor(() => expect(screen.getByText(/2048 bytes/)).toBeInTheDocument());
+  });
+
+  it('renders secure download interface for PowerPoint (.pptx) files', async () => {
+    render(<OfficeViewer url="/preview/doc.pptx" filename="presentacion.pptx" fileSize={4096} />);
+    
+    // Debe mostrar la interfaz de descarga segura
+    await waitFor(() => {
+      expect(screen.getByText(/presentacion.pptx/i)).toBeInTheDocument();
+      expect(screen.getByText(/4096 bytes/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /descargar/i })).toBeInTheDocument();
+    });
+
+    // No debe intentar hacer fetch del contenido HTML
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('renders secure download interface for PowerPoint (.ppt) files', async () => {
+    render(<OfficeViewer url="/preview/doc.ppt" filename="presentacion.ppt" fileSize={2048} />);
+    
+    // Debe mostrar la interfaz de descarga segura
+    await waitFor(() => {
+      expect(screen.getByText(/presentacion.ppt/i)).toBeInTheDocument();
+      expect(screen.getByText(/2048 bytes/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /descargar/i })).toBeInTheDocument();
+    });
+
+    // No debe intentar hacer fetch del contenido HTML
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });

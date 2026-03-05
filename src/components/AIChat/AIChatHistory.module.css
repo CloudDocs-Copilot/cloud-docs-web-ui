@@ -1,0 +1,275 @@
+/* ============================================================
+   AIChatHistory — Panel izquierdo de conversaciones previas
+   ============================================================ */
+
+.panel {
+  width: 100%;
+  flex: 1;
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  animation: slideInLeft 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ---- Header ---- */
+.header {
+  padding: 1rem 1rem 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+
+.heading {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* Alias legacy --- */
+.panelHeader { padding: 1rem 1rem 0.75rem; border-bottom: 1px solid #f1f5f9; flex-shrink: 0; }
+.panelTitle  { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; margin-bottom: 0; }
+
+.newBtn {
+  width: calc(100% - 1.5rem);
+  margin: 0.6rem 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0;
+  border-radius: 10px;
+  border: 2px dashed #d1d5db;
+  background: transparent;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: #6366f1;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.newBtn:hover {
+  border-color: #6366f1;
+  border-style: solid;
+  background: #f5f3ff;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.12);
+}
+
+/* ---- Lista ---- */
+.list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.25rem 0.5rem;
+  list-style: none;
+  margin: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
+}
+
+.list::-webkit-scrollbar { width: 4px; }
+.list::-webkit-scrollbar-track { background: transparent; }
+.list::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+
+/* ---- Item wrapper (li) ---- */
+.itemWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.item {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.5rem 0.6rem 0.75rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.18s;
+  margin-bottom: 2px;
+  animation: fadeIn 0.3s ease both;
+  position: relative;
+  border: 1px solid transparent;
+  background: none;
+  text-align: left;
+  width: 100%;
+}
+
+/* Stagger de entrada */
+.item:nth-child(1)  { animation-delay: 0.03s; }
+.item:nth-child(2)  { animation-delay: 0.06s; }
+.item:nth-child(3)  { animation-delay: 0.09s; }
+.item:nth-child(4)  { animation-delay: 0.12s; }
+.item:nth-child(5)  { animation-delay: 0.15s; }
+.item:nth-child(n+6){ animation-delay: 0.18s; }
+
+.item:hover {
+  background: #f8fafc;
+  transform: translateX(3px);
+  border-color: #e5e7eb;
+}
+
+.itemActive {
+  background: #f5f3ff;
+  border-color: #c4b5fd;
+}
+
+.itemActive::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #6366f1;
+}
+
+.itemIcon {
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  color: #9ca3af;
+}
+
+.itemActive .itemIcon {
+  color: #6366f1;
+}
+
+.itemContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemTitle {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #1e293b;
+  white-space: normal;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
+  max-height: 2.8em;
+  margin-bottom: 0.15rem;
+  word-break: break-word;
+}
+
+.itemActive .itemTitle {
+  color: #4f46e5;
+  font-weight: 600;
+}
+
+.itemMeta {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.modeBadge {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.modeOrg {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.modeDoc {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.deleteBtn {
+  flex-shrink: 0;
+  opacity: 0;
+  transform: scale(0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: none;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 0.8rem;
+  line-height: 1;
+  transition: opacity 0.15s, transform 0.15s, color 0.15s, background 0.15s, border-color 0.15s;
+  margin-left: 2px;
+}
+
+.itemWrapper:hover .deleteBtn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.deleteBtn:hover {
+  color: #ef4444;
+  background: #fff1f1;
+  border-color: #fecaca;
+}
+
+.deleteWarning {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* ---- Empty state ---- */
+.emptyState,
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+  text-align: center;
+  color: #9ca3af;
+  animation: fadeIn 0.3s ease both;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.emptyIcon {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.45;
+  display: block;
+}
+
+.emptyHint {
+  font-size: 0.75rem;
+  color: #b0bec5;
+  margin: 0;
+}
+
+.emptyText {
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+/* ---- Animaciones ---- */
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+

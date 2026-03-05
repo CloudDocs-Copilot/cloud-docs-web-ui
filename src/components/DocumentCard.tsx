@@ -399,7 +399,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
           {/* Footer con fecha y tamaño */}
           <div className={styles.cardFooter}>
             <span className={styles.documentDate}>
-              {formatDate(document.uploadedAt)}
+              {document.uploadedAt ? formatDate(document.uploadedAt) : '—'}
             </span>
             <span className={styles.documentSize}>
               {formatFileSize(document.size)}

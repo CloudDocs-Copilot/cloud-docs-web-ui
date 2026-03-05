@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import searchService from '../services/search.service';
 import type { Document } from '../types/document.types';
 
 interface SearchFilters {
@@ -9,29 +10,17 @@ interface SearchFilters {
   organizationId?: string;
 }
 
-interface SearchHistoryItem {
-  query: string;
-  results: number;
-  timestamp: Date;
-}
-
 interface SearchResult extends Document {
   highlight?: string;
-}
-
-interface SearchResponse {
-  documents: SearchResult[];
-  total: number;
-  took?: number;
 }
 
 export const useSearch = () => {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [total, setTotal] = useState<number | null>(null);
+  const [total, setTotal] = useState<number>(0);
   const [took, setTook] = useState<number | null>(null);
-  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
   const search = useCallback(async (filters: SearchFilters) => {
     if (!filters.query.trim()) {
@@ -42,56 +31,26 @@ export const useSearch = () => {
     setError(null);
 
     try {
-      const searchParams = new URLSearchParams();
-      searchParams.append('q', filters.query.trim());
-      
-      if (filters.mimeType) {
-        searchParams.append('mimeType', filters.mimeType);
-      }
-      if (filters.fromDate) {
-        searchParams.append('fromDate', filters.fromDate);
-      }
-      if (filters.toDate) {
-        searchParams.append('toDate', filters.toDate);
-      }
-      if (filters.organizationId) {
-        searchParams.append('organizationId', filters.organizationId);
-      }
-
-      const response = await fetch(`http://localhost:4000/api/search?${searchParams.toString()}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Para enviar cookies de autenticación
+      const data = await searchService.search({
+        query: filters.query.trim(),
+        mimeType: filters.mimeType,
+        organizationId: filters.organizationId,
       });
 
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
-
-      const data: SearchResponse = await response.json();
-      
-      setResults(data.documents || []);
+      setResults((data.data as SearchResult[]) || []);
       setTotal(data.total || 0);
       setTook(data.took || null);
 
-      // Agregar al historial
+      // Agregar al historial (strings únicos, máximo 10)
       setSearchHistory(prev => {
-        const newItem: SearchHistoryItem = {
-          query: filters.query.trim(),
-          results: data.total || 0,
-          timestamp: new Date(),
-        };
-
-        // Evitar duplicados y mantener solo los últimos 10
-        const filtered = prev.filter(item => item.query !== newItem.query);
-        return [newItem, ...filtered].slice(0, 10);
+        const query = filters.query.trim();
+        const filtered = prev.filter(q => q !== query);
+        return [query, ...filtered].slice(0, 10);
       });
 
     } catch (err) {
       console.error('Error en búsqueda:', err);
-      setError(err instanceof Error ? err.message : 'Error desconocido en la búsqueda');
+      setError('Error al buscar documentos');
       setResults([]);
       setTotal(0);
       setTook(null);
@@ -106,7 +65,7 @@ export const useSearch = () => {
 
   const clearResults = useCallback(() => {
     setResults([]);
-    setTotal(null);
+    setTotal(0);
     setTook(null);
     setError(null);
   }, []);

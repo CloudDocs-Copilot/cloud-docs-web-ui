@@ -75,14 +75,14 @@ export const OfficeViewer: React.FC<OfficeViewerProps> = ({ url, filename, onBac
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to load document: ${response.statusText}`);
+          throw new Error(`Fallo al cargar el documento: ${response.statusText}`);
         }
 
         const html = await response.text();
         setHtmlContent(html);
       } catch (err) {
         console.error('[OfficeViewer] Error loading document:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load document');
+        setError(err instanceof Error ? err.message : 'Fallo al cargar el documento');
       } finally {
         setLoading(false);
       }

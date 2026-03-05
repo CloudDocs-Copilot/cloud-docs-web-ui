@@ -1,4 +1,4 @@
-import { previewService } from '../preview.service';
+import { previewService, DEFAULT_PREVIEW_CONFIG } from '../preview.service';
 import { DocumentPreviewType } from '../../types/preview.types';
 import type { PreviewDocument } from '../../types/preview.types';
 
@@ -48,6 +48,29 @@ describe('preview.service', () => {
 
     it('returns false for unsupported types', () => {
       expect(previewService.canPreview({ id: '3', filename: 'archive.zip', mimeType: 'application/zip', size: 512 } as PreviewDocument)).toBe(false);
+    });
+
+    it('returns false when file exceeds max size', () => {
+      const big = { id: 'big', url: '', mimeType: 'text/plain', filename: 'a.txt', size: DEFAULT_PREVIEW_CONFIG.maxFileSize + 1 };
+      expect(previewService.canPreview(big)).toBe(false);
+    });
+  });
+
+  describe('getCodeLanguage', () => {
+    it('returns correct language for known extensions', () => {
+      expect(previewService.getCodeLanguage('file.js')).toBe('javascript');
+      expect(previewService.getCodeLanguage('file.unknown')).toBe('text');
+    });
+
+    it('returns correct preview type label', () => {
+      expect(previewService.getPreviewTypeLabel(DocumentPreviewType.TEXT)).toBe('Text Document');
+    });
+  });
+
+  describe('formatFileSize', () => {
+    it('formats byte sizes correctly', () => {
+      expect(previewService.formatFileSize(0)).toBe('0 Bytes');
+      expect(previewService.formatFileSize(1024)).toContain('KB');
     });
   });
 });

@@ -1,75 +1,85 @@
-import React, { useState, useCallback, useRef, useEffect, useContext } from 'react';
-import type { FormEvent } from 'react';
-import { Container, Row, Col, Form, Button, Badge, Spinner, Alert } from 'react-bootstrap';
-import { Search, X, Clock, FileText } from 'lucide-react';
+import React, { useState, useCallback, type FormEvent } from 'react';
+import { Container, Row, Col, Form, Button, Badge, Alert, Card } from 'react-bootstrap';
+import { Search, X, FileEarmark } from 'react-bootstrap-icons';
 import MainLayout from '../components/MainLayout';
-import DocumentCard from '../components/DocumentCard';
-import { usePageTitle } from '../hooks/usePageInfoTitle';
-import { useSearch } from '../hooks/useSearch';
-import { useAutocomplete } from '../hooks/useAutocomplete';
-import { OrganizationContext } from '../context/OrganizationContext';
-import type { Document } from '../types/document.types';
+import { formatDate, formatFileSize } from '../utils/formatters';
+import useOrganization from '../hooks/useOrganization';
+import { apiClient } from '../api/httpClient.config';
 import styles from './SearchPage.module.css';
+import type { Document } from '../types/document.types';
 
-// Tipos MIME comunes
-const FILE_TYPES = [
-  { value: '', label: 'Todos los tipos' },
-  { value: 'application/pdf', label: 'PDF' },
-  { value: 'image/jpeg', label: 'Imágenes (JPG)' },
-  { value: 'image/png', label: 'Imágenes (PNG)' },
-  { value: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', label: 'Word' },
-  { value: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', label: 'Excel' },
-  { value: 'video/mp4', label: 'Video (MP4)' },
-  { value: 'text/plain', label: 'Texto plano' },
-];
+/**
+ * Colores por tipo de archivo
+ */
+const FILE_TYPE_COLORS: Record<string, string> = {
+  'pdf': '#dc3545',
+  'doc': '#0d6efd', 
+  'docx': '#0d6efd',
+  'txt': '#6c757d',
+  'jpg': '#198754',
+  'jpeg': '#198754',
+  'png': '#198754',
+  'gif': '#198754',
+  'xlsx': '#198754',
+  'xls': '#198754'
+};
 
 const SearchPage: React.FC = () => {
-  usePageTitle({
-    title: 'Buscar documentos',
-    subtitle: 'Encuentra tus archivos rápidamente',
-    documentTitle: 'Búsqueda',
-    metaDescription: 'Busca documentos por nombre, tipo y fecha'
-  });
+  // Contexto de organización
+  const { activeOrganization } = useOrganization();
 
-  const orgContext = useContext(OrganizationContext);
-  const { results, loading, error, total, took, searchHistory, search, clearError, clearResults, clearHistory } = useSearch();
-  
+  // Estados del formulario
   const [query, setQuery] = useState('');
-  const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [mimeType, setMimeType] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [results, setResults] = useState<Document[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
-  
-  const { suggestions, loading: autocompleteLoading } = useAutocomplete(
-    query, 
-    orgContext?.activeOrganization?.id, 
-    showAutocomplete
-  );
-  const inputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<HTMLDivElement>(null);
+  const [totalResults, setTotalResults] = useState(0);
+  const [searchTime, setSearchTime] = useState<number | null>(null);
 
   /**
-   * Cerrar autocomplete al hacer clic fuera
+   * Obtiene el color del tipo de archivo
    */
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        autocompleteRef.current &&
-        !autocompleteRef.current.contains(event.target as Node) &&
-        inputRef.current &&
-        !inputRef.current.contains(event.target as Node)
-      ) {
-        setShowAutocomplete(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const getFileTypeColor = (mimeType: string): string => {
+    const extension = mimeType.split('/')[1] || mimeType;
+    return FILE_TYPE_COLORS[extension.toLowerCase()] || '#6c757d';
+  };
 
   /**
-   * Ejecutar búsqueda
+   * Obtiene la etiqueta elegante del tipo de archivo
+   */
+  const getFileTypeLabel = (mimeType: string): string => {
+    if (mimeType.includes('pdf')) return 'PDF';
+    if (mimeType.includes('word') || mimeType.includes('document')) return 'Word';
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return 'Excel';
+    if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return 'PowerPoint';
+    if (mimeType.includes('text/plain')) return 'Texto';
+    if (mimeType.includes('image/jpeg')) return 'JPEG';
+    if (mimeType.includes('image/png')) return 'PNG';
+    if (mimeType.includes('image/gif')) return 'GIF';
+    
+    // Fallback: usar la extensión del mimeType
+    const extension = mimeType.split('/')[1];
+    return extension ? extension.toUpperCase() : 'Archivo';
+  };
+
+  /**
+   * Obtiene el ícono del tipo de archivo
+   */
+  const getFileIcon = (mimeType: string): string => {
+    if (mimeType.includes('pdf')) return '📄';
+    if (mimeType.includes('image')) return '🖼️';
+    if (mimeType.includes('word') || mimeType.includes('document')) return '📝';
+    if (mimeType.includes('excel') || mimeType.includes('spreadsheet')) return '📊';
+    if (mimeType.includes('powerpoint') || mimeType.includes('presentation')) return '📈';
+    return '📋';
+  };
+
+  /**
+   * Maneja la búsqueda
    */
   const handleSearch = useCallback(async (e?: FormEvent) => {
     if (e) {
@@ -80,298 +90,369 @@ const SearchPage: React.FC = () => {
       return;
     }
 
-    setShowAutocomplete(false);
+    setLoading(true);
+    setError(null);
     setHasSearched(true);
 
-    await search({
-      query: query.trim(),
-      organizationId: orgContext?.activeOrganization?.id,
-      mimeType: mimeType || undefined,
-      fromDate: fromDate ? new Date(fromDate) : undefined,
-      toDate: toDate ? new Date(toDate) : undefined,
-      limit: 50,
-    });
-  }, [query, mimeType, fromDate, toDate, orgContext?.activeOrganization, search]);
+    try {
+      const searchParams = new URLSearchParams();
+      searchParams.append('q', query.trim());
+      
+      // Agregar organización si existe
+      if (activeOrganization?.id) {
+        searchParams.append('organizationId', activeOrganization.id);
+      }
+      
+      // Usar los nombres correctos de parámetros
+      if (mimeType) {
+        searchParams.append('mimeType', mimeType);
+        console.log('🗂️ Filtro de tipo aplicado:', mimeType);
+      }
+      if (fromDate) {
+        searchParams.append('fromDate', fromDate);
+        console.log('📅 Filtro fecha desde:', fromDate);
+      }
+      if (toDate) {
+        searchParams.append('toDate', toDate);
+        console.log('📅 Filtro fecha hasta:', toDate);
+      }
+
+      console.log('🔍 Iniciando búsqueda con parámetros:', {
+        query: query.trim(),
+        mimeType: mimeType || 'todos',
+        organizationId: activeOrganization?.id || 'ninguna',
+        fromDate,
+        toDate
+      });
+
+      const response = await apiClient.get(`/search?${searchParams.toString()}`);
+      
+      const { data: documents = [], total = 0, took = 0 } = response.data;
+      
+      console.log(`✅ Respuesta de búsqueda:`, {
+        total,
+        took,
+        documents: documents.map((d: Document) => ({
+          id: d.id,
+          filename: d.filename || d.originalname,
+          mimeType: d.mimeType
+        }))
+      });
+      
+      setResults(documents);
+      setTotalResults(total);
+      setSearchTime(took);
+
+    } catch (err: unknown) {
+      console.error('Error en búsqueda:', err);
+      const errorMessage = err instanceof Error && 'response' in err ? (err as { response?: { data?: { message?: string } } }).response?.data?.message || err.message : 'Error desconocido en la búsqueda';
+      setError(errorMessage);
+      setResults([]);
+      setTotalResults(0);
+      setSearchTime(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [query, mimeType, fromDate, toDate, activeOrganization?.id]);
 
   /**
-   * Seleccionar sugerencia de autocompletado
+   * Maneja la vista previa del documento
    */
-  const handleSelectSuggestion = useCallback((suggestion: string) => {
-    setQuery(suggestion);
-    setShowAutocomplete(false);
-    inputRef.current?.focus();
+  const handlePreview = useCallback(async (docId: string) => {
+    try {
+      // Hacer petición autenticada para obtener la URL de preview
+      const response = await apiClient.get(`/documents/preview/${docId}`, {
+        responseType: 'blob',
+        headers: {
+          'Accept': '*/*'
+        }
+      });
+      
+      // Obtener el Content-Type de la respuesta
+      const contentType = response.headers['content-type'] || 'application/octet-stream';
+      console.log('📋 Content-Type recibido:', contentType);
+      
+      // Crear URL temporal para el blob con el content-type correcto
+      const blob = new Blob([response.data], { type: contentType });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Abrir en nueva ventana con configuración para mostrar correctamente
+      const previewWindow = window.open(url, '_blank', 'width=1000,height=800,scrollbars=yes,resizable=yes');
+      
+      if (!previewWindow) {
+        setError('No se pudo abrir la ventana de previsualización. Verifica que no estén bloqueadas las ventanas emergentes.');
+        return;
+      }
+      
+      // Limpiar URL después de un tiempo
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+      }, 30000); // 30 segundos para dar tiempo a que cargue
+      
+    } catch (error: unknown) {
+      console.error('Error al previsualizar documento:', error);
+      const errorMsg = error instanceof Error && 'response' in error ? (error as { response?: { data?: { message?: string } }; message: string }).response?.data?.message || error.message : 'Error desconocido';
+      setError(`Error al previsualizar el documento: ${errorMsg}`);
+    }
   }, []);
 
   /**
-   * Seleccionar del historial
-   */
-  const handleSelectHistory = useCallback((historyQuery: string) => {
-    setQuery(historyQuery);
-    setShowAutocomplete(false);
-  }, []);
-
-  /**
-   * Limpiar búsqueda
+   * Limpia todos los filtros y resultados
    */
   const handleClear = useCallback(() => {
     setQuery('');
     setMimeType('');
     setFromDate('');
     setToDate('');
+    setResults([]);
+    setError(null);
     setHasSearched(false);
-    clearResults();
-    clearError();
-    inputRef.current?.focus();
-  }, [clearResults, clearError]);
-
-  /**
-   * Formatear tiempo de búsqueda
-   */
-  const formatTook = (ms: number): string => {
-    if (ms < 1000) return `${ms}ms`;
-    return `${(ms / 1000).toFixed(2)}s`;
-  };
+    setTotalResults(0);
+    setSearchTime(null);
+  }, []);
 
   return (
     <MainLayout>
       <Container className={styles.searchContainer}>
-        {/* Header con barra de búsqueda */}
+        {/* Cabecera */}
         <div className={styles.searchHeader}>
-
+          <h2>
+            <Search className={styles.titleIcon} />
+            Buscar Documentos
+          </h2>
           <Form onSubmit={handleSearch} className={styles.searchForm}>
             <div className={styles.searchInputWrapper}>
-              <Search className={styles.searchIcon} />
               <Form.Control
-                ref={inputRef}
                 type="text"
-                placeholder="Buscar por nombre de archivo..."
+                placeholder="Pregunta a tus documentos..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                onFocus={() => setShowAutocomplete(true)}
                 className={styles.searchInput}
-                autoComplete="off"
               />
-              {query && (
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  className={styles.clearButton}
-                  aria-label="Limpiar búsqueda"
-                >
-                  <X />
-                </button>
-              )}
-
-              {/* Autocomplete dropdown */}
-              {showAutocomplete && (query.length >= 2 || searchHistory.length > 0) && (
-                <div ref={autocompleteRef} className={styles.autocompleteDropdown}>
-                  {/* Sugerencias */}
-                  {suggestions.length > 0 && (
-                    <div className={styles.autocompleteSection}>
-                      <div className={styles.autocompleteSectionTitle}>
-                        <FileText size={14} />
-                        Sugerencias
-                      </div>
-                      {suggestions.map((suggestion, index) => (
-                        <button
-                          key={index}
-                          type="button"
-                          onClick={() => handleSelectSuggestion(suggestion)}
-                          className={styles.autocompleteItem}
-                        >
-                          {suggestion}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Historial */}
-                  {searchHistory.length > 0 && query.length < 2 && (
-                    <div className={styles.autocompleteSection}>
-                      <div className={styles.autocompleteSectionTitle}>
-                        <Clock size={14} />
-                        Búsquedas recientes
-                        {searchHistory.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={clearHistory}
-                            className={styles.clearHistoryBtn}
-                          >
-                            Limpiar
-                          </button>
-                        )}
-                      </div>
-                      {searchHistory.map((item, index) => (
-                        <button
-                          key={index}
-                          type="button"
-                          onClick={() => handleSelectHistory(item)}
-                          className={styles.autocompleteItem}
-                        >
-                          <Clock size={14} className={styles.historyIcon} />
-                          {item}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {autocompleteLoading && (
-                    <div className={styles.autocompleteLoading}>
-                      <Spinner animation="border" size="sm" />
-                    </div>
-                  )}
-                </div>
-              )}
+              <Button 
+                type="submit" 
+                variant="primary"
+                disabled={loading || !query.trim()}
+                className={styles.searchButton}
+              >
+                {loading ? 'Buscando...' : 'Buscar'}
+              </Button>
             </div>
 
-            <Button type="submit" disabled={!query.trim() || loading} className={styles.searchButton}>
-              {loading ? <Spinner animation="border" size="sm" /> : 'Buscar'}
-            </Button>
+            {/* Filtros avanzados */}
+            <Row className="mt-3">
+              <Col md={4}>
+                <Form.Select
+                  value={mimeType}
+                  onChange={(e) => {
+                    setMimeType(e.target.value);
+                    // Si hay una búsqueda activa, reejecutar automáticamente
+                    if (query.trim() && hasSearched) {
+                      setTimeout(() => handleSearch(), 100);
+                    }
+                  }}
+                  className={styles.filterSelect}
+                >
+                  <option value="">Todos los tipos</option>
+                  <option value="application/pdf">📄 PDF</option>
+                  <option value="application/msword">📝 Word (.doc)</option>
+                  <option value="application/vnd.openxmlformats-officedocument.wordprocessingml.document">📝 Word (.docx)</option>
+                  <option value="application/vnd.ms-excel">📊 Excel (.xls)</option>
+                  <option value="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">📊 Excel (.xlsx)</option>
+                  <option value="application/vnd.ms-powerpoint">📈 PowerPoint (.ppt)</option>
+                  <option value="application/vnd.openxmlformats-officedocument.presentationml.presentation">📈 PowerPoint (.pptx)</option>
+                  <option value="text/plain">📋 Texto (.txt)</option>
+                  <option value="image/jpeg">🖼️ JPEG</option>
+                  <option value="image/png">🖼️ PNG</option>
+                  <option value="image/gif">🖼️ GIF</option>
+                </Form.Select>
+              </Col>
+              <Col md={3}>
+                <Form.Control
+                  type="date"
+                  placeholder="Desde"
+                  value={fromDate}
+                  onChange={(e) => {
+                    setFromDate(e.target.value);
+                    // Si hay una búsqueda activa, reejecutar automáticamente
+                    if (query.trim() && hasSearched) {
+                      setTimeout(() => handleSearch(), 100);
+                    }
+                  }}
+                  className={styles.dateInput}
+                />
+              </Col>
+              <Col md={3}>
+                <Form.Control
+                  type="date"
+                  placeholder="Hasta"
+                  value={toDate}
+                  onChange={(e) => {
+                    setToDate(e.target.value);
+                    // Si hay una búsqueda activa, reejecutar automáticamente
+                    if (query.trim() && hasSearched) {
+                      setTimeout(() => handleSearch(), 100);
+                    }
+                  }}
+                  className={styles.dateInput}
+                />
+              </Col>
+              <Col md={2}>
+                <Button
+                  variant="outline-secondary"
+                  onClick={handleClear}
+                  className={styles.clearButton}
+                >
+                  <X /> Limpiar
+                </Button>
+              </Col>
+            </Row>
           </Form>
-
-          {/* Filtros */}
-          <div className={styles.filters}>
-            <Form.Group className={styles.filterGroup}>
-              <Form.Label className={styles.filterLabel}>Tipo de archivo</Form.Label>
-              <Form.Select
-                value={mimeType}
-                onChange={(e) => setMimeType(e.target.value)}
-                className={styles.filterSelect}
-              >
-                {FILE_TYPES.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-
-            <Form.Group className={styles.filterGroup}>
-              <Form.Label className={styles.filterLabel}>Desde</Form.Label>
-              <Form.Control
-                type="date"
-                value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
-                className={styles.filterInput}
-              />
-            </Form.Group>
-
-            <Form.Group className={styles.filterGroup}>
-              <Form.Label className={styles.filterLabel}>Hasta</Form.Label>
-              <Form.Control
-                type="date"
-                value={toDate}
-                onChange={(e) => setToDate(e.target.value)}
-                className={styles.filterInput}
-              />
-            </Form.Group>
-
-            {(mimeType || fromDate || toDate) && (
-              <Button
-                variant="link"
-                onClick={handleClear}
-                className={styles.clearFiltersBtn}
-              >
-                Limpiar filtros
-              </Button>
-            )}
-          </div>
         </div>
 
-        {/* Error Alert */}
+        {/* Error */}
         {error && (
-          <Alert variant="danger" dismissible onClose={clearError} className={styles.errorAlert}>
+          <Alert variant="danger" dismissible onClose={() => setError(null)}>
             {error}
           </Alert>
         )}
 
-        {/* Resultados */}
+        {/* Estadísticas de búsqueda */}
         {hasSearched && (
-          <div className={styles.resultsSection}>
-            {/* Stats */}
-            {!loading && results.length > 0 && (
-              <div className={styles.resultsStats}>
-                <span className={styles.resultsCount}>
-                  {total} resultado{total !== 1 ? 's' : ''} encontrado{total !== 1 ? 's' : ''}
-                </span>
-                <Badge bg="secondary" className={styles.timeBadge}>
-                  {formatTook(took)}
-                </Badge>
-              </div>
-            )}
+          <div className={styles.searchStats}>
+            <small className="text-muted">
+              {results.length} resultado{results.length !== 1 ? 's' : ''} encontrado{results.length !== 1 ? 's' : ''}
+            </small>
+          </div>
+        )}
 
-            {/* Loading */}
+        {/* Resultados */}
+        <Row>
+          <Col lg={9}>
+            {/* Lista de resultados */}
             {loading && (
-              <div className={styles.loadingContainer}>
-                <Spinner animation="border" />
-                <p className={styles.loadingText}>Buscando documentos...</p>
+              <div className={styles.loadingState}>
+                <div className="text-center">
+                  <div className="spinner-border" role="status">
+                    <span className="visually-hidden">Buscando...</span>
+                  </div>
+                  <p className="mt-2">Buscando documentos...</p>
+                </div>
               </div>
             )}
 
-            {/* No results */}
-            {!loading && results.length === 0 && (
+            {error && (
+              <Alert variant="danger" className="mb-3">
+                <strong>Error:</strong> {error}
+              </Alert>
+            )}
+
+            {hasSearched && !loading && !error && (
+              <div className="mb-3">
+                <small className="text-muted">
+                  {totalResults > 0 ? (
+                    <>
+                      {totalResults} resultado{totalResults !== 1 ? 's' : ''} encontrado{totalResults !== 1 ? 's' : ''}
+                      {searchTime && ` en ${searchTime}ms`}
+                      {mimeType && <span className="ms-2 badge bg-info">Tipo: {mimeType.split('/')[1]?.toUpperCase()}</span>}
+                      {fromDate && <span className="ms-2 badge bg-secondary">Desde: {fromDate}</span>}
+                      {toDate && <span className="ms-2 badge bg-secondary">Hasta: {toDate}</span>}
+                    </>
+                  ) : (
+                    <>
+                      No se encontraron resultados
+                      {mimeType && <span className="ms-2 badge bg-warning">Filtro tipo: {mimeType.split('/')[1]?.toUpperCase()}</span>}
+                    </>
+                  )}
+                </small>
+              </div>
+            )}
+
+            {hasSearched && !loading && results.length === 0 && !error && (
               <div className={styles.emptyState}>
-                <Search size={64} className={styles.emptyIcon} />
-                <h4 className={styles.emptyTitle}>No se encontraron resultados</h4>
-                <p className={styles.emptyMessage}>
-                  Intenta con otros términos de búsqueda o ajusta los filtros
-                </p>
+                <FileEarmark className={styles.emptyIcon} />
+                <h4>No se encontraron documentos</h4>
+                <p>Prueba con otros términos de búsqueda o ajusta los filtros</p>
               </div>
             )}
 
-            {/* Results grid */}
-            {!loading && results.length > 0 && (
-              <Row>
-                {results.map((doc: Document) => (
-                  <Col key={doc.id} xs={12} sm={6} md={4} lg={3} className="mb-3">
-                    <DocumentCard document={doc} />
-                  </Col>
+            {results.length > 0 && (
+              <div className={styles.resultsContainer}>
+                {results.map((doc) => (
+                  <Card key={doc.id} className={styles.resultCard}>
+                    <Card.Body>
+                      <div className={styles.resultHeader}>
+                        <div className={styles.fileInfo}>
+                          <span className={styles.fileIcon}>
+                            {getFileIcon(doc.mimeType)}
+                          </span>
+                          <div>
+                            <h6 className={styles.fileName}>
+                              {doc.originalname || doc.filename}
+                            </h6>
+                            <div className={styles.fileMeta}>
+                              <Badge 
+                                style={{ backgroundColor: getFileTypeColor(doc.mimeType) }}
+                                className="me-2"
+                              >
+                                {getFileTypeLabel(doc.mimeType)}
+                              </Badge>
+                              <span className="text-muted me-2">
+                                {doc.size ? formatFileSize(doc.size) : 'Tamaño desconocido'}
+                              </span>
+                              <span className="text-muted">
+                                {doc.uploadedAt ? formatDate(doc.uploadedAt) : 'Fecha desconocida'}
+                              </span>
+                            </div>
+                            
+                            {/* Mostrar snippet del contenido si existe */}
+                            {doc.extractedContent && (
+                              <div className={styles.contentSnippet}>
+                                <small className="text-muted">
+                                  Contenido: {doc.extractedContent.substring(0, 150)}...
+                                </small>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className={styles.resultActions}>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className={styles.actionButton}
+                            onClick={() => handlePreview(doc.id)}
+                            title="Ver documento"
+                          >
+                            Ver
+                          </Button>
+                        </div>
+                      </div>
+                    </Card.Body>
+                  </Card>
                 ))}
-              </Row>
+              </div>
             )}
-          </div>
-        )}
+          </Col>
 
-        {/* Empty state inicial */}
-        {!hasSearched && searchHistory.length === 0 && (
-          <div className={styles.initialState}>
-            <Search size={80} className={styles.initialIcon} />
-            <h3 className={styles.initialTitle}>Busca tus documentos</h3>
-            <p className={styles.initialMessage}>
-              Introduce un nombre de archivo, tipo o fecha para encontrar tus documentos
-            </p>
-          </div>
-        )}
-
-        {/* Historial inicial */}
-        {!hasSearched && searchHistory.length > 0 && (
-          <div className={styles.historySection}>
-            <div className={styles.historySectionHeader}>
-              <h4 className={styles.historySectionTitle}>
-                <Clock />
-                Búsquedas recientes
-              </h4>
-              <Button variant="link" onClick={clearHistory} className={styles.clearHistoryLink}>
-                Limpiar historial
-              </Button>
-            </div>
-            <div className={styles.historyList}>
-              {searchHistory.map((item, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setQuery(item);
-                    handleSearch();
-                  }}
-                  className={styles.historyItem}
-                >
-                  <Clock size={16} />
-                  {item}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+          {/* Sidebar con tips */}
+          <Col lg={3}>
+            <Card className={styles.tipsCard}>
+              <Card.Header>
+                <h6 className="mb-0">💡 Tips de búsqueda</h6>
+              </Card.Header>
+              <Card.Body>
+                <ul className={styles.tipsList}>
+                  <li>Usa comillas para frases exactas: <code>"contrato de arrendamiento"</code></li>
+                  <li>Busca por tipo de archivo usando los filtros de arriba</li>
+                  <li>Combina términos: <code>contrato arrendamiento</code> encontrará ambos</li>
+                  <li>Usa palabras clave del contenido del documento</li>
+                  <li>Puedes buscar por nombre de archivo o por contenido</li>
+                  <li>Los filtros de fecha te ayudan a encontrar documentos recientes</li>
+                </ul>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
       </Container>
     </MainLayout>
   );

@@ -39,7 +39,7 @@ describe('VideoPlayer branches and controls', () => {
       render(<VideoPlayer url="/bad.mp4" mimeType="video/mp4" filename="bad.mp4" onBack={() => {}} fileSize={0} />);
     });
 
-    expect(await screen.findByText(/Failed to load video/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Fallo al cargar el video/i)).toBeInTheDocument();
   });
 
   it('togglePlay calls play/pause on video element', async () => {
@@ -108,5 +108,36 @@ describe('VideoPlayer branches and controls', () => {
     fireEvent.click(rateBtn as HTMLElement);
     // after clicking should change displayed playbackRate text
     expect(rateBtn?.textContent).not.toBe(initialText);
+  });
+
+  it('fetches video with authentication credentials', async () => {
+    const blob = new Blob(['v'], { type: 'video/mp4' });
+    global.fetch = jest.fn().mockResolvedValueOnce({ ok: true, blob: async () => blob });
+
+    await act(async () => {
+      render(<VideoPlayer url="/v.mp4" mimeType="video/mp4" filename="v.mp4" onBack={() => {}} fileSize={0} />);
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/v.mp4',
+      expect.objectContaining({ credentials: 'include' })
+    );
+  });
+
+  it('supports different video MIME types', async () => {
+    const blob = new Blob(['v'], { type: 'video/webm' });
+    global.fetch = jest.fn().mockResolvedValueOnce({ ok: true, blob: async () => blob });
+
+    const { container } = render(
+      <VideoPlayer url="/v.webm" mimeType="video/webm" filename="v.webm" onBack={() => {}} fileSize={0} />
+    );
+
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    });
+
+    const video = container.querySelector('video');
+    expect(video).toBeTruthy();
   });
 });

@@ -1,0 +1,251 @@
+/* ============================================================
+   AIHelpPanel — Offcanvas lateral de ayuda
+   ============================================================ */
+
+.offcanvasHeader {
+  background: linear-gradient(135deg, #1e293b 0%, #312e81 100%);
+  color: #fff;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.offcanvasTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fff;
+}
+
+.offcanvasTitle .titleIcon {
+  font-size: 1.3rem;
+  animation: rotatePulse 3s ease-in-out infinite;
+}
+
+.offcanvasBody {
+  padding: 0;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+
+/* ---- Secciones ---- */
+.section {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  animation: fadeInUp 0.4s ease both;
+}
+
+.section:nth-child(1) { animation-delay: 0.05s; }
+.section:nth-child(2) { animation-delay: 0.1s; }
+.section:nth-child(3) { animation-delay: 0.15s; }
+.section:nth-child(4) { animation-delay: 0.2s; }
+.section:nth-child(5) { animation-delay: 0.25s; }
+
+.sectionTitle {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6366f1;
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sectionTitle .sectionIcon {
+  font-size: 1rem;
+}
+
+/* ---- Lista de características ---- */
+.featureList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.featureItem {
+  font-size: 0.875rem;
+  color: #374151;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  line-height: 1.5;
+}
+
+.featureDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6366f1;
+  margin-top: 0.45rem;
+  flex-shrink: 0;
+}
+
+/* ---- Flujo de pasos (1 → 2 → 3) ---- */
+.stepsFlow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin-top: 0.25rem;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  text-align: center;
+}
+
+.stepNumber {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #6366f1;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.4rem;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.step:hover .stepNumber {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 6px rgba(99, 102, 241, 0.25);
+}
+
+.stepLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 0.2rem;
+}
+
+.stepDesc {
+  font-size: 0.7rem;
+  color: #6b7280;
+  line-height: 1.4;
+  padding: 0 0.25rem;
+}
+
+.stepConnector {
+  flex: 0 0 24px;
+  height: 2px;
+  background: linear-gradient(90deg, #6366f1, #818cf8);
+  margin-top: 15px;
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stepConnector::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  animation: connectorFill 2s ease 0.5s forwards;
+}
+
+/* ---- Badges de formatos ---- */
+.formatsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.formatBadge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: #ede9fe;
+  color: #4f46e5;
+  border: 1px solid #c4b5fd;
+  cursor: default;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.formatBadge:hover {
+  transform: scale(1.08);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+}
+
+.unsupportedNote {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.25rem;
+}
+
+/* ---- Limitaciones ---- */
+.limitationItem {
+  font-size: 0.85rem;
+  color: #374151;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  line-height: 1.5;
+}
+
+.limitationIcon {
+  color: #f59e0b;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+/* ---- Consejos ---- */
+.tipItem {
+  font-size: 0.85rem;
+  color: #374151;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+  line-height: 1.5;
+}
+
+.tipIcon {
+  color: #10b981;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+/* ---- Animaciones ---- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes rotatePulse {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50%       { transform: rotate(15deg) scale(1.1); }
+}
+
+@keyframes connectorFill {
+  from { left: -100%; }
+  to   { left: 100%; }
+}
+
+/* ---- Accesibilidad: reduce motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

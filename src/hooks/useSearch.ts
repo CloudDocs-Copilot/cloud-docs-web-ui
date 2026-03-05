@@ -1,117 +1,77 @@
-/**
- * Hook para búsqueda de documentos
- */
-
-import { useState, useCallback, useEffect } from 'react';
-import { searchService } from '../services/search.service';
-import type { SearchParams } from '../services/search.service';
+import { useState, useCallback } from 'react';
+import searchService from '../services/search.service';
 import type { Document } from '../types/document.types';
 
-const SEARCH_HISTORY_KEY = 'search_history';
-const MAX_HISTORY_ITEMS = 10;
+interface SearchFilters {
+  query: string;
+  mimeType?: string;
+  fromDate?: string;
+  toDate?: string;
+  organizationId?: string;
+}
+
+interface SearchResult extends Document {
+  highlight?: string;
+}
 
 export const useSearch = () => {
-  const [results, setResults] = useState<Document[]>([]);
+  const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [total, setTotal] = useState(0);
-  const [took, setTook] = useState(0);
+  const [total, setTotal] = useState<number>(0);
+  const [took, setTook] = useState<number | null>(null);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
 
-
-  /**
-   * Cargar historial de búsquedas desde localStorage
-   */
-  useEffect(() => {
-    const history = localStorage.getItem(SEARCH_HISTORY_KEY);
-    if (history) {
-      try {
-        setSearchHistory(JSON.parse(history));
-      } catch (e) {
-        console.error('Error loading search history:', e);
-      }
+  const search = useCallback(async (filters: SearchFilters) => {
+    if (!filters.query.trim()) {
+      return;
     }
-  }, []);
 
-  /**
-   * Guardar término en historial
-   */
-  const saveToHistory = useCallback((query: string) => {
-    if (!query || query.trim().length === 0) return;
+    setLoading(true);
+    setError(null);
 
-    setSearchHistory((prev) => {
-      // Eliminar duplicados y agregar al inicio
-      const filtered = prev.filter((item) => item !== query);
-      const newHistory = [query, ...filtered].slice(0, MAX_HISTORY_ITEMS);
-      
-      // Guardar en localStorage
-      localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(newHistory));
-      
-      return newHistory;
-    });
-  }, []);
-
-  /**
-   * Limpiar historial
-   */
-  const clearHistory = useCallback(() => {
-    setSearchHistory([]);
-    localStorage.removeItem(SEARCH_HISTORY_KEY);
-  }, []);
-
-  /**
-   * Ejecutar búsqueda
-   */
-  const search = useCallback(async (params: SearchParams) => {
     try {
-      setLoading(true);
-      setError(null);
+      const data = await searchService.search({
+        query: filters.query.trim(),
+        mimeType: filters.mimeType,
+        organizationId: filters.organizationId,
+      });
 
-      const response = await searchService.search(params);
+      setResults((data.data as SearchResult[]) || []);
+      setTotal(data.total || 0);
+      setTook(data.took || null);
 
-      setResults(response.data);
-      setTotal(response.total);
-      setTook(response.took);
+      // Agregar al historial (strings únicos, máximo 10)
+      setSearchHistory(prev => {
+        const query = filters.query.trim();
+        const filtered = prev.filter(q => q !== query);
+        return [query, ...filtered].slice(0, 10);
+      });
 
-      // Guardar en historial
-      saveToHistory(params.query);
-
-      return response;
-    } catch (err: unknown) {
-      console.error('[useSearch] Search error:', err);
-      let errorMessage = 'Error al buscar documentos';
-
-      if (err && typeof err === 'object' && 'response' in err) {
-        const axiosError = err as { response?: { data?: { message?: string } } };
-        if (axiosError.response?.data?.message) {
-          errorMessage = axiosError.response.data.message;
-        }
-      }
-
-      setError(errorMessage);
+    } catch (err) {
+      console.error('Error en búsqueda:', err);
+      setError('Error al buscar documentos');
       setResults([]);
       setTotal(0);
-      throw err;
+      setTook(null);
     } finally {
       setLoading(false);
     }
-  }, [saveToHistory]);
+  }, []);
 
-  /**
-   * Limpiar error
-   */
   const clearError = useCallback(() => {
     setError(null);
   }, []);
 
-  /**
-   * Limpiar resultados
-   */
   const clearResults = useCallback(() => {
     setResults([]);
     setTotal(0);
-    setTook(0);
+    setTook(null);
     setError(null);
+  }, []);
+
+  const clearHistory = useCallback(() => {
+    setSearchHistory([]);
   }, []);
 
   return {
@@ -127,5 +87,3 @@ export const useSearch = () => {
     clearHistory,
   };
 };
-
-export default useSearch;

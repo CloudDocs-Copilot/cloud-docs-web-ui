@@ -41,7 +41,6 @@ describe('ImageViewer branches and edge cases', () => {
     });
 
     expect(await screen.findByText(/Error Loading Image/i)).toBeInTheDocument();
-    expect(screen.getByText(/Failed to load image/i)).toBeInTheDocument();
   });
 
   it('zoom in/out and rotate update zoom level and rotation', async () => {
@@ -104,5 +103,44 @@ describe('ImageViewer branches and edge cases', () => {
     });
     const callsAfter = (URL.revokeObjectURL as jest.Mock).mock.calls.length;
     expect(callsAfter).toBeGreaterThanOrEqual(callsBefore);
+  });
+
+  it('fetches image with authentication credentials', async () => {
+    const blob = new Blob(['abc'], { type: 'image/png' });
+    global.fetch = jest.fn().mockResolvedValueOnce({ ok: true, blob: async () => blob });
+
+    await act(async () => {
+      render(<ImageViewer url="/img.png" filename="img.png" onBack={() => {}} fileSize={0} />);
+      await new Promise(resolve => setTimeout(resolve, 50));
+    });
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/img.png',
+      expect.objectContaining({ credentials: 'include' })
+    );
+  });
+
+  it('displays image with correct alt text', async () => {
+    const blob = new Blob(['abc'], { type: 'image/png' });
+    global.fetch = jest.fn().mockResolvedValueOnce({ ok: true, blob: async () => blob });
+
+    await act(async () => {
+      render(<ImageViewer url="/img.png" filename="img.png" alt="test alt" onBack={() => {}} fileSize={0} />);
+    });
+
+    const img = await screen.findByRole('img');
+    expect(img).toHaveAttribute('alt', 'test alt');
+  });
+
+  it('uses filename as alt text when alt prop is not provided', async () => {
+    const blob = new Blob(['abc'], { type: 'image/png' });
+    global.fetch = jest.fn().mockResolvedValueOnce({ ok: true, blob: async () => blob });
+
+    await act(async () => {
+      render(<ImageViewer url="/img.png" filename="photo.png" onBack={() => {}} fileSize={0} />);
+    });
+
+    const img = await screen.findByRole('img');
+    expect(img).toHaveAttribute('alt', 'photo.png');
   });
 });

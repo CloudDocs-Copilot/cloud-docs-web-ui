@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Button, Spinner, Form, Modal } from 'react-bootstrap';
 import { FolderPlus, FileEarmarkPlus } from 'react-bootstrap-icons';
 import { FolderTree } from './FolderTree';
 import { FolderCard } from './FolderCard';
 import { FolderBreadcrumbs } from './FolderBreadcrumbs';
+import { FileUploader } from '../FileUploader/FileUploader';
 import DocumentCard from '../DocumentCard';
 import { DocumentPreviewModal } from '../DocumentPreview';
 import { folderService } from '../../services/folder.service';
@@ -58,9 +59,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
   const [renamingDoc, setRenamingDoc] = useState(false);
 
   // File Upload State
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadingFile, setUploadingFile] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   // Helper to find path in tree (would handle breadcrumbs)
   // For now, simpler breadcrumbs: just Current Folder name, or we rely on Tree selection highlight
@@ -240,48 +239,18 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
   };
 
   const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
     if (!currentFolder?.id) {
       alert('Por favor selecciona una carpeta primero');
       return;
     }
+    setShowUploadModal(true);
+  };
 
-    console.log('[FileManagerView] Subiendo archivo a carpeta:', currentFolder.id, 'Nombre de carpeta:', currentFolder.name);
-
-    setUploadingFile(true);
-    setUploadProgress(0);
-
-    try {
-      const response = await documentService.uploadDocument({
-        file,
-        folderId: currentFolder.id,
-        onProgress: (progress) => {
-          setUploadProgress(progress.percentage);
-        },
-      });
-
-      console.log('[FileManagerView] Carga exitosa, documento:', response.document);
-
-      // Refrescar contenido
+  const handleUploadComplete = () => {
+    // Refrescar contenido después de subir archivos
+    if (currentFolder) {
       fetchContents(currentFolder.id);
       setRefreshTree(prev => prev + 1);
-      
-      // Resetear input de archivo
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (error: unknown) {
-      console.error('Error al subir archivo:', error);
-      alert(`Error al subir archivo: ${getErrorMessage(error)}`);
-    } finally {
-      setUploadingFile(false);
-      setUploadProgress(0);
     }
   };
 
@@ -362,15 +331,6 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
 
   return (
     <Container fluid className="vh-100 d-flex flex-column overflow-hidden p-0">
-      {/* Input de archivo oculto */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        style={{ display: 'none' }}
-        onChange={handleFileChange}
-        disabled={uploadingFile}
-      />
-
       {/* Barra de herramientas */}
       <div className="bg-white border-bottom p-2 d-flex justify-content-between align-items-center">
         <h5 className="m-0 ps-2">Archivos</h5>
@@ -387,10 +347,10 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
             variant="primary" 
             size="sm" 
             onClick={handleUploadClick}
-            disabled={!currentFolder || uploadingFile}
+            disabled={!currentFolder}
           >
             <FileEarmarkPlus className="me-2" /> 
-            {uploadingFile ? `Subiendo... ${uploadProgress}%` : 'Subir Archivo'}
+            Subir Archivo
           </Button>
         </div>
       </div>
@@ -585,6 +545,31 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
           show={showPreview}
           onHide={handleClosePreview}
         />
+      )}
+
+      {/* Modal de carga múltiple de archivos */}
+      {showUploadModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1050,
+          padding: '1rem'
+        }}>
+          <div style={{ maxWidth: '600px', width: '100%' }}>
+            <FileUploader
+              folderId={currentFolder?.id}
+              onUploadSuccess={handleUploadComplete}
+              onClose={() => setShowUploadModal(false)}
+            />
+          </div>
+        </div>
       )}
     </Container>
   );

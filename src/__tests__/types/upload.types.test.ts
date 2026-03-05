@@ -51,6 +51,9 @@ describe('Upload Types - Constantes', () => {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       );
       expect(ALLOWED_MIME_TYPES).toContain(
+        'application/vnd.ms-powerpoint'
+      );
+      expect(ALLOWED_MIME_TYPES).toContain(
         'application/vnd.openxmlformats-officedocument.presentationml.presentation'
       );
     });
@@ -60,8 +63,8 @@ describe('Upload Types - Constantes', () => {
       expect(ALLOWED_MIME_TYPES).toContain('image/png');
     });
 
-    it('debe tener exactamente 7 tipos permitidos', () => {
-      expect(ALLOWED_MIME_TYPES).toHaveLength(7);
+    it('debe tener exactamente 8 tipos permitidos', () => {
+      expect(ALLOWED_MIME_TYPES).toHaveLength(8);
     });
   });
 
@@ -70,6 +73,7 @@ describe('Upload Types - Constantes', () => {
       expect(ALLOWED_EXTENSIONS).toContain('.pdf');
       expect(ALLOWED_EXTENSIONS).toContain('.docx');
       expect(ALLOWED_EXTENSIONS).toContain('.xlsx');
+      expect(ALLOWED_EXTENSIONS).toContain('.ppt');
       expect(ALLOWED_EXTENSIONS).toContain('.pptx');
     });
 
@@ -110,6 +114,7 @@ describe('Upload Types - Helper Functions', () => {
       expect(isAllowedExtension('documento.pdf')).toBe(true);
       expect(isAllowedExtension('archivo.docx')).toBe(true);
       expect(isAllowedExtension('hoja.xlsx')).toBe(true);
+      expect(isAllowedExtension('diapositivas.ppt')).toBe(true);
       expect(isAllowedExtension('presentacion.pptx')).toBe(true);
       expect(isAllowedExtension('imagen.jpg')).toBe(true);
       expect(isAllowedExtension('foto.jpeg')).toBe(true);
@@ -192,6 +197,9 @@ describe('Upload Types - Helper Functions', () => {
         )
       ).toBe('Excel');
       expect(
+        getFileTypeName('application/vnd.ms-powerpoint')
+      ).toBe('PowerPoint');
+      expect(
         getFileTypeName(
           'application/vnd.openxmlformats-officedocument.presentationml.presentation'
         )
@@ -211,7 +219,7 @@ describe('Upload Types - Helper Functions', () => {
   describe('getAllowedTypesDisplay', () => {
     it('debe retornar string con tipos permitidos', () => {
       const display = getAllowedTypesDisplay();
-      expect(display).toBe('PDF, DOCX, XLSX, PPTX, JPG, PNG, TXT');
+      expect(display).toBe('PDF, DOCX, XLSX, PPT, PPTX, JPG, PNG, TXT');
     });
   });
 });

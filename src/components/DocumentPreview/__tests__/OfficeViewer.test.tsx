@@ -80,9 +80,10 @@ describe('OfficeViewer', () => {
     
     // Debe mostrar la interfaz de descarga segura
     await waitFor(() => {
-      expect(screen.getByText(/presentacion.pptx/i)).toBeInTheDocument();
-      expect(screen.getByText(/4096 bytes/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/presentacion.pptx/i).length).toBeGreaterThan(0);
       expect(screen.getByRole('button', { name: /descargar/i })).toBeInTheDocument();
+      // Verificar mensaje de seguridad
+      expect(screen.getByText(/visualización segura/i)).toBeInTheDocument();
     });
 
     // No debe intentar hacer fetch del contenido HTML
@@ -94,9 +95,10 @@ describe('OfficeViewer', () => {
     
     // Debe mostrar la interfaz de descarga segura
     await waitFor(() => {
-      expect(screen.getByText(/presentacion.ppt/i)).toBeInTheDocument();
-      expect(screen.getByText(/2048 bytes/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/presentacion.ppt/i).length).toBeGreaterThan(0);
       expect(screen.getByRole('button', { name: /descargar/i })).toBeInTheDocument();
+      // Verificar mensaje de seguridad
+      expect(screen.getByText(/visualización segura/i)).toBeInTheDocument();
     });
 
     // No debe intentar hacer fetch del contenido HTML

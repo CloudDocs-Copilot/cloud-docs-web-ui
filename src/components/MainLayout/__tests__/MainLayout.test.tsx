@@ -49,4 +49,10 @@ describe('MainLayout branches', () => {
     render(<MemoryRouter><MainLayout><div /></MainLayout></MemoryRouter>);
     expect(screen.getByText('act')).toBeInTheDocument();
   });
+
+  it('renders header and sidebar', () => {
+    render(<MemoryRouter><MainLayout><div /></MainLayout></MemoryRouter>);
+    expect(screen.getByTestId('header')).toBeInTheDocument();
+    expect(screen.getByTestId('sidebar')).toBeInTheDocument();
+  });
 });

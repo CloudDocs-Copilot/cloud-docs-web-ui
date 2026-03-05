@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    // Configuración más permisiva para desarrollo
+    "strict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "exactOptionalPropertyTypes": false,
+    // Permitir cualquier tipo temporalmente
+    "suppressImplicitAnyIndexErrors": true,
+    // Ignorar errores de módulos externos
+    "moduleResolution": "node"
+  }
+}

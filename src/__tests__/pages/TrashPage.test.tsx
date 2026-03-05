@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import TrashPage from '../../pages/TrashPage';
@@ -11,14 +11,16 @@ import type { DeletedDocument } from '../../services/deletion.service';
 jest.mock('../../hooks/useTrash');
 jest.mock('../../hooks/useDocumentDeletion');
 jest.mock('../../hooks/usePageInfoTitle');
-jest.mock('../../hooks/useOrganization', () => ({
-  useOrganization: () => ({
-    activeOrganization: { id: 'org-123', name: 'Test Organization' },
-    memberships: [],
-    setActiveOrganization: jest.fn(),
-    setMemberships: jest.fn(),
-    activeRole: 'member'
-  })
+
+// Mock de componentes que no son objetivo del test
+jest.mock('../../components/Header', () => ({
+  __esModule: true,
+  default: () => <div data-testid="mock-header">Header</div>
+}));
+
+jest.mock('../../components/Sidebar', () => ({
+  __esModule: true,
+  default: () => <div data-testid="mock-sidebar">Sidebar</div>
 }));
 
 // Wrapper component for router context and page context
@@ -156,12 +158,13 @@ describe('TrashPage', () => {
     const deleteButton = screen.getByRole('button', { name: /eliminar permanentemente/i });
     await user.click(deleteButton);
 
-    // Modal should appear
-    expect(screen.getByText('Eliminar permanentemente')).toBeInTheDocument();
-    expect(screen.getByText('¿Estás seguro de que deseas eliminar permanentemente este documento?')).toBeInTheDocument();
+    // Wait for modal to appear and get modal element
+    const modalText = await screen.findByText('¿Estás seguro de que deseas eliminar permanentemente este documento?');
+    const modal = modalText.closest('.modal-content');
+    expect(modal).toBeInTheDocument();
 
-    // Confirm deletion
-    const confirmButton = screen.getByRole('button', { name: 'Eliminar permanentemente' });
+    // Find confirm button specifically within the modal
+    const confirmButton = within(modal!).getByRole('button', { name: /eliminar permanentemente/i });
     await user.click(confirmButton);
 
     expect(mockPermanentDelete).toHaveBeenCalledWith('1');
@@ -181,12 +184,13 @@ describe('TrashPage', () => {
     const emptyButton = screen.getByRole('button', { name: /vaciar papelera/i });
     await user.click(emptyButton);
 
-    // Modal should appear
-    expect(screen.getByText('Vaciar papelera')).toBeInTheDocument();
-    expect(screen.getByText(/¿Estás seguro de que deseas vaciar la papelera?/)).toBeInTheDocument();
+    // Wait for modal to appear and get modal element
+    const modalText = await screen.findByText(/¿Estás seguro de que deseas vaciar la papelera?/);
+    const modal = modalText.closest('.modal-content');
+    expect(modal).toBeInTheDocument();
 
-    // Confirm empty trash
-    const confirmButton = screen.getByRole('button', { name: 'Vaciar papelera' });
+    // Find confirm button specifically within the modal
+    const confirmButton = within(modal!).getByRole('button', { name: /vaciar papelera/i });
     await user.click(confirmButton);
 
     expect(mockEmptyTrash).toHaveBeenCalled();
@@ -269,7 +273,13 @@ describe('TrashPage', () => {
     const deleteButton = screen.getByRole('button', { name: /eliminar permanentemente/i });
     await user.click(deleteButton);
 
-    const confirmButton = screen.getByRole('button', { name: 'Eliminar permanentemente' });
+    // Wait for modal to appear and get modal element
+    const modalText = await screen.findByText(/¿Estás seguro de que deseas eliminar permanentemente este documento?/);
+    const modal = modalText.closest('.modal-content');
+    expect(modal).toBeInTheDocument();
+
+    // Find confirm button specifically within the modal
+    const confirmButton = within(modal!).getByRole('button', { name: /eliminar permanentemente/i });
     await user.click(confirmButton);
 
     expect(mockPermanentDelete).toHaveBeenCalledWith('1');

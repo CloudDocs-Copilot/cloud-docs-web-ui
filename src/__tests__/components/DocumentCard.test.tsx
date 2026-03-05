@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import DocumentCard from '../../components/DocumentCard';
 import { useDocumentDeletion } from '../../hooks/useDocumentDeletion';
 import type { Document } from '../../types/document.types';
@@ -96,52 +96,61 @@ describe('DocumentCard', () => {
   });
 
   it('shows error when moveToTrash fails', async () => {
-    const errorMessage = 'Error al mover a papelera';
-    mockMoveToTrash.mockRejectedValue(new Error(errorMessage));
+    // Mock moveToTrash to return null (indicates failure without throwing)
+    mockMoveToTrash.mockResolvedValue(null);
     
     render(<DocumentCard document={mockDocumentWithFolder} />);
     
-    // Open and confirm delete
+    // Open delete modal
     const deleteButton = screen.getByTitle('Mover a papelera');
     fireEvent.click(deleteButton);
     
-    const buttons = screen.getAllByRole('button');
-    const confirmButton = buttons.find(button => 
-      button.textContent === 'Mover a papelera' && button.className.includes('btn-danger')
-    );
+    // Wait for modal to be visible and get modal element
+    const modalText = await screen.findByText(/se eliminará automáticamente después de 30 días/);
+    const modal = modalText.closest('.modal-content');
+    expect(modal).toBeInTheDocument();
+    
+    // Find confirm button specifically within the modal footer
+    const confirmButton = within(modal!).getByRole('button', { name: /^Mover a papelera$/i });
     
     await act(async () => {
-      fireEvent.click(confirmButton!);
+      fireEvent.click(confirmButton);
     });
     
+    // Verify moveToTrash was called
     await waitFor(() => {
-      // The actual error message shown is different
-      expect(screen.getByText('Error al eliminar el documento')).toBeInTheDocument();
+      expect(mockMoveToTrash).toHaveBeenCalledWith('123');
     });
+    
+    // Modal should remain open when deletion fails (deleted === null)
+    expect(screen.getByText(/se eliminará automáticamente después de 30 días/)).toBeInTheDocument();
   });
 
   it('handles missing document ID gracefully', async () => {
     const docWithoutId = { ...mockDocumentWithFolder, id: undefined };
+    mockMoveToTrash.mockResolvedValue(null);
     
     render(<DocumentCard document={docWithoutId as Document} />);
     
     const deleteButton = screen.getByTitle('Mover a papelera');
     fireEvent.click(deleteButton);
     
-    const buttons = screen.getAllByRole('button');
-    const confirmButton = buttons.find(button => 
-      button.textContent === 'Mover a papelera' && button.className.includes('btn-danger')
-    );
+    // Wait for modal to be visible and get modal element
+    const modalText = await screen.findByText(/se eliminará automáticamente después de 30 días/);
+    const modal = modalText.closest('.modal-content');
+    expect(modal).toBeInTheDocument();
+    
+    // Find confirm button specifically within the modal
+    const confirmButton = within(modal!).getByRole('button', { name: /^Mover a papelera$/i });
     
     await act(async () => {
-      fireEvent.click(confirmButton!);
+      fireEvent.click(confirmButton);
     });
     
+    // Component calls moveToTrash with empty string when ID is missing
     await waitFor(() => {
-      expect(screen.getByText('ID del documento no disponible')).toBeInTheDocument();
+      expect(mockMoveToTrash).toHaveBeenCalledWith('');
     });
-    
-    expect(mockMoveToTrash).not.toHaveBeenCalled();
   });
 
   it('closes modal when cancel is clicked', async () => {

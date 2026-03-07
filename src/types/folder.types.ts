@@ -55,6 +55,12 @@ export interface FolderContentsResponse {
     folder: Folder;
     subfolders: Folder[];
     documents: Document[];
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
   };
 }
 

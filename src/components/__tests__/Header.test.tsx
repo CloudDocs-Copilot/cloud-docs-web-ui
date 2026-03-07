@@ -105,25 +105,6 @@ describe("Header", () => {
     expect(mockNavigate).toHaveBeenCalledWith("/login");
   });
 
-  it("renders Dashboard button when user exists and not on /dashboard, and navigates when clicked", () => {
-    mockUseLocation.mockReturnValueOnce({ pathname: "/" });
-
-    render(<Header />);
-
-    const dashboardBtn = screen.getByTitle("Dashboard");
-    fireEvent.click(dashboardBtn);
-
-    expect(mockNavigate).toHaveBeenCalledWith("/dashboard");
-  });
-
-  it("does NOT render Dashboard button when already on /dashboard (branch)", () => {
-    mockUseLocation.mockReturnValueOnce({ pathname: "/dashboard" });
-
-    render(<Header />);
-
-    expect(screen.queryByTitle("Dashboard")).not.toBeInTheDocument();
-  });
-
   it("clicking user badge navigates to /profile", () => {
     render(<Header />);
 

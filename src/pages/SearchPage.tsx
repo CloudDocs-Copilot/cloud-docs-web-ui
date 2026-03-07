@@ -213,7 +213,7 @@ const SearchPage: React.FC = () => {
 
   return (
     <MainLayout>
-      <Container className={styles.searchContainer}>
+      <Container fluid className={styles.searchContainer}>
         {/* Cabecera */}
         <div className={styles.searchHeader}>
           <h2>

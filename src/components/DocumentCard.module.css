@@ -115,10 +115,15 @@
   line-height: 1.4;
   max-width: 100%;
   overflow: hidden;
-  text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  /* Forzar el quiebre de palabras largas */
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  hyphens: auto;
+  /* Dar espacio para los botones de opciones */
+  padding-right: 72px;
 }
 
 .badgeWrapper {

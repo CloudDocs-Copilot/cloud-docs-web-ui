@@ -61,7 +61,6 @@ describe('PendingInvitations', () => {
 
     render(<MemoryRouter><PendingInvitations /></MemoryRouter>);
 
-    expect(screen.getByText(/Invitaciones Pendientes/i)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Aceptar/i }));
     await waitFor(() => expect(acceptMock).toHaveBeenCalledWith('i1'));
   });

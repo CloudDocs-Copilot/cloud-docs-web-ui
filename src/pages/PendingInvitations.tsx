@@ -63,19 +63,8 @@ const PendingInvitations: React.FC = () => {
     <MainLayout>
       <Container fluid className={styles.container}>
         <Row>
-          <Col lg={8} className="mx-auto">
-            <div className={styles.header}>
-              <h2 className={styles.title}>
-                Invitaciones Pendientes
-                {invitations.length > 0 && (
-                  <span className={styles.count}>({invitations.length})</span>
-                )}
-              </h2>
-              <p className={styles.subtitle}>
-                Revisa y gestiona las invitaciones que has recibido
-              </p>
-            </div>
-
+          {/* Left column: invitation cards */}
+          <Col md={8} className={styles.cardsColumn}>
             {invitations.length === 0 ? (
               <Alert variant="info" className={styles.emptyState}>
                 <Alert.Heading>No tienes invitaciones pendientes</Alert.Heading>
@@ -95,6 +84,58 @@ const PendingInvitations: React.FC = () => {
                 ))}
               </div>
             )}
+          </Col>
+
+          {/* Right column: informational panel */}
+          <Col md={4} className={styles.infoColumn}>
+            <div className={styles.infoPanel}>
+              <div className={styles.infoPanelSection}>
+                <div className={styles.infoPanelIcon}>📬</div>
+                <h5 className={styles.infoPanelTitle}>¿Qué son las invitaciones?</h5>
+                <p className={styles.infoPanelText}>
+                  Las invitaciones son solicitudes de acceso enviadas por administradores de organizaciones.
+                  Al aceptar una invitación, pasarás a formar parte de esa organización y podrás
+                  acceder a sus documentos y recursos compartidos.
+                </p>
+              </div>
+
+              <hr className={styles.infoDivider} />
+
+              <div className={styles.infoPanelSection}>
+                <div className={styles.infoPanelIcon}>✅</div>
+                <h5 className={styles.infoPanelTitle}>Al aceptar una invitación</h5>
+                <ul className={styles.infoPanelList}>
+                  <li>Obtendrás acceso inmediato a los documentos de la organización.</li>
+                  <li>Tu rol determinará los permisos que tendrás dentro de la organización.</li>
+                  <li>Podrás cambiar de organización activa en cualquier momento desde tu perfil.</li>
+                </ul>
+              </div>
+
+              <hr className={styles.infoDivider} />
+
+              <div className={styles.infoPanelSection}>
+                <div className={styles.infoPanelIcon}>ℹ️</div>
+                <h5 className={styles.infoPanelTitle}>Roles disponibles</h5>
+                <div className={styles.rolesGrid}>
+                  <div className={styles.roleItem}>
+                    <span className={`${styles.roleBadge} ${styles.roleBadgeOwner}`}>OWNER</span>
+                    <span className={styles.roleDesc}>Control total de la organización</span>
+                  </div>
+                  <div className={styles.roleItem}>
+                    <span className={`${styles.roleBadge} ${styles.roleBadgeAdmin}`}>ADMIN</span>
+                    <span className={styles.roleDesc}>Gestión de miembros y configuración</span>
+                  </div>
+                  <div className={styles.roleItem}>
+                    <span className={`${styles.roleBadge} ${styles.roleBadgeMember}`}>MEMBER</span>
+                    <span className={styles.roleDesc}>Acceso y colaboración en documentos</span>
+                  </div>
+                  <div className={styles.roleItem}>
+                    <span className={`${styles.roleBadge} ${styles.roleBadgeViewer}`}>VIEWER</span>
+                    <span className={styles.roleDesc}>Solo lectura de documentos</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </Col>
         </Row>
       </Container>

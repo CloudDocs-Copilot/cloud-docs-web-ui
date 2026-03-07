@@ -70,20 +70,12 @@ const TrashPage: React.FC = () => {
 
   return (
     <MainLayout>
-      <Container className={styles.trashContainer}>
+      <Container fluid className={styles.trashContainer}>
         {/* Header */}
         <Row className={styles.headerSection}>
           <Col>
             <div className={styles.headerContent}>
-              <div>
-                <h2 className={styles.headerTitle}>
-                  <Trash2 />
-                  Papelera
-                </h2>
-                <p className={styles.headerSubtitle}>
-                  Los documentos se eliminarán automáticamente después de 30 días
-                </p>
-              </div>
+            
               {trashDocuments.length > 0 && (
                 <button 
                   className={styles.emptyTrashBtn}

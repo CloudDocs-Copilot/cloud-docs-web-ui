@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Form, Button, InputGroup, OverlayTrigger, Popover, Spinner } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { Button, OverlayTrigger, Popover, Spinner } from 'react-bootstrap';
 import styles from './Header.module.css';
 import { useAuth } from '../hooks/useAuth';
 import OrganizationSelector from './Organization/OrganizationSelector';
@@ -17,7 +17,6 @@ function isInvitationNotification(n: NotificationDTO): boolean {
 const Header: React.FC = () => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
-  const location = useLocation();
 
   const { notifications, unreadCount, loading: notifLoading, refresh, markRead, markAllRead } = useNotifications();
 
@@ -139,32 +138,8 @@ const Header: React.FC = () => {
   return (
     <>
       <header className={styles.header}>
-        <div className={styles.searchBarWrapper}>
-          <InputGroup>
-            <InputGroup.Text className={styles.searchIcon}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <circle cx="11" cy="11" r="8" strokeWidth="2" />
-                <path d="m21 21-4.35-4.35" strokeWidth="2" />
-              </svg>
-            </InputGroup.Text>
-
-            <Form.Control
-              type="text"
-              placeholder="Pregunta a tus documentos..."
-              className={styles.searchInput}
-            />
-          </InputGroup>
-        </div>
 
         <div className={styles.headerActions}>
-          {user && !location.pathname.startsWith('/dashboard') && (
-            <Button variant="link" className={styles.iconBtn} onClick={() => navigate('/dashboard')} title="Dashboard">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path d="M3 13h8V3H3v10zM3 21h8v-6H3v6zM13 21h8V11h-8v10zM13 3v6h8V3h-8z" strokeWidth="1.5" />
-              </svg>
-            </Button>
-          )}
-
           <OrganizationSelector />
 
           {/* Notifications button + popover */}

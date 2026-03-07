@@ -32,12 +32,19 @@ export const UPLOAD_CONSTRAINTS = {
  */
 export const ALLOWED_MIME_TYPES = [
   'application/pdf',
+  'application/msword', // .doc
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-powerpoint',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   'image/jpeg',
   'image/png',
   'text/plain',
+  // Videos
+  'video/mp4',
+  'video/webm',
+  'video/ogg',
+  'video/quicktime', // .mov
 ] as const;
 
 /**
@@ -45,13 +52,20 @@ export const ALLOWED_MIME_TYPES = [
  */
 export const ALLOWED_EXTENSIONS = [
   '.pdf',
+  '.doc',
   '.docx',
   '.xlsx',
+  '.ppt',
   '.pptx',
   '.jpg',
   '.jpeg',
   '.png',
   '.txt',
+  // Videos
+  '.mp4',
+  '.webm',
+  '.ogg',
+  '.mov',
 ] as const;
 
 /**
@@ -59,13 +73,20 @@ export const ALLOWED_EXTENSIONS = [
  */
 export const EXTENSION_TO_MIME: Record<string, string> = {
   '.pdf': 'application/pdf',
+  '.doc': 'application/msword',
   '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.ppt': 'application/vnd.ms-powerpoint',
   '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.png': 'image/png',
   '.txt': 'text/plain',
+  // Videos
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.ogg': 'video/ogg',
+  '.mov': 'video/quicktime',
 };
 
 /**
@@ -73,12 +94,19 @@ export const EXTENSION_TO_MIME: Record<string, string> = {
  */
 export const FILE_TYPE_NAMES: Record<string, string> = {
   'application/pdf': 'PDF',
+  'application/msword': 'Word',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'Word',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'Excel',
+  'application/vnd.ms-powerpoint': 'PowerPoint',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PowerPoint',
   'image/jpeg': 'Imagen JPEG',
   'image/png': 'Imagen PNG',
   'text/plain': 'Texto',
+  // Videos
+  'video/mp4': 'Video MP4',
+  'video/webm': 'Video WebM',
+  'video/ogg': 'Video Ogg',
+  'video/quicktime': 'Video MOV',
 };
 
 // ============================================================================
@@ -218,5 +246,5 @@ export function getFileTypeName(mimeType: string): string {
  * Lista de tipos permitidos formateada para mostrar al usuario
  */
 export function getAllowedTypesDisplay(): string {
-  return 'PDF, DOCX, XLSX, PPTX, JPG, PNG, TXT';
+  return 'PDF, DOC, DOCX, XLSX, PPT, PPTX, JPG, PNG, TXT, MP4, WebM, OGG, MOV';
 }

@@ -25,8 +25,10 @@ export const folderService = {
   /**
    * Obtiene el contenido de una carpeta específica
    */
-  getContents: async (folderId: string): Promise<FolderContentsResponse['contents']> => {
-    const response = await apiClient.get<FolderContentsResponse>(`/folders/${folderId}/contents`);
+  getContents: async (folderId: string, page?: number, limit?: number): Promise<FolderContentsResponse['contents']> => {
+    const response = await apiClient.get<FolderContentsResponse>(`/folders/${folderId}/contents`, {
+      params: { page, limit }
+    });
     return response.data.contents;
   },
 

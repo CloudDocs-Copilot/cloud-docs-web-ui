@@ -51,6 +51,9 @@ describe('Upload Types - Constantes', () => {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       );
       expect(ALLOWED_MIME_TYPES).toContain(
+        'application/vnd.ms-powerpoint'
+      );
+      expect(ALLOWED_MIME_TYPES).toContain(
         'application/vnd.openxmlformats-officedocument.presentationml.presentation'
       );
     });
@@ -60,16 +63,29 @@ describe('Upload Types - Constantes', () => {
       expect(ALLOWED_MIME_TYPES).toContain('image/png');
     });
 
-    it('debe tener exactamente 7 tipos permitidos', () => {
-      expect(ALLOWED_MIME_TYPES).toHaveLength(7);
+    it('debe incluir tipos de video', () => {
+      expect(ALLOWED_MIME_TYPES).toContain('video/mp4');
+      expect(ALLOWED_MIME_TYPES).toContain('video/webm');
+      expect(ALLOWED_MIME_TYPES).toContain('video/ogg');
+      expect(ALLOWED_MIME_TYPES).toContain('video/quicktime');
+    });
+
+    it('debe incluir formato Word antiguo (.doc)', () => {
+      expect(ALLOWED_MIME_TYPES).toContain('application/msword');
+    });
+
+    it('debe tener exactamente 13 tipos permitidos', () => {
+      expect(ALLOWED_MIME_TYPES).toHaveLength(13);
     });
   });
 
   describe('ALLOWED_EXTENSIONS', () => {
     it('debe incluir extensiones comunes de documentos', () => {
       expect(ALLOWED_EXTENSIONS).toContain('.pdf');
+      expect(ALLOWED_EXTENSIONS).toContain('.doc');
       expect(ALLOWED_EXTENSIONS).toContain('.docx');
       expect(ALLOWED_EXTENSIONS).toContain('.xlsx');
+      expect(ALLOWED_EXTENSIONS).toContain('.ppt');
       expect(ALLOWED_EXTENSIONS).toContain('.pptx');
     });
 
@@ -77,6 +93,13 @@ describe('Upload Types - Constantes', () => {
       expect(ALLOWED_EXTENSIONS).toContain('.jpg');
       expect(ALLOWED_EXTENSIONS).toContain('.jpeg');
       expect(ALLOWED_EXTENSIONS).toContain('.png');
+    });
+
+    it('debe incluir extensiones de video', () => {
+      expect(ALLOWED_EXTENSIONS).toContain('.mp4');
+      expect(ALLOWED_EXTENSIONS).toContain('.webm');
+      expect(ALLOWED_EXTENSIONS).toContain('.ogg');
+      expect(ALLOWED_EXTENSIONS).toContain('.mov');
     });
   });
 });
@@ -99,17 +122,21 @@ describe('Upload Types - Helper Functions', () => {
       expect(isAllowedMimeType('text/plain')).toBe(true);
     });
 
-    it('debe retornar false para tipos MIME de video', () => {
-      expect(isAllowedMimeType('video/mp4')).toBe(false);
-      expect(isAllowedMimeType('video/webm')).toBe(false);
+    it('debe retornar true para tipos MIME de video', () => {
+      expect(isAllowedMimeType('video/mp4')).toBe(true);
+      expect(isAllowedMimeType('video/webm')).toBe(true);
+      expect(isAllowedMimeType('video/ogg')).toBe(true);
+      expect(isAllowedMimeType('video/quicktime')).toBe(true);
     });
   });
 
   describe('isAllowedExtension', () => {
     it('debe retornar true para extensiones permitidas', () => {
       expect(isAllowedExtension('documento.pdf')).toBe(true);
+      expect(isAllowedExtension('archivo.doc')).toBe(true);
       expect(isAllowedExtension('archivo.docx')).toBe(true);
       expect(isAllowedExtension('hoja.xlsx')).toBe(true);
+      expect(isAllowedExtension('diapositivas.ppt')).toBe(true);
       expect(isAllowedExtension('presentacion.pptx')).toBe(true);
       expect(isAllowedExtension('imagen.jpg')).toBe(true);
       expect(isAllowedExtension('foto.jpeg')).toBe(true);
@@ -119,7 +146,14 @@ describe('Upload Types - Helper Functions', () => {
     it('debe retornar false para extensiones no permitidas', () => {
       expect(isAllowedExtension('virus.exe')).toBe(false);
       expect(isAllowedExtension('script.js')).toBe(false);
-      expect(isAllowedExtension('video.mp4')).toBe(false);
+      expect(isAllowedExtension('archive.zip')).toBe(false);
+    });
+
+    it('debe retornar true para archivos de video', () => {
+      expect(isAllowedExtension('video.mp4')).toBe(true);
+      expect(isAllowedExtension('pelicula.webm')).toBe(true);
+      expect(isAllowedExtension('clip.ogg')).toBe(true);
+      expect(isAllowedExtension('grabacion.mov')).toBe(true);
     });
 
     it('debe retornar true para archivos de texto', () => {
@@ -192,6 +226,9 @@ describe('Upload Types - Helper Functions', () => {
         )
       ).toBe('Excel');
       expect(
+        getFileTypeName('application/vnd.ms-powerpoint')
+      ).toBe('PowerPoint');
+      expect(
         getFileTypeName(
           'application/vnd.openxmlformats-officedocument.presentationml.presentation'
         )
@@ -211,7 +248,7 @@ describe('Upload Types - Helper Functions', () => {
   describe('getAllowedTypesDisplay', () => {
     it('debe retornar string con tipos permitidos', () => {
       const display = getAllowedTypesDisplay();
-      expect(display).toBe('PDF, DOCX, XLSX, PPTX, JPG, PNG, TXT');
+      expect(display).toBe('PDF, DOC, DOCX, XLSX, PPT, PPTX, JPG, PNG, TXT, MP4, WebM, OGG, MOV');
     });
   });
 });

@@ -15,7 +15,9 @@ interface OfficeViewerProps {
 
 /**
  * Visor de documentos Office (Word, Excel, PowerPoint)
- * Carga el HTML convertido desde el backend y lo renderiza de forma segura
+ * - Word: Convierte a HTML en backend y renderiza
+ * - Excel: Usa componente especializado ExcelPreview
+ * - PowerPoint: Descarga segura (sin conversión servidor, mantiene privacidad)
  */
 export const OfficeViewer: React.FC<OfficeViewerProps> = ({ url, filename, onBack, fileSize }) => {
   const [htmlContent, setHtmlContent] = useState<string>('');
@@ -24,15 +26,52 @@ export const OfficeViewer: React.FC<OfficeViewerProps> = ({ url, filename, onBac
   const [error, setError] = useState<string | null>(null);
   const [scale, setScale] = useState<number>(1.0);
 
+  // Detectar tipo de archivo
+  const isPowerPoint = filename.toLowerCase().endsWith('.ppt') || filename.toLowerCase().endsWith('.pptx');
+  const isExcel = filename.toLowerCase().endsWith('.xlsx') || filename.toLowerCase().endsWith('.xls');
+  const isOldWord = filename.toLowerCase().endsWith('.doc'); // Word antiguo (.doc) - no soporta conversión
+
   useEffect(() => {
+    // PowerPoint: no cargar contenido, solo mostrar interfaz de descarga
+    if (isPowerPoint) {
+      setLoading(false);
+      return;
+    }
+
+    // Word antiguo (.doc): no intentar cargar, evitar loop infinito
+    if (isOldWord) {
+      setLoading(false);
+      return;
+    }
+
+    // Excel: cargar como blob
+    if (isExcel) {
+      const fetchExcel = async () => {
+        try {
+          setLoading(true);
+          const response = await fetch(url, { credentials: 'include' });
+          if (!response.ok) throw new Error(`Failed to load Excel: ${response.statusText}`);
+          const blob = await response.blob();
+          setExcelFile(blob);
+        } catch (err) {
+          console.error('[OfficeViewer] Error loading Excel:', err);
+          setError(err instanceof Error ? err.message : 'Failed to load Excel');
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchExcel();
+      return;
+    }
+
+    // Word: cargar HTML convertido
     const loadDocument = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // Hacer fetch del HTML convertido
         const response = await fetch(url, {
-          credentials: 'include', // Incluir cookies de autenticación
+          credentials: 'include',
         });
 
         if (!response.ok) {
@@ -50,19 +89,7 @@ export const OfficeViewer: React.FC<OfficeViewerProps> = ({ url, filename, onBac
     };
 
     loadDocument();
-    // Detect Excel
-    if (filename.endsWith('.xlsx')) {
-      const fetchExcel = async () => {
-        const response = await fetch(url, { credentials: 'include' });
-        if (!response.ok) throw new Error(`Fallo al cargar Excel: ${response.statusText}`);
-        const blob = await response.blob();
-        setExcelFile(blob);
-        setLoading(false);
-      };
-      fetchExcel();
-      return;
-    }
-  }, [url, filename]);
+  }, [url, filename, isPowerPoint, isExcel, isOldWord]);
 
   /**
    * Aumentar zoom
@@ -80,8 +107,129 @@ export const OfficeViewer: React.FC<OfficeViewerProps> = ({ url, filename, onBac
 
   const formattedFileSize = fileSize ? previewService.formatFileSize(fileSize) : '';
 
-    // Render Excel preview
-    if (excelFile) {
+  // PowerPoint: Interfaz de descarga segura (no requiere instalación de LibreOffice)
+  if (isPowerPoint && !loading) {
+    return (
+      <div className={styles.viewerContainer}>
+        <PreviewHeader
+          filename={filename}
+          fileSize={fileSize}
+          fileInfo={formattedFileSize}
+          onBack={onBack}
+        />
+        
+        <div className={styles.documentContainer}>
+          <div className={styles.powerPointContainer}>
+            <div className={styles.powerPointIcon}>
+              <i className="bi bi-file-earmark-ppt" style={{ fontSize: '4rem', color: '#D24726' }}></i>
+            </div>
+            
+            <h4 className="mt-3">{filename}</h4>
+            {fileSize && <p className="text-muted">{formattedFileSize}</p>}
+            
+            <Alert variant="info" className="mt-4 text-start">
+              <Alert.Heading>
+                <i className="bi bi-shield-check me-2"></i>
+                Visualización Segura de PowerPoint
+              </Alert.Heading>
+              <p>
+                Para proteger la <strong>confidencialidad de tus documentos</strong>, 
+                no enviamos presentaciones a servicios externos de terceros ni requerimos software adicional en el servidor.
+              </p>
+              <p className="mb-0">
+                Descarga el archivo para visualizarlo de forma segura en tu dispositivo con:
+              </p>
+              <ul className="mt-2">
+                <li><strong>Microsoft PowerPoint</strong> (Windows/Mac)</li>
+                <li><strong>Google Slides</strong> (Web/Gratis - sube el archivo)</li>
+                <li><strong>LibreOffice Impress</strong> (Gratis/Open Source)</li>
+                <li><strong>Apple Keynote</strong> (Mac/iOS)</li>
+              </ul>
+            </Alert>
+            
+            <Button 
+              variant="primary" 
+              size="lg" 
+              className="mt-3"
+              onClick={() => window.open(url.replace('/preview/', '/download/'), '_blank')}
+            >
+              <i className="bi bi-download me-2"></i>
+              Descargar Presentación
+            </Button>
+            
+            <p className="text-muted mt-3" style={{ fontSize: '0.875rem' }}>
+              <i className="bi bi-lock-fill me-1"></i>
+              Tus documentos permanecen en tu infraestructura. Nunca compartimos datos con terceros.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Word antiguo (.doc): Interfaz de descarga (evitar loop infinito)
+  if (isOldWord && !loading) {
+    return (
+      <div className={styles.viewerContainer}>
+        <PreviewHeader
+          filename={filename}
+          fileSize={fileSize}
+          fileInfo={formattedFileSize}
+          onBack={onBack}
+        />
+        
+        <div className={styles.documentContainer}>
+          <div className={styles.powerPointContainer}>
+            <div className={styles.powerPointIcon}>
+              <i className="bi bi-file-earmark-word" style={{ fontSize: '4rem', color: '#2B579A' }}></i>
+            </div>
+            
+            <h4 className="mt-3">{filename}</h4>
+            {fileSize && <p className="text-muted">{formattedFileSize}</p>}
+            
+            <Alert variant="info" className="mt-4 text-start">
+              <Alert.Heading>
+                <i className="bi bi-info-circle me-2"></i>
+                Formato Word Antiguo (.doc)
+              </Alert.Heading>
+              <p>
+                Los archivos <strong>.doc</strong> (Word 97-2003) requieren conversión especial. 
+                Por el momento, descarga el archivo para visualizarlo.
+              </p>
+              <p className="mb-0">
+                Puedes abrir este archivo con:
+              </p>
+              <ul className="mt-2">
+                <li><strong>Microsoft Word</strong> (Windows/Mac)</li>
+                <li><strong>Google Docs</strong> (Web/Gratis - sube el archivo)</li>
+                <li><strong>LibreOffice Writer</strong> (Gratis/Open Source)</li>
+                <li><strong>Pages</strong> (Mac/iOS)</li>
+              </ul>
+              <p className="mt-2 mb-0">
+                <small className="text-muted">
+                  <i className="bi bi-lightbulb me-1"></i>
+                  <strong>Sugerencia:</strong> Considera convertir el archivo a formato .docx para mejor compatibilidad.
+                </small>
+              </p>
+            </Alert>
+            
+            <Button 
+              variant="primary" 
+              size="lg" 
+              className="mt-3"
+              onClick={() => window.open(url.replace('/preview/', '/download/'), '_blank')}
+            >
+              <i className="bi bi-download me-2"></i>
+              Descargar Documento
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render Excel preview
+  if (excelFile) {
       return (
         <div className={styles.viewerContainer}>
           <PreviewHeader filename={filename} fileSize={fileSize} onBack={onBack} />

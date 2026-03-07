@@ -5,6 +5,11 @@ jest.mock('../../../services/preview.service', () => ({
   previewService: { formatFileSize: (n:number) => `${n} bytes` },
 }));
 
+// Mock ExcelPreview component
+jest.mock('../ExcelPreview', () => ({
+  ExcelPreview: () => <div>Excel Preview</div>,
+}));
+
 import { OfficeViewer } from '../OfficeViewer';
 
 describe('OfficeViewer', () => {
@@ -68,5 +73,50 @@ describe('OfficeViewer', () => {
     global.fetch = jest.fn(() => Promise.resolve({ ok: true, text: () => Promise.resolve('<p>ok</p>') } as Response));
     render(<OfficeViewer url="/doc.html" filename="file.docx" fileSize={2048} />);
     await waitFor(() => expect(screen.getByText(/2048 bytes/)).toBeInTheDocument());
+  });
+
+  it('renders secure download interface for PowerPoint (.pptx) files', async () => {
+    render(<OfficeViewer url="/preview/doc.pptx" filename="presentacion.pptx" fileSize={4096} />);
+    
+    // Debe mostrar la interfaz de descarga segura
+    await waitFor(() => {
+      expect(screen.getAllByText(/presentacion.pptx/i).length).toBeGreaterThan(0);
+      expect(screen.getByRole('button', { name: /descargar/i })).toBeInTheDocument();
+      // Verificar mensaje de seguridad
+      expect(screen.getByText(/visualización segura/i)).toBeInTheDocument();
+    });
+
+    // No debe intentar hacer fetch del contenido HTML
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('renders secure download interface for PowerPoint (.ppt) files', async () => {
+    render(<OfficeViewer url="/preview/doc.ppt" filename="presentacion.ppt" fileSize={2048} />);
+    
+    // Debe mostrar la interfaz de descarga segura
+    await waitFor(() => {
+      expect(screen.getAllByText(/presentacion.ppt/i).length).toBeGreaterThan(0);
+      expect(screen.getByRole('button', { name: /descargar/i })).toBeInTheDocument();
+      // Verificar mensaje de seguridad
+      expect(screen.getByText(/visualización segura/i)).toBeInTheDocument();
+    });
+
+    // No debe intentar hacer fetch del contenido HTML
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('renders download interface for old Word (.doc) files to avoid infinite loop', async () => {
+    render(<OfficeViewer url="/preview/documento.doc" filename="documento.doc" fileSize={1024} />);
+    
+    // Debe mostrar la interfaz de descarga
+    await waitFor(() => {
+      expect(screen.getAllByText(/documento.doc/i).length).toBeGreaterThan(0);
+      expect(screen.getByRole('button', { name: /descargar documento/i })).toBeInTheDocument();
+      // Verificar mensaje informativo
+      expect(screen.getByText(/formato word antiguo/i)).toBeInTheDocument();
+    });
+
+    // No debe intentar hacer fetch del contenido HTML (evitar loop infinito)
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 });

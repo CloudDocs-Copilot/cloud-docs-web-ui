@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { Sparkles } from 'lucide-react';
 import styles from './Logo.module.final.css?inline';
 
@@ -27,7 +27,8 @@ export const Logo: React.FC<LogoProps> = ({
   // Calculate proportional sizes
   const containerSize = size;
   const iconSize = size * 0.5; // Icon size relative to container
-  const gradientId = `folder-gradient-${Math.random().toString(36).substr(2, 9)}`;
+  const uniqueId = useId();
+  const gradientId = `folder-gradient-${uniqueId}`;
 
   const getContainerClasses = () => {
     const classes = [styles.logoContainer];

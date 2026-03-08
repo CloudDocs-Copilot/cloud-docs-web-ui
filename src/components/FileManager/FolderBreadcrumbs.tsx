@@ -16,7 +16,7 @@ export const FolderBreadcrumbs: React.FC<FolderBreadcrumbsProps> = ({
   if (!path || path.length === 0) return null;
 
   return (
-    <Breadcrumb className="mb-0 bg-light p-2 rounded">
+    <Breadcrumb className="mb-0 p-1" style={{ backgroundColor: 'transparent' }}>
       {path.map((folder, index) => {
         const isLast = index === path.length - 1;
         return (
@@ -24,7 +24,11 @@ export const FolderBreadcrumbs: React.FC<FolderBreadcrumbsProps> = ({
             key={folder.id} 
             active={isLast}
             onClick={() => !isLast && onNavigate(folder.id)}
-            style={{ cursor: isLast ? 'default' : 'pointer' }}
+            style={{ 
+              cursor: isLast ? 'default' : 'pointer',
+              color: isLast ? '#111827' : '#6b7280',
+              fontWeight: isLast ? 500 : 400
+            }}
           >
             {index === 0 && <Folder className="me-1 mb-1" size={14} />}
             {folder.displayName || folder.name}

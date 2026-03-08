@@ -189,6 +189,7 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
         <span 
           className={styles.folderName} 
           style={{ fontWeight: folder.isRoot ? 600 : 400 }}
+          title={folder.displayName || folder.name}
           onDoubleClick={(e) => {
             e.stopPropagation();
             if (!folder.isRoot && onRenameFolder) {
@@ -258,7 +259,11 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
                 <FileEarmark className="text-muted" size={14} />
               </span>
               
-              <span className={styles.folderName} style={{ fontSize: '0.85rem' }}>
+              <span 
+                className={styles.folderName} 
+                style={{ fontSize: '0.85rem' }}
+                title={doc.originalname || doc.filename}
+              >
                 {doc.originalname || doc.filename}
               </span>
             </div>

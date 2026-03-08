@@ -12,8 +12,10 @@ jest.mock('../FolderTreeItem', () => ({
     <div data-testid={`folder-${folder.id}`}>{folder.name}</div>
   ),
 }));
+jest.mock('../../../hooks/useOrganization');
 
-const mockUseOrganization = require('../../../hooks/useOrganization').default;
+import useOrganization from '../../../hooks/useOrganization';
+const mockUseOrganization = useOrganization as jest.MockedFunction<typeof useOrganization>;
 
 describe('FolderTree', () => {
   const mockOnSelectFolder = jest.fn();

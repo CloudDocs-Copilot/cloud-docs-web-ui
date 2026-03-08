@@ -30,8 +30,10 @@ jest.mock('../../FileUploader/FileUploader', () => ({
 jest.mock('../../DocumentPreview', () => ({
   DocumentPreviewModal: () => <div data-testid="preview-modal">Preview</div>,
 }));
+jest.mock('../../../hooks/useOrganization');
 
-const mockUseOrganization = require('../../../hooks/useOrganization').default;
+import useOrganization from '../../../hooks/useOrganization';
+const mockUseOrganization = useOrganization as jest.MockedFunction<typeof useOrganization>;
 
 describe('FileManagerView', () => {
   const mockRootFolder: Folder = {

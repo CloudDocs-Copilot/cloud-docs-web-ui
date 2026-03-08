@@ -43,7 +43,7 @@ export const Logo: React.FC<LogoProps> = ({
   };
 
   const getIconColor = () => {
-    if (variant === 'white') return '#6366f1';
+    if (variant === 'white') return '#ffffff'; // White icon for dark backgrounds
     return '#ffffff';
   };
 

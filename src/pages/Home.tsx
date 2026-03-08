@@ -554,7 +554,7 @@ const Home: React.FC = () => {
           <Row>
             <Col md={4} className="mb-4 mb-md-0">
               <h5 className={styles.footerBrand}>
-                <span className={styles.brandIcon}>📄</span>
+                <Logo size={28} variant="white" animated={false} className={styles.brandIcon} />
                 CloudDocs Copilot
               </h5>
               <p className={styles.footerText}>

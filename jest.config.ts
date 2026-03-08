@@ -38,6 +38,8 @@ const config: Config = {
     '!src/**/index.{ts,tsx}',
     '!src/**/index.ts',
     '!src/**/index.tsx',
+    // exclude brand archive folder (historical versions)
+    '!src/brand/archive/**',
   ],
   coverageReporters: ['text', 'lcov', 'json-summary'],
   testTimeout: 30000,

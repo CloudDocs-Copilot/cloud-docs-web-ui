@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useFormValidation } from '../hooks/useFormValidation';
 import { useHttpRequest } from '../hooks/useHttpRequest';
-import { Sparkles, User, Mail, Lock } from 'lucide-react';
+import { User, Mail, Lock } from 'lucide-react';
+import { Logo } from '../brand';
 import styles from './RegisterForm.module.css';
 import { NotificationToast } from './NotificationToast';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
@@ -145,9 +146,7 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
     <div className={styles.container}>
       <div className={styles.wrapper}>
         <div className={styles.headerSection}>
-          <div className={styles.logoIcon}>
-            <Sparkles className={styles.logoIconSvg} />
-          </div>
+          <Logo size={56} variant="gradient" animated />
           <h1 className={styles.appTitle}>CloudDocs Copilot</h1>
           <p className={styles.appSubtitle}>Crea tu cuenta y comienza a organizar</p>
         </div>

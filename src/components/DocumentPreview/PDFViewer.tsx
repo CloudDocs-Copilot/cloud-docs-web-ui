@@ -24,9 +24,6 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ url, filename, onBack, fil
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
-  
-  // Por ahora solo mostramos la primera página
-  const pageNumber = 1;
 
   /**
    * Cargar PDF con autenticación
@@ -187,18 +184,22 @@ export const PDFViewer: React.FC<PDFViewerProps> = ({ url, filename, onBack, fil
             error={<></>}   // Usamos nuestro propio error state
             className={styles.pdfDocument}
           >
-            <Page
-              pageNumber={pageNumber}
-              scale={scale}
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-              loading={
-                <div className={styles.pageLoading}>
-                  <Spinner animation="border" size="sm" />
-                </div>
-              }
-              className={styles.pdfPage}
-            />
+            {/* Renderizar todas las páginas del PDF */}
+            {Array.from(new Array(numPages), (_el, index) => (
+              <Page
+                key={`page_${index + 1}`}
+                pageNumber={index + 1}
+                scale={scale}
+                renderTextLayer={false}
+                renderAnnotationLayer={false}
+                loading={
+                  <div className={styles.pageLoading}>
+                    <Spinner animation="border" size="sm" />
+                  </div>
+                }
+                className={styles.pdfPage}
+              />
+            ))}
           </Document>
         )}
       </div>

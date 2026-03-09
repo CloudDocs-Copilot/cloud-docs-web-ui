@@ -399,7 +399,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
           {/* Footer con fecha y tamaño */}
           <div className={styles.cardFooter}>
             <span className={styles.documentDate}>
-              {formatDate(document.uploadedAt)}
+              {document.uploadedAt ? formatDate(document.uploadedAt) : '—'}
             </span>
             <span className={styles.documentSize}>
               {formatFileSize(document.size)}
@@ -576,8 +576,8 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
           </Modal.Header>
           <Modal.Body>
             <p>¿Deseas mover este documento a la papelera?</p>
-            <p className="text-muted">
-            <strong>{getDocumentDisplayName(document)}</strong>
+            <p className="text-muted" style={{ overflowWrap: 'break-word', wordBreak: 'break-word' }}>
+              <strong>{getDocumentDisplayName(document)}</strong>
             </p>
             <p className="text-muted small">
               El documento se eliminará automáticamente después de 30 días. Puedes restaurarlo desde la papelera antes de

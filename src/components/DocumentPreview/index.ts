@@ -9,3 +9,5 @@ export { ImageViewer } from './ImageViewer';
 export { VideoPlayer } from './VideoPlayer';
 export { TextViewer } from './TextViewer';
 export { PreviewHeader } from './PreviewHeader';
+export { OfficeViewer } from './OfficeViewer';
+export { ExcelPreview } from './ExcelPreview';

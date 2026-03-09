@@ -30,7 +30,7 @@ const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
       <Modal.Header closeButton>
         <Modal.Title id={titleId}>{title}</Modal.Title>
       </Modal.Header>
-      <Modal.Body>{children}</Modal.Body>
+      <Modal.Body style={{ overflowWrap: 'break-word', wordBreak: 'break-word', minWidth: 0 }}>{children}</Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" size="sm" onClick={onCancel} disabled={processing}>
           Cancelar

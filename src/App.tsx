@@ -26,6 +26,7 @@ const ForgotPasswordPage = React.lazy(() => import('./pages/ForgotPasswordPage')
 const ResetPasswordPage = React.lazy(() => import('./pages/ResetPasswordPage'));
 const SharedDocs = React.lazy(() => import('./pages/SharedDocs'));
 const Notifications = React.lazy(() => import('./pages/Notifications'));
+const AICollectionsPage = React.lazy(() => import('./pages/AICollectionsPage'));
 
 
 function App() {
@@ -93,6 +94,7 @@ function App() {
         <Route path="/invitations" element={<PrivateRoute><PendingInvitations /></PrivateRoute>} />
         <Route path="/shared" element={<PrivateRoute><SharedDocs /></PrivateRoute>} />
         <Route path="/notifications" element={<PrivateRoute><RequireOrganization><Notifications /></RequireOrganization></PrivateRoute>} />
+        <Route path="/collections" element={<PrivateRoute><RequireOrganization><AICollectionsPage /></RequireOrganization></PrivateRoute>} />
       <Route path="/auth/confirmed" element={<ConfirmAccount />} />
       <Route path="/forbidden" element={<PrivateRoute><Forbidden /></PrivateRoute>} />
       <Route path="*" element={<NotFound />} />

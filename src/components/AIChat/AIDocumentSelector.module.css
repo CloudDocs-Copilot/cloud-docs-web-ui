@@ -1,0 +1,367 @@
+/* ============================================================
+   AIDocumentSelector — Dropdown para elegir documento
+   ============================================================ */
+
+.wrapper {
+  position: relative;
+}
+
+.trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.85rem;
+  border-radius: 10px;
+  border: 1.5px solid #e5e7eb;
+  background: #fff;
+  font-size: 0.85rem;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.trigger:hover, .triggerOpen {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+}
+
+.triggerPlaceholder {
+  color: #9ca3af;
+}
+
+.triggerLabel {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.chevron {
+  margin-left: auto;
+  font-size: 0.7rem;
+  color: #9ca3af;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.chevronUp {
+  transform: rotate(180deg);
+}
+
+/* ---- Dropdown ---- */
+.dropdown {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.1);
+  z-index: 200;
+  overflow: hidden;
+  animation: dropdownOpen 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  max-height: 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Search bar row ---- */
+.searchWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.6rem;
+  border-bottom: 1px solid #f1f5f9;
+  background: #f8fafc;
+  flex-shrink: 0;
+}
+
+.searchIcon {
+  font-size: 0.8rem;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font-size: 0.83rem;
+  outline: none;
+  color: #1e293b;
+  padding: 0.15rem 0;
+}
+
+.searchInput::placeholder {
+  color: #9ca3af;
+}
+
+.clearIconBtn {
+  background: none;
+  border: none;
+  padding: 0.1rem 0.2rem;
+  cursor: pointer;
+  font-size: 0.7rem;
+  color: #9ca3af;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+.clearIconBtn:hover {
+  color: #ef4444;
+}
+
+/* ---- Body scroll area ---- */
+.bodyScroll {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+.bodyScroll::-webkit-scrollbar { width: 4px; }
+.bodyScroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+
+/* ---- Section labels ---- */
+.sectionLabel {
+  padding: 0.5rem 0.85rem 0.2rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+/* ---- Results header ---- */
+.resultsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.45rem 0.85rem;
+  border-bottom: 1px solid #f1f5f9;
+  flex-shrink: 0;
+}
+
+.resultsLabel {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.clearBtn {
+  background: none;
+  border: none;
+  font-size: 0.7rem;
+  color: #6366f1;
+  cursor: pointer;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+.clearBtn:hover {
+  background: #f5f3ff;
+}
+
+/* ---- Suggestion items ---- */
+.suggestionItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.85rem;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 0.83rem;
+  color: #374151;
+}
+.suggestionItem:hover {
+  background: #f5f3ff;
+  color: #4f46e5;
+}
+
+.suggestionIcon {
+  font-size: 0.8rem;
+  color: #6366f1;
+  flex-shrink: 0;
+}
+
+.suggestionText {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Shared badge ---- */
+.sharedBadge {
+  font-size: 0.62rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  font-weight: 600;
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+/* ---- Incompatible option ---- */
+.optionIncompatible {
+  opacity: 0.6;
+}
+
+/* ---- Shake on wrapper ---- */
+.shake {
+  animation: shake 0.4s ease both;
+}
+
+.optionList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  scrollbar-width: thin;
+  scrollbar-color: #e2e8f0 transparent;
+}
+
+.optionList::-webkit-scrollbar { width: 4px; }
+.optionList::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.option:hover {
+  background: #f5f3ff;
+}
+
+.optionSelected {
+  background: #ede9fe;
+}
+
+.optionIcon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.optionContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.optionName {
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.optionMeta {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.1rem;
+}
+
+/* ---- Badges de estado IA ---- */
+.aiBadge {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.aiCompleted {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.aiProcessing {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.aiNone {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.aiFailed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ---- Badge formato no compatible ---- */
+.unsupportedBadge {
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-weight: 600;
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* ---- Aviso debajo del trigger cuando el doc no es compatible ---- */
+.incompatibleWarning {
+  margin-top: 0.35rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: 8px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  font-size: 0.75rem;
+  color: #92400e;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  animation: shake 0.4s ease both;
+}
+
+.incompatibleIcon {
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+/* ---- Empty / Loading ---- */
+.emptyOption {
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #9ca3af;
+}
+
+/* ---- Animaciones ---- */
+@keyframes dropdownOpen {
+  from { opacity: 0; transform: translateY(6px) scaleY(0.95); }
+  to   { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-4px); }
+  40%       { transform: translateX(4px); }
+  60%       { transform: translateX(-3px); }
+  80%       { transform: translateX(3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

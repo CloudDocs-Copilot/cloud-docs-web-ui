@@ -52,9 +52,10 @@ describe("Notifications Page", () => {
     });
   });
 
-  it("renders page title", () => {
+  it("renders page with filter tabs", () => {
     render(<Notifications />);
-    expect(screen.getByText("Notificaciones")).toBeInTheDocument();
+    expect(screen.getByText("Todas")).toBeInTheDocument();
+    expect(screen.getByText(/No leídas/)).toBeInTheDocument();
   });
 
   it("calls refresh on mount", () => {

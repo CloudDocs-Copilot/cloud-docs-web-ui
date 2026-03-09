@@ -44,7 +44,7 @@ describe('PDFViewer', () => {
     }
   });
 
-  it('loads PDF blob and renders page', async () => {
+  it('loads PDF blob and renders all pages', async () => {
     const blob = new Blob(['%PDF-1.4'], { type: 'application/pdf' });
     mockApiGet.mockResolvedValueOnce({ 
       data: blob, 
@@ -60,8 +60,10 @@ describe('PDFViewer', () => {
       expect(screen.getByTestId('pdf-document')).toBeInTheDocument();
     }, { timeout: 2000 });
     
+    // El mock simula un PDF con 2 páginas, verificar que ambas se renderizan
     await waitFor(() => {
-      expect(screen.getByTestId('pdf-page')).toBeInTheDocument();
+      const pages = screen.getAllByTestId('pdf-page');
+      expect(pages).toHaveLength(2);
     }, { timeout: 2000 });
   });
 

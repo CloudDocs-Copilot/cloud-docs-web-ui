@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Container, Row, Col, Button, Spinner, Form, Modal } from 'react-bootstrap';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Container, Row, Col, Button, Spinner, Form, Modal, Pagination } from 'react-bootstrap';
 import { FolderPlus, FileEarmarkPlus } from 'react-bootstrap-icons';
 import { FolderTree } from './FolderTree';
 import { FolderCard } from './FolderCard';
 import { FolderBreadcrumbs } from './FolderBreadcrumbs';
+import { FileUploader } from '../FileUploader/FileUploader';
 import DocumentCard from '../DocumentCard';
 import { DocumentPreviewModal } from '../DocumentPreview';
 import { folderService } from '../../services/folder.service';
@@ -36,6 +37,12 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
   const [refreshTree, setRefreshTree] = useState(0);
   const [folderTree, setFolderTree] = useState<Folder | null>(null);
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalDocuments, setTotalDocuments] = useState(0);
+  const DOCUMENTS_PER_PAGE = 20;
+
   // New Folder Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
@@ -58,20 +65,24 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
   const [renamingDoc, setRenamingDoc] = useState(false);
 
   // File Upload State
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [uploadingFile, setUploadingFile] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   // Helper to find path in tree (would handle breadcrumbs)
   // For now, simpler breadcrumbs: just Current Folder name, or we rely on Tree selection highlight
   
-  const fetchContents = useCallback(async (folderId: string) => {
+  const fetchContents = useCallback(async (folderId: string, page: number = 1) => {
     setLoading(true);
     try {
-      const data = await folderService.getContents(folderId);
+      const data = await folderService.getContents(folderId, page, DOCUMENTS_PER_PAGE);
       setItems({ subfolders: data.subfolders, documents: data.documents });
       // Update current folder details from response
       setCurrentFolder(data.folder);
+      // Update pagination info
+      if (data.pagination) {
+        setCurrentPage(data.pagination.page);
+        setTotalPages(data.pagination.totalPages);
+        setTotalDocuments(data.pagination.total);
+      }
     } catch (error: unknown) {
       console.error('[FileManagerView] Error al cargar contenido:', error);
       alert(`Error al cargar carpeta: ${getErrorMessage(error)}`);
@@ -80,12 +91,12 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [DOCUMENTS_PER_PAGE]);
 
   // Effect to handle external refresh triggers (e.g. from File Upload in Header)
   useEffect(() => {
     if (externalRefresh > 0 && currentFolder) {
-       fetchContents(currentFolder.id);
+       fetchContents(currentFolder.id, currentPage);
        setRefreshTree(prev => prev + 1);
     } else if (externalRefresh > 0 && !currentFolder && activeOrganization) {
        // Refresh root if we are at root (NOTE: fetchContents needs an ID, if null is root we might need logic adjustment)
@@ -99,7 +110,8 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
 
   const handleSelectFolder = useCallback((folder: Folder) => {
     setCurrentFolder(folder);
-    fetchContents(folder.id);
+    setCurrentPage(1); // Reset to page 1 when changing folders
+    fetchContents(folder.id, 1);
   }, [fetchContents]);
 
   const handleCreateFolder = async () => {
@@ -127,8 +139,9 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       });
       setShowCreateModal(false);
       setNewFolderName('');
-      // Refresh content and tree
-      fetchContents(currentFolder.id);
+      // Refresh content and tree (reset to page 1 as folder list changed)
+      setCurrentPage(1);
+      fetchContents(currentFolder.id, 1);
       setRefreshTree(prev => prev + 1);
     } catch (error: unknown) {
       console.error('Error al crear carpeta:', error);
@@ -159,7 +172,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       setRenameFolderValue('');
       // Refresh content and tree
       if (currentFolder) {
-        fetchContents(currentFolder.id);
+        fetchContents(currentFolder.id, currentPage);
       }
       setRefreshTree(prev => prev + 1);
     } catch (error: unknown) {
@@ -184,13 +197,13 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
     // Refrescar el contenido de la carpeta actual después de eliminar
     if (currentFolder) {
       console.log('[FileManagerView] Llamando a fetchContents para actualizar la lista...');
-      fetchContents(currentFolder.id);
+      fetchContents(currentFolder.id, currentPage);
       // También refrescar el árbol para actualizar los contadores
       setRefreshTree(prev => prev + 1);
     } else {
       console.warn('[FileManagerView] No hay currentFolder, no se puede refrescar');
     }
-  }, [currentFolder, fetchContents]);
+  }, [currentFolder, currentPage, fetchContents]);
 
   const handleConfirmRenameDocument = async () => {
     if (!documentToRename || !renameDocValue.trim()) {
@@ -205,7 +218,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       setRenameDocValue('');
       // Refresh content
       if (currentFolder) {
-        fetchContents(currentFolder.id);
+        fetchContents(currentFolder.id, currentPage);
       }
     } catch (error: unknown) {
       console.error('Error al renombrar documento:', error);
@@ -240,48 +253,18 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
   };
 
   const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
     if (!currentFolder?.id) {
       alert('Por favor selecciona una carpeta primero');
       return;
     }
+    setShowUploadModal(true);
+  };
 
-    console.log('[FileManagerView] Subiendo archivo a carpeta:', currentFolder.id, 'Nombre de carpeta:', currentFolder.name);
-
-    setUploadingFile(true);
-    setUploadProgress(0);
-
-    try {
-      const response = await documentService.uploadDocument({
-        file,
-        folderId: currentFolder.id,
-        onProgress: (progress) => {
-          setUploadProgress(progress.percentage);
-        },
-      });
-
-      console.log('[FileManagerView] Carga exitosa, documento:', response.document);
-
-      // Refrescar contenido
-      fetchContents(currentFolder.id);
+  const handleUploadComplete = () => {
+    // Refrescar contenido después de subir archivos
+    if (currentFolder) {
+      fetchContents(currentFolder.id, currentPage);
       setRefreshTree(prev => prev + 1);
-      
-      // Resetear input de archivo
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (error: unknown) {
-      console.error('Error al subir archivo:', error);
-      alert(`Error al subir archivo: ${getErrorMessage(error)}`);
-    } finally {
-      setUploadingFile(false);
-      setUploadProgress(0);
     }
   };
 
@@ -327,7 +310,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       await documentService.moveDocument(documentId, targetFolderId);
       // Refresh current folder view as the document might have moved OUT of it
       if (currentFolder) {
-        fetchContents(currentFolder.id);
+        fetchContents(currentFolder.id, currentPage);
       }
       // Also refresh tree in case counts update (if we implement counts)
       setRefreshTree(prev => prev + 1);
@@ -348,7 +331,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
       await folderService.move(sourceFolderId, { targetFolderId });
       // Refresh current folder view
       if (currentFolder) {
-        fetchContents(currentFolder.id);
+        fetchContents(currentFolder.id, currentPage);
       }
       // Refresh tree to show new structure
       setRefreshTree(prev => prev + 1);
@@ -362,15 +345,6 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
 
   return (
     <Container fluid className="vh-100 d-flex flex-column overflow-hidden p-0">
-      {/* Input de archivo oculto */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        style={{ display: 'none' }}
-        onChange={handleFileChange}
-        disabled={uploadingFile}
-      />
-
       {/* Barra de herramientas */}
       <div className="bg-white border-bottom p-2 d-flex justify-content-between align-items-center">
         <h5 className="m-0 ps-2">Archivos</h5>
@@ -387,10 +361,10 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
             variant="primary" 
             size="sm" 
             onClick={handleUploadClick}
-            disabled={!currentFolder || uploadingFile}
+            disabled={!currentFolder}
           >
             <FileEarmarkPlus className="me-2" /> 
-            {uploadingFile ? `Subiendo... ${uploadProgress}%` : 'Subir Archivo'}
+            Subir Archivo
           </Button>
         </div>
       </div>
@@ -417,7 +391,10 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
             <FolderBreadcrumbs 
               currentFolder={currentFolder} 
               path={breadcrumbPath}
-              onNavigate={(id) => fetchContents(id)}
+              onNavigate={(id) => {
+                setCurrentPage(1);
+                fetchContents(id, 1);
+              }}
             />
           </div>
 
@@ -451,7 +428,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
 
                  {/* Cuadrícula de documentos */}
                  <div>
-                    <h6 className="text-muted mb-3">Archivos ({items.documents.length})</h6>
+                    <h6 className="text-muted mb-3">Archivos ({totalDocuments > 0 ? totalDocuments : items.documents.length})</h6>
                     <Row className="g-3">
                       {items.documents.map(doc => (
                         <Col key={doc.id} xs={12} sm={6} md={4} lg={3}>
@@ -469,6 +446,57 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
                         </div>
                       )}
                     </Row>
+
+                    {/* Controles de Paginación */}
+                    {totalPages > 1 && (
+                      <div className="d-flex justify-content-center mt-4">
+                        <Pagination>
+                          <Pagination.First 
+                            onClick={() => currentFolder && fetchContents(currentFolder.id, 1)}
+                            disabled={currentPage === 1}
+                          />
+                          <Pagination.Prev 
+                            onClick={() => currentFolder && fetchContents(currentFolder.id, currentPage - 1)}
+                            disabled={currentPage === 1}
+                          />
+                          
+                          {/* Mostrar páginas cercanas */}
+                          {Array.from({ length: totalPages }, (_, i) => i + 1)
+                            .filter(page => {
+                              // Mostrar primera, última, actual y 2 cercanas
+                              return page === 1 || 
+                                     page === totalPages || 
+                                     Math.abs(page - currentPage) <= 2;
+                            })
+                            .map((page, index, array) => {
+                              // Agregar puntos suspensivos si hay salto
+                              const prevPage = array[index - 1];
+                              const showEllipsis = prevPage && page - prevPage > 1;
+                              
+                              return (
+                                <React.Fragment key={page}>
+                                  {showEllipsis && <Pagination.Ellipsis disabled />}
+                                  <Pagination.Item
+                                    active={page === currentPage}
+                                    onClick={() => currentFolder && fetchContents(currentFolder.id, page)}
+                                  >
+                                    {page}
+                                  </Pagination.Item>
+                                </React.Fragment>
+                              );
+                            })}
+                          
+                          <Pagination.Next 
+                            onClick={() => currentFolder && fetchContents(currentFolder.id, currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                          />
+                          <Pagination.Last 
+                            onClick={() => currentFolder && fetchContents(currentFolder.id, totalPages)}
+                            disabled={currentPage === totalPages}
+                          />
+                        </Pagination>
+                      </div>
+                    )}
                  </div>
               </>
             )}
@@ -585,6 +613,31 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
           show={showPreview}
           onHide={handleClosePreview}
         />
+      )}
+
+      {/* Modal de carga múltiple de archivos */}
+      {showUploadModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1050,
+          padding: '1rem'
+        }}>
+          <div style={{ maxWidth: '600px', width: '100%' }}>
+            <FileUploader
+              folderId={currentFolder?.id}
+              onUploadSuccess={handleUploadComplete}
+              onClose={() => setShowUploadModal(false)}
+            />
+          </div>
+        </div>
       )}
     </Container>
   );

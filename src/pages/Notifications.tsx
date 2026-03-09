@@ -93,7 +93,7 @@ const Notifications: React.FC = () => {
     <MainLayout>
       <Container fluid className="py-3">
         <div className={styles['page-header']}>
-          <h2 className={styles['page-header-title']}>Notificaciones</h2>
+          
           {unreadCount > 0 && (
             <Button variant="outline-primary" size="sm" onClick={handleMarkAllRead}>
               Marcar todas como leídas

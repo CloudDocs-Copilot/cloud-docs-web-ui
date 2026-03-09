@@ -261,6 +261,16 @@ export async function copyDocument(
 }
 
 /**
+ * Lista los documentos compartidos con el usuario autenticado
+ *
+ * @returns Promesa con la lista de documentos compartidos
+ */
+export async function listSharedDocuments(): Promise<ListDocumentsResponse> {
+  const response = await apiClient.get<ListDocumentsResponse>('/documents/shared');
+  return response.data;
+}
+
+/**
  * Comparte un documento con otros usuarios
  *
  * @param documentId - ID del documento a compartir

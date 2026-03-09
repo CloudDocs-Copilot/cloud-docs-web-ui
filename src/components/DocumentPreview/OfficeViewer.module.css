@@ -103,3 +103,62 @@
     padding: 20px;
   }
 }
+
+/* Estilos para PowerPoint - Interfaz de descarga segura */
+.powerPointContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  max-width: 700px;
+  margin: 2rem auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.powerPointIcon {
+  animation: fadeInScale 0.4s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.powerPointContainer h4 {
+  color: #212529;
+  font-weight: 600;
+  margin-top: 1rem;
+  word-break: break-word;
+}
+
+.powerPointContainer .alert {
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.powerPointContainer .alert ul {
+  margin-bottom: 0;
+  padding-left: 1.5rem;
+  text-align: left;
+}
+
+.powerPointContainer .alert li {
+  margin-bottom: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .powerPointContainer {
+    padding: 2rem 1.5rem;
+    margin: 1rem;
+  }
+}

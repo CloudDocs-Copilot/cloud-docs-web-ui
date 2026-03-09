@@ -49,6 +49,13 @@ function getHumanLoginError(err: unknown): string {
     return "Correo o contraseña incorrectos.";
   }
 
+  if (status === 403) {
+    if (msg.includes("account is not active")) {
+      return "Usuario inactivo. No puede iniciar sesión.";
+    }
+    return "No tienes permisos para iniciar sesión.";
+  }
+
   if (status === 404) {
     const url = `${err.config?.baseURL ?? ""}${err.config?.url ?? ""}`;
 

@@ -14,40 +14,55 @@ import { useNavigate } from 'react-router-dom';
     aiAnalysis: boolean;
   }
 interface IUserDTO {
-    name: string;
-    email: string;
-    role: 'user' | 'admin';
-    active: boolean;
-    tokenVersion: number;
-    lastPasswordChange?: string | null;
-    organization?: string | null;
-    rootFolder?: string | null;
-    storageUsed: number;
-    avatar?: string | null;
-    preferences: IUserPreferences;
-    createdAt: string;
-    updatedAt: string;
-  }
+  name: string;
+  email: string;
+  role: 'user' | 'admin';
+  active: boolean;
+  tokenVersion: number;
+  lastPasswordChange?: string | null;
+  organization?: string | null;
+  rootFolder?: string | null;
+  storageUsed: number;
+  avatar?: string | null;
+  preferences: IUserPreferences;
+  createdAt: string;
+  updatedAt: string;
+}
 
-  interface RegisterApiResponse {
-    message: string;
-    user: IUserDTO;
-  }
+interface RegisterApiResponse {
+  message: string;
+  user: IUserDTO;
+}
+
+interface RegisterApiErrorResponse {
+  success: false;
+  error: string;
+}
+
+interface HttpRequestErrorLike {
+  message?: string;
+  status?: number;
+  data?: RegisterApiErrorResponse;
+  response?: {
+    status?: number;
+    data?: RegisterApiErrorResponse;
+  };
+}
+
 interface RegisterFormProps {
   onRegister?: (data: { name: string; email: string; password: string }) => void;
   onSwitchToLogin?: () => void;
 }
 
 const RegisterForm: React.FC<RegisterFormProps> = () => {
-
   usePageTitle({
-        title: 'Register',
-        subtitle: 'Register',
-        documentTitle: 'Registro de usuario',
-        metaDescription: 'Página de registro para CloudDocs Copilot'
-      });
-    
-  const navigate = useNavigate(); 
+    title: 'Register',
+    subtitle: 'Register',
+    documentTitle: 'Registro de usuario',
+    metaDescription: 'Página de registro para CloudDocs Copilot'
+  });
+
+  const navigate = useNavigate();
 
   const [form, setForm] = useState({
     name: '',
@@ -63,12 +78,8 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState<'success' | 'danger'>('danger');
 
-  
-
-  
-
   // Hook genérico para llamadas HTTP
-  const { execute,  error: apiError } = useHttpRequest<RegisterApiResponse>();
+  const { execute, error: apiError } = useHttpRequest<RegisterApiResponse>();
 
   // Validaciones por campo
   const validationRules = {
@@ -86,7 +97,7 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
       if (!/[A-Z]/.test(value)) return 'Debe tener una mayúscula.';
       if (!/[0-9]/.test(value)) return 'Debe tener un número.';
       if (!/[^A-Za-z0-9]/.test(value)) return 'Debe tener un carácter especial.';
-      
+
       return '';
     },
     confirm: (value: string) => {
@@ -97,7 +108,6 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
   };
 
   const {
-   
     validateAllFields,
     getFieldError,
     clearAllErrors
@@ -127,13 +137,26 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
 
     // Ejecutar la petición usando el hook genérico
     const result = await execute({ method: 'POST', url: '/auth/register', data: payload });
-
     if (result) {
-      setSuccess(result.message || 'Registro exitoso. Revisa tu email para confirmar tu cuenta.');
+      const successMessage = 'Registro exitoso. Revisa tu email para confirmar tu cuenta.';
+      setSuccess(successMessage);
+      setToastMessage(successMessage);
+      setToastVariant('success');
+      setShowToast(true);
       setForm({ name: '', email: '', password: '', confirm: '' });
-      navigate('/login');
+      setTimeout(() => {
+        navigate('/login');
+      }, 3000);
     } else {
-      const msg = apiError?.message || 'Error al registrar usuario.';
+      const requestError = apiError as HttpRequestErrorLike | null;
+
+      const msg =
+        (requestError?.status === 409 || requestError?.response?.status === 409)
+          ? requestError?.data?.error ||
+            requestError?.response?.data?.error ||
+            'Correo electrónico ya registrado.'
+          : requestError?.message || 'Error al registrar usuario.';
+
       setError(msg);
       setToastMessage(msg);
       setToastVariant('danger');
@@ -231,7 +254,7 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
         onClose={() => setShowToast(false)}
         message={toastMessage}
         variant={toastVariant}
-        title={toastVariant === 'danger' ? 'Error' : 'Notificación'}
+        title={toastVariant === 'danger' ? 'Error' : 'Éxito'}
       />
     </div>
   );

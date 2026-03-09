@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
 
   return (
     <MainLayout>
-      <Container fluid>
+      <Container fluid className="p-4" style={{ backgroundColor: '#f5f6f8' }}>
         <DashboardGrid
           role={role}
           stats={stats}

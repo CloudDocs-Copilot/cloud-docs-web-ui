@@ -13,12 +13,17 @@
 
 .contentArea {
   flex: 1;
-  padding: 32px;
+  padding: 0;
   overflow-y: auto;
+  background-color: #f5f6f8;
 }
 
 .contentHeader {
-  margin-bottom: 32px;
+  background-color: #ffffff;
+  padding: 24px 32px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .breadcrumbs {
@@ -39,16 +44,18 @@
 }
 
 .pageTitle {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin-bottom: 4px;
+  font-size: 1.875rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 6px;
+  letter-spacing: -0.02em;
 }
 
 .pageSubtitle {
-  font-size: 0.95rem;
+  font-size: 0.9375rem;
   color: #6b7280;
   margin: 0;
+  line-height: 1.5;
 }
 
 .pageActions {

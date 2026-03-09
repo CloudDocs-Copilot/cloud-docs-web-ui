@@ -91,7 +91,7 @@ const Notifications: React.FC = () => {
 
   return (
     <MainLayout>
-      <Container fluid className="py-3">
+      <Container fluid className="p-4" style={{ backgroundColor: '#f5f6f8' }}>
         <div className={styles['page-header']}>
           
           {unreadCount > 0 && (

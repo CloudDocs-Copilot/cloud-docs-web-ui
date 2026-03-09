@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, OverlayTrigger, Popover, Spinner } from 'react-bootstrap';
 import styles from './Header.module.css';
 import { useAuth } from '../hooks/useAuth';
+import { Logo } from '../brand';
 import OrganizationSelector from './Organization/OrganizationSelector';
 import { useNotifications } from '../hooks/useNotifications';
 import { getNotificationTypeLabel } from '../constants/notificationTypes';
@@ -138,6 +139,7 @@ const Header: React.FC = () => {
   return (
     <>
       <header className={styles.header}>
+        <Logo size={36} variant="gradient" onClick={() => navigate('/dashboard')} />
 
         <div className={styles.headerActions}>
           <OrganizationSelector />

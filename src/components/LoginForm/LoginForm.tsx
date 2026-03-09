@@ -5,6 +5,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { usePageTitle } from "../../hooks/usePageInfoTitle";
 import { useAuth } from "../../hooks/useAuth";
 import { useFormValidation } from "../../hooks/useFormValidation";
+import { Logo } from '../../brand';
 import axios from "axios";
 import type { AxiosError } from 'axios';
 
@@ -148,28 +149,7 @@ export default function LoginForm() {
       <div className={styles.wrapper}>
         {/* Header (logo + textos) */}
         <div className={styles.headerSection}>
-          <div className={styles.logoIcon}>
-            {/* Icono (puedes sustituirlo por tu SVG final cuando lo tengas) */}
-            <svg
-              className={styles.logoIconSvg}
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M12 2l1.2 4.3L17.5 8 13.2 9.2 12 13.5 10.8 9.2 6.5 8l4.3-1.7L12 2Z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M19 11l.7 2.5L22 14l-2.3.5L19 17l-.7-2.5L16 14l2.3-.5L19 11Z"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </div>
+          <Logo size={56} variant="gradient" animated />
 
           <div className={styles.appTitle}>CloudDocs Copilot</div>
           <div className={styles.appSubtitle}>Gestión documental inteligente con IA</div>

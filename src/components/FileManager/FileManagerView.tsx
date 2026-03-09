@@ -6,6 +6,7 @@ import { FolderCard } from './FolderCard';
 import { FolderBreadcrumbs } from './FolderBreadcrumbs';
 import { FileUploader } from '../FileUploader/FileUploader';
 import DocumentCard from '../DocumentCard';
+import treeStyles from './FolderTree.module.css';
 import { DocumentPreviewModal } from '../DocumentPreview';
 import { folderService } from '../../services/folder.service';
 import * as documentService from '../../services/document.service';
@@ -344,10 +345,10 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
   };
 
   return (
-    <Container fluid className="vh-100 d-flex flex-column overflow-hidden p-0">
+    <Container fluid className="vh-100 d-flex flex-column overflow-hidden p-0" style={{ backgroundColor: '#f5f6f8' }}>
       {/* Barra de herramientas */}
-      <div className="bg-white border-bottom p-2 d-flex justify-content-between align-items-center">
-        <h5 className="m-0 ps-2">Archivos</h5>
+      <div className="bg-white border-bottom p-2 d-flex justify-content-between align-items-center" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)' }}>
+        <h5 className="m-0 ps-2" style={{ fontSize: '1.125rem', fontWeight: 600, color: '#111827' }}>Archivos</h5>
         <div className="d-flex gap-2">
           <Button 
             variant="outline-primary" 
@@ -371,23 +372,25 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
 
       <Row className="flex-grow-1 g-0 overflow-hidden">
         {/* Árbol lateral */}
-        <Col md={3} lg={2} className="border-end bg-light overflow-auto h-100">
-          <FolderTree 
-            onSelectFolder={handleSelectFolder} 
-            selectedFolderId={currentFolder?.id}
-            refreshTrigger={refreshTree}
-            onMoveDocument={handleMoveDocument}
-            onDocumentClick={handleDocumentClick}
-            onRenameFolder={handleRenameFolder}
-            onRenameDocument={handleRenameDocument}
-            onTreeLoaded={setFolderTree}
-          />
+        <Col md={3} lg={2} className={`border-end h-100 ${treeStyles.treeContainer}`} style={{ backgroundColor: '#ffffff', borderRight: '1px solid #e5e7eb' }}>
+          <div className="p-2">
+            <FolderTree 
+              onSelectFolder={handleSelectFolder} 
+              selectedFolderId={currentFolder?.id}
+              refreshTrigger={refreshTree}
+              onMoveDocument={handleMoveDocument}
+              onDocumentClick={handleDocumentClick}
+              onRenameFolder={handleRenameFolder}
+              onRenameDocument={handleRenameDocument}
+              onTreeLoaded={setFolderTree}
+            />
+          </div>
         </Col>
 
         {/* Contenido principal */}
         <Col md={9} lg={10} className="d-flex flex-column h-100 overflow-hidden">
           {/* Área de navegación (breadcrumbs) */}
-          <div className="p-2 border-bottom bg-white">
+          <div className="p-2 border-bottom bg-white" style={{ boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)' }}>
             <FolderBreadcrumbs 
               currentFolder={currentFolder} 
               path={breadcrumbPath}
@@ -399,7 +402,7 @@ export const FileManagerView: React.FC<FileManagerViewProps> = ({ externalRefres
           </div>
 
           {/* Cuadrícula de archivos */}
-          <div className="flex-grow-1 overflow-auto p-3 bg-white">
+          <div className="flex-grow-1 overflow-auto p-3" style={{ backgroundColor: '#fafbfc' }}>
             {loading ? (
               <div className="d-flex justify-content-center pt-5">
                 <Spinner animation="border" variant="primary" />

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Badge, Alert } from 'react-bootstrap';
+import { Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { DashboardWidget } from '../DashboardWidget';
 import type { OrgMember } from '../../../services/dashboard.service';
@@ -10,11 +10,11 @@ interface MembersOverviewWidgetProps {
   error: string | null;
 }
 
-const ROLE_VARIANT: Record<string, string> = {
-  owner: 'danger',
-  admin: 'warning',
-  member: 'primary',
-  viewer: 'secondary',
+const ROLE_COLOR: Record<string, string> = {
+  owner: '#dc3545',
+  admin: '#fd7e14',
+  member: '#0d6efd',
+  viewer: '#6c757d',
 };
 
 const ROLE_LABEL: Record<string, string> = {
@@ -23,6 +23,28 @@ const ROLE_LABEL: Record<string, string> = {
   member: 'Miembro',
   viewer: 'Visitante',
 };
+
+const STATUS_COLOR: Record<string, string> = {
+  active: '#198754',
+  pending: '#fd7e14',
+  suspended: '#dc3545',
+};
+
+const AVATAR_BG = '#0d6efd';
+
+function getMemberName(m: OrgMember): string {
+  if (m.user?.name) return m.user.name;
+  if (m.user?.email) return m.user.email;
+  return 'Usuario';
+}
+
+function getMemberEmail(m: OrgMember): string {
+  return m.user?.email ?? '';
+}
+
+function getInitial(name: string): string {
+  return name.trim().charAt(0).toUpperCase();
+}
 
 export const MembersOverviewWidget: React.FC<MembersOverviewWidgetProps> = ({
   members,
@@ -40,15 +62,6 @@ export const MembersOverviewWidget: React.FC<MembersOverviewWidgetProps> = ({
     </svg>
   );
 
-  const roleCounts =
-    members?.reduce<Record<string, number>>((acc, m) => {
-      const role = typeof m.role === 'string' ? m.role.toLowerCase() : 'member';
-      acc[role] = (acc[role] ?? 0) + 1;
-      return acc;
-    }, {}) ?? {};
-
-  const pending = members?.filter((m) => m.status === 'pending').length ?? 0;
-
   const actions = (
     <button
       className="btn btn-link btn-sm p-0 text-decoration-none"
@@ -58,6 +71,8 @@ export const MembersOverviewWidget: React.FC<MembersOverviewWidgetProps> = ({
     </button>
   );
 
+  const preview = members?.slice(0, 5) ?? [];
+
   return (
     <DashboardWidget title="Miembros" icon={icon} loading={loading} actions={actions}>
       {error && (
@@ -65,22 +80,62 @@ export const MembersOverviewWidget: React.FC<MembersOverviewWidgetProps> = ({
           <small>{error}</small>
         </Alert>
       )}
-      {!error && members && (
-        <div>
-          <p className="mb-2 fw-semibold">{members.length} miembros en total</p>
-          <div className="d-flex flex-wrap gap-1 mb-2">
-            {Object.entries(roleCounts).map(([role, count]) => (
-              <Badge key={role} bg={ROLE_VARIANT[role] ?? 'secondary'}>
-                {ROLE_LABEL[role] ?? role}: {count}
-              </Badge>
-            ))}
-          </div>
-          {pending > 0 && (
-            <small className="text-warning">
-              {pending} invitación{pending !== 1 ? 'es' : ''} pendiente{pending !== 1 ? 's' : ''}
-            </small>
+      {!error && members && members.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {preview.map((m, idx) => {
+            const name = getMemberName(m);
+            const email = getMemberEmail(m);
+            const role = (typeof m.role === 'string' ? m.role.toLowerCase() : 'member');
+            const status = (typeof m.status === 'string' ? m.status.toLowerCase() : 'active');
+            return (
+              <div key={m.id ?? idx} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {/* Avatar */}
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%',
+                  backgroundColor: AVATAR_BG,
+                  color: '#fff', fontWeight: 700, fontSize: '0.875rem',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  {getInitial(name)}
+                </div>
+                {/* Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.85rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {name}
+                  </div>
+                  {email && (
+                    <div style={{ fontSize: '0.75rem', color: '#6b7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {email}
+                    </div>
+                  )}
+                </div>
+                {/* Role */}
+                <span style={{
+                  fontSize: '0.72rem', fontWeight: 600, padding: '2px 8px',
+                  borderRadius: 12, backgroundColor: ROLE_COLOR[role] ?? '#6b7280',
+                  color: '#fff', whiteSpace: 'nowrap', flexShrink: 0,
+                }}>
+                  {ROLE_LABEL[role] ?? role}
+                </span>
+                {/* Status dot */}
+                <span
+                  title={status}
+                  style={{
+                    width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                    backgroundColor: STATUS_COLOR[status] ?? '#6b7280',
+                  }}
+                />
+              </div>
+            );
+          })}
+          {members.length > 5 && (
+            <small className="text-muted">+{members.length - 5} más</small>
           )}
         </div>
+      )}
+      {!error && members && members.length === 0 && !loading && (
+        <p className="text-muted small mb-0">No hay miembros en esta organización.</p>
       )}
       {!error && !members && !loading && (
         <p className="text-muted small mb-0">No hay datos disponibles.</p>

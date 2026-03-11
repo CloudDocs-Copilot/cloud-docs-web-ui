@@ -19,10 +19,13 @@ import * as useOrgModule from '../../hooks/useOrganization';
 import { dashboardService } from '../../services/dashboard.service';
 
 const mockStats = {
-  storageUsed: 1000,
-  storageTotal: 10000,
-  documentsCount: 5,
-  membersCount: 3,
+  totalUsers: 3,
+  totalStorageLimit: 10000,
+  totalDocuments: 5,
+  totalFolders: 2,
+  usedStorage: 1000,
+  availableStorage: 9000,
+  storagePerUser: [],
 };
 
 const mockMembers = [

@@ -1,15 +1,25 @@
 import { apiClient } from '../api';
 
-export interface OrgStats {
+export interface StoragePerUser {
+  userId: string;
+  userName: string;
   storageUsed: number;
-  storageTotal: number;
-  documentsCount: number;
-  membersCount: number;
+  percentage: number;
+}
+
+export interface OrgStats {
+  totalUsers: number;
+  totalStorageLimit: number;
+  totalDocuments: number;
+  totalFolders: number;
+  usedStorage: number;
+  availableStorage: number;
+  storagePerUser: StoragePerUser[];
 }
 
 export interface OrgStatsResponse {
   success: boolean;
-  data: OrgStats;
+  stats: OrgStats;
 }
 
 export interface OrgMember {
@@ -33,11 +43,20 @@ export interface OrgMembersResponse {
 export const dashboardService = {
   getOrganizationStats: async (orgId: string): Promise<OrgStats> => {
     const response = await apiClient.get<OrgStatsResponse>(`/organizations/${orgId}/stats`);
-    return response.data.data;
+    return response.data.stats;
   },
 
   getOrganizationMembers: async (orgId: string): Promise<OrgMember[]> => {
-    const response = await apiClient.get<OrgMembersResponse>(`/organizations/${orgId}/members`);
-    return response.data.data;
+    const response = await apiClient.get(`/memberships/organization/${orgId}/members`);
+    const payload = response?.data;
+    let items: OrgMember[] = [];
+    if (Array.isArray(payload)) {
+      items = payload;
+    } else if (payload && Array.isArray(payload.data)) {
+      items = payload.data;
+    } else if (payload && Array.isArray(payload.members)) {
+      items = payload.members;
+    }
+    return items;
   },
 };

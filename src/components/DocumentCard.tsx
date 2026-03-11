@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Badge, Modal, Button } from 'react-bootstrap';
+import { Card, Modal, Button } from 'react-bootstrap';
 import { GripVertical } from 'react-bootstrap-icons';
 import type { Document } from '../types/document.types';
 import { getFileTypeFromMime, formatFileSize } from '../types/document.types';
@@ -157,25 +157,40 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
     }
   };
 
-  // Mapeo de folder IDs a nombres de categorías
-  const getFolderName = (folderId: string): string => {
-    const folderMap: { [key: string]: string } = {
-      'folder_legal': 'Legal',
-      'folder_finanzas': 'Finanzas',
-      'folder_proyectos': 'Proyectos',
-      'folder_tecnico': 'Técnico',
-      'folder_marketing': 'Marketing'
-    };
-    return folderMap[folderId] || 'General';
-  };
-
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
-      'Legal': '#fbbf24',
-      'Finanzas': '#10b981',
-      'Proyectos': '#a855f7',
-      'Técnico': '#f97316',
-      'Marketing': '#a855f7',
+      'Contrato': '#fbbf24',
+      'Factura': '#10b981',
+      'Informe': '#3b82f6',
+      'Manual': '#f97316',
+      'Política': '#8b5cf6',
+      'Presentación': '#ec4899',
+      'Reporte Financiero': '#059669',
+      'Acta de Reunión': '#6366f1',
+      'Propuesta': '#14b8a6',
+      'Recibo': '#84cc16',
+      'Nómina': '#22c55e',
+      'Certificado': '#f59e0b',
+      'Documento Fiscal': '#ef4444',
+      'Carta': '#06b6d4',
+      'Solicitud': '#a855f7',
+      'Cotización': '#fb923c',
+      'Presupuesto': '#0d9488',
+      'Factura Proforma': '#65a30d',
+      'Factura Simplificada': '#0891b2',
+      'Orden de Compra': '#ea580c',
+      'Hoja de Cálculo': '#16a34a',
+      'Imagen/Fotografía': '#d946ef',
+      'Presentación Técnica': '#2563eb',
+      'Política Interna': '#7c3aed',
+      'Carta Comercial': '#047857',
+      'Declaración': '#d97706',
+      'Permiso': '#0e7490',
+      'Licencia': '#15803d',
+      'Resumen Ejecutivo': '#9333ea',
+      'Checklist': '#ca8a04',
+      'Formulario': '#475569',
+      'Otro': '#6b7280',
       'General': '#6b7280'
     };
     return colors[category] || '#6b7280';
@@ -204,7 +219,7 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
 
   // Obtener tipo de archivo desde MIME type
   const fileType = getFileTypeFromMime(document.mimeType);
-  const folderName = getFolderName(document.folder);
+  const categoryName = document.aiCategory || 'General';
 
   const handleDragStart = (e: React.DragEvent) => {
     setIsDragging(true);
@@ -387,13 +402,13 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
 
           {/* Badge de categoría con ícono */}
           <div className={styles.badgeWrapper}>
-            <Badge 
+            <span
               className={styles.categoryBadge}
-              style={{ backgroundColor: getCategoryColor(folderName) }}
+              style={{ backgroundColor: getCategoryColor(categoryName) }}
             >
               <span className={styles.badgeIcon}>✨</span>
-              {folderName}
-            </Badge>
+              {categoryName}
+            </span>
           </div>
 
           {/* Footer con fecha y tamaño */}

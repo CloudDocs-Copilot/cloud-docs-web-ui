@@ -70,22 +70,84 @@
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background-color: #1f2937;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: #fff;
   border: none;
   font-size: 1.5rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.45);
+  transition: all 0.25s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: visible;
 }
 
 .helpButton:hover {
-  background-color: #374151;
-  transform: scale(1.05);
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.55);
+}
+
+.helpButton:hover .helpTooltip {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.helpTooltip {
+  position: absolute;
+  right: 68px;
+  bottom: 0;
+  background: #1e1b4b;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(10px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.helpTooltip::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  bottom: 18px;
+  border: 8px solid transparent;
+  border-right: none;
+  border-left-color: #1e1b4b;
+}
+
+.helpTooltipTitle {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.helpTooltipDesc {
+  font-size: 0.75rem;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+.helpButtonIcon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9));
+  animation: aiPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes aiPulse {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.7)); }
+  50% { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 1)); }
 }
 
 /* Responsive */

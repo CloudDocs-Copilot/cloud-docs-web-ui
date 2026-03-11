@@ -5,10 +5,13 @@ import { StorageWidget } from '../widgets/StorageWidget';
 import type { OrgStats } from '../../../services/dashboard.service';
 
 const mockStats: OrgStats = {
-  storageUsed: 500 * 1024 * 1024, // 500 MB
-  storageTotal: 1024 * 1024 * 1024, // 1 GB
-  documentsCount: 20,
-  membersCount: 5,
+  totalUsers: 5,
+  totalStorageLimit: 1024 * 1024 * 1024, // 1 GB
+  totalDocuments: 20,
+  totalFolders: 4,
+  usedStorage: 500 * 1024 * 1024, // 500 MB
+  availableStorage: 524 * 1024 * 1024,
+  storagePerUser: [],
 };
 
 describe('StorageWidget', () => {
@@ -22,7 +25,8 @@ describe('StorageWidget', () => {
   it('shows warning alert when usage > 80%', () => {
     const highUsageStats: OrgStats = {
       ...mockStats,
-      storageUsed: 850 * 1024 * 1024, // 850 MB of 1 GB = ~83%
+      usedStorage: 850 * 1024 * 1024, // 850 MB of 1 GB = ~83%
+      availableStorage: 174 * 1024 * 1024,
     };
 
     render(<StorageWidget stats={highUsageStats} loading={false} error={null} />);
@@ -33,7 +37,8 @@ describe('StorageWidget', () => {
   it('shows danger alert when usage > 95%', () => {
     const criticalStats: OrgStats = {
       ...mockStats,
-      storageUsed: 980 * 1024 * 1024, // 980 MB of 1 GB = ~96%
+      usedStorage: 980 * 1024 * 1024, // 980 MB of 1 GB = ~96%
+      availableStorage: 44 * 1024 * 1024,
     };
 
     render(<StorageWidget stats={criticalStats} loading={false} error={null} />);
@@ -60,3 +65,5 @@ describe('StorageWidget', () => {
     expect(screen.getByText('No hay datos disponibles.')).toBeInTheDocument();
   });
 });
+
+

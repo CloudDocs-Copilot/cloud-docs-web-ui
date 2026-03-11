@@ -1,0 +1,305 @@
+/* Legal Page Styles */
+
+.legalPage {
+  min-height: 100vh;
+  background-color: #f9fafb;
+  scroll-behavior: smooth;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 60px 0 40px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+  transition: all 0.2s;
+}
+
+.backLink:hover {
+  color: white;
+  transform: translateX(-4px);
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: white;
+}
+
+.subtitle {
+  font-size: 1rem;
+  opacity: 0.9;
+  margin-bottom: 0;
+}
+
+/* Content */
+.content {
+  padding: 48px 0;
+  max-width: 1200px;
+}
+
+/* Sidebar Navigation */
+.sidebar {
+  position: sticky;
+  top: 24px;
+  height: fit-content;
+  margin-bottom: 32px;
+}
+
+.sidebarNav {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: #4b5563;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.navLink:hover {
+  background-color: #f3f4f6;
+  color: #667eea;
+  transform: translateX(4px);
+}
+
+.navLink:active {
+  background-color: #e5e7eb;
+}
+
+.navLink.active {
+  background-color: #ede9fe;
+  color: #667eea;
+  font-weight: 600;
+  border-left: 3px solid #667eea;
+}
+
+/* Sections */
+.section {
+  background-color: white;
+  border-radius: 12px;
+  padding: 40px;
+  margin-bottom: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  scroll-margin-top: 80px; /* Offset para que no quede pegado al top al hacer scroll */
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.icon {
+  color: #667eea;
+  flex-shrink: 0;
+}
+
+/* Subsections */
+.subsection {
+  margin-bottom: 32px;
+}
+
+.subsection:last-child {
+  margin-bottom: 0;
+}
+
+.subsection h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 16px;
+  margin-top: 0;
+}
+
+.subsection p {
+  color: #4b5563;
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.subsection ul {
+  color: #4b5563;
+  line-height: 1.8;
+  margin-bottom: 16px;
+  padding-left: 24px;
+}
+
+.subsection li {
+  margin-bottom: 8px;
+}
+
+.subsection strong {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+/* Contact Box */
+.contactBox {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-radius: 12px;
+  padding: 32px;
+  border: 2px solid #d1d5db;
+}
+
+.contactBox h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 16px;
+}
+
+.contactBox p {
+  color: #4b5563;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.contactList {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contactList li {
+  color: #4b5563;
+  font-size: 0.95rem;
+  padding: 12px 16px;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+.contactList strong {
+  color: #667eea;
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+  .sidebar {
+    position: static;
+    margin-bottom: 32px;
+  }
+
+  .sidebarNav {
+    position: static;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.75rem;
+  }
+
+  .section {
+    padding: 32px 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 40px 0 30px;
+  }
+
+  .title {
+    font-size: 1.75rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.5rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .section {
+    padding: 24px 20px;
+  }
+
+  .subsection h3 {
+    font-size: 1.125rem;
+  }
+
+  .navLink {
+    font-size: 0.9rem;
+    padding: 10px 12px;
+  }
+
+  .contactBox {
+    padding: 24px 20px;
+  }
+
+  .content {
+    padding: 32px 0;
+  }
+}
+
+@media (max-width: 576px) {
+  .header {
+    padding: 32px 0 24px;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .sectionTitle {
+    font-size: 1.25rem;
+  }
+
+  .icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .section {
+    padding: 20px 16px;
+    margin-bottom: 24px;
+  }
+
+  .subsection {
+    margin-bottom: 24px;
+  }
+
+  .contactList li {
+    font-size: 0.875rem;
+    padding: 10px 12px;
+  }
+}

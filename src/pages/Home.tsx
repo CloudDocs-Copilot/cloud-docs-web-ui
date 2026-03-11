@@ -573,9 +573,9 @@ const Home: React.FC = () => {
             <Col md={4}>
               <h6 className={styles.footerTitle}>Legal</h6>
               <ul className={styles.footerLinks}>
-                <li><a href="#">Privacidad</a></li>
-                <li><a href="#">Términos</a></li>
-                <li><a href="#">Seguridad</a></li>
+                <li><a href="/legal#privacidad">Privacidad</a></li>
+                <li><a href="/legal#terminos">Términos</a></li>
+                <li><a href="/legal#seguridad">Seguridad</a></li>
               </ul>
             </Col>
           </Row>

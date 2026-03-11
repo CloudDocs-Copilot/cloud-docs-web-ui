@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import LoginPage from './pages/LoginPage'
 import NotFound from './pages/NotFound';
 import ConfirmAccount from './pages/ConfirmAccount'
+import Legal from './pages/Legal';
 import PrivateRoute from './components/PrivateRoute'
 import RequireRole from './components/RequireRole'
 import RequireOrganization from './components/Organization/RequireOrganization'
@@ -34,6 +35,7 @@ function App() {
     <Suspense fallback={<Loader fullScreen message="Cargando..." />}>
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/legal" element={<Legal />} />
       <Route path="/login" element={<LoginPage />} />
 
       <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />

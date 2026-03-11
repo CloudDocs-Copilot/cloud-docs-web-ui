@@ -1,12 +1,13 @@
 import React, { useState, useCallback, type FormEvent } from 'react';
 import { Container, Row, Col, Form, Button, Badge, Alert, Card } from 'react-bootstrap';
-import { Search, X, FileEarmark } from 'react-bootstrap-icons';
+import {  X, FileEarmark } from 'react-bootstrap-icons';
 import MainLayout from '../components/MainLayout';
 import { formatDate, formatFileSize } from '../utils/formatters';
 import useOrganization from '../hooks/useOrganization';
 import { apiClient } from '../api/httpClient.config';
 import styles from './SearchPage.module.css';
 import type { Document } from '../types/document.types';
+import { usePageTitle } from '../hooks/usePageInfoTitle';
 
 /**
  * Colores por tipo de archivo
@@ -39,6 +40,13 @@ const SearchPage: React.FC = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [totalResults, setTotalResults] = useState(0);
   const [searchTime, setSearchTime] = useState<number | null>(null);
+
+   usePageTitle({
+      title: 'Buscar Documentos',
+      subtitle: ' Encuentra rápidamente los documentos que necesitas',
+      documentTitle: 'Buscar Documentos',
+      metaDescription: 'Utiliza nuestra potente función de búsqueda para encontrar documentos por nombre, contenido, tipo y fecha. Filtra resultados para acceder rápidamente a lo que necesitas.',
+    });
 
   /**
    * Obtiene el color del tipo de archivo
@@ -216,10 +224,7 @@ const SearchPage: React.FC = () => {
       <Container fluid className={styles.searchContainer}>
         {/* Cabecera */}
         <div className={styles.searchHeader}>
-          <h2>
-            <Search className={styles.titleIcon} />
-            Buscar Documentos
-          </h2>
+          
           <Form onSubmit={handleSearch} className={styles.searchForm}>
             <div className={styles.searchInputWrapper}>
               <Form.Control

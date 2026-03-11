@@ -77,6 +77,7 @@ describe("DocumentCard", () => {
     uploadedBy: OWNER_ID,
     organization: "org-1",
     folder: "folder_legal",
+    aiCategory: "Legal",
     uploadedAt: new Date("2026-02-14T00:00:00.000Z").toISOString(),
     sharedWith: [],
     createdAt: new Date().toISOString(),
@@ -138,16 +139,16 @@ describe("DocumentCard", () => {
     expect(screen.getByText("1 KB")).toBeInTheDocument();
   });
 
-  it("renders different folder names correctly (including unknown -> General)", () => {
-    const folders = [
-      { id: "folder_proyectos", name: "Proyectos" },
-      { id: "folder_tecnico", name: "Técnico" },
-      { id: "folder_marketing", name: "Marketing" },
-      { id: "folder_unknown", name: "General" },
+  it("renders different aiCategory values correctly (null/undefined -> General)", () => {
+    const categories = [
+      { aiCategory: "Proyectos", name: "Proyectos" },
+      { aiCategory: "Técnico", name: "Técnico" },
+      { aiCategory: "Marketing", name: "Marketing" },
+      { aiCategory: null, name: "General" },
     ];
 
-    folders.forEach(({ id, name }) => {
-      const doc = { ...baseDoc, folder: id };
+    categories.forEach(({ aiCategory, name }) => {
+      const doc = { ...baseDoc, aiCategory };
       const { unmount } = render(<DocumentCard document={doc as Document} />);
       expect(screen.getByText(name)).toBeInTheDocument();
       unmount();

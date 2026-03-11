@@ -17,13 +17,16 @@ describe('dashboardService', () => {
   describe('getOrganizationStats', () => {
     it('fetches stats from the correct endpoint', async () => {
       const mockStats = {
-        storageUsed: 1024,
-        storageTotal: 10240,
-        documentsCount: 5,
-        membersCount: 3,
+        totalUsers: 3,
+        totalStorageLimit: 10240,
+        totalDocuments: 5,
+        totalFolders: 2,
+        usedStorage: 1024,
+        availableStorage: 9216,
+        storagePerUser: [],
       };
 
-      mockApiClient.get.mockResolvedValueOnce({ data: { success: true, data: mockStats } });
+      mockApiClient.get.mockResolvedValueOnce({ data: { success: true, stats: mockStats } });
 
       const result = await dashboardService.getOrganizationStats('org-123');
 
@@ -49,7 +52,7 @@ describe('dashboardService', () => {
 
       const result = await dashboardService.getOrganizationMembers('org-123');
 
-      expect(mockApiClient.get).toHaveBeenCalledWith('/organizations/org-123/members');
+      expect(mockApiClient.get).toHaveBeenCalledWith('/memberships/organization/org-123/members');
       expect(result).toEqual(mockMembers);
     });
 

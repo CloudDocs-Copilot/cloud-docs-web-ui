@@ -35,6 +35,8 @@ describe('RecentDocumentsWidget', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    localStorage.setItem('auth_user', JSON.stringify({ id: 'user-1' }));
+
     (useOrganizationHook.default as jest.Mock).mockReturnValue({
       activeOrganization: { id: 'org-1', role: 'member' },
     });
@@ -105,15 +107,31 @@ describe('RecentDocumentsWidget', () => {
     expect(screen.getByText('Error al cargar documentos')).toBeInTheDocument();
   });
 
-  it('renders documents and passes canDelete from permissions', async () => {
+  it('renders only documents uploaded by the logged in user and passes canDelete from permissions', async () => {
     (useHttpRequestHook.useHttpRequest as jest.Mock).mockReturnValue({
       execute: mockExecute,
       data: {
         success: true,
-        count: 2,
+        count: 3,
         documents: [
-          { id: '1', filename: 'doc1.pdf', uploadedAt: new Date().toISOString() },
-          { id: '2', filename: 'doc2.docx', uploadedAt: new Date().toISOString() },
+          {
+            id: '1',
+            filename: 'doc1.pdf',
+            uploadedBy: 'user-1',
+            uploadedAt: new Date().toISOString(),
+          },
+          {
+            id: '2',
+            filename: 'doc2.docx',
+            uploadedBy: 'user-2',
+            uploadedAt: new Date().toISOString(),
+          },
+          {
+            id: '3',
+            filename: 'doc3.png',
+            uploadedBy: 'user-1',
+            uploadedAt: new Date().toISOString(),
+          },
         ],
       },
       isLoading: false,
@@ -129,10 +147,46 @@ describe('RecentDocumentsWidget', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('doc-doc1.pdf')).toBeInTheDocument();
-      expect(screen.getByTestId('doc-doc2.docx')).toBeInTheDocument();
+      expect(screen.getByTestId('doc-doc3.png')).toBeInTheDocument();
     });
 
+    expect(screen.queryByTestId('doc-doc2.docx')).not.toBeInTheDocument();
     expect(screen.getAllByText('canDelete:true').length).toBe(2);
+  });
+
+  it('renders empty state when no documents match the logged in user', async () => {
+    (useHttpRequestHook.useHttpRequest as jest.Mock).mockReturnValue({
+      execute: mockExecute,
+      data: {
+        success: true,
+        count: 2,
+        documents: [
+          {
+            id: '1',
+            filename: 'doc1.pdf',
+            uploadedBy: 'user-2',
+            uploadedAt: new Date().toISOString(),
+          },
+          {
+            id: '2',
+            filename: 'doc2.docx',
+            uploadedBy: 'user-3',
+            uploadedAt: new Date().toISOString(),
+          },
+        ],
+      },
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+
+    render(
+      <BrowserRouter>
+        <RecentDocumentsWidget />
+      </BrowserRouter>,
+    );
+
+    expect(screen.getByText(/No se encontraron documentos/)).toBeInTheDocument();
   });
 
   it('renders empty state when no documents', async () => {

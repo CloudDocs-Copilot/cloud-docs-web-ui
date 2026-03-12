@@ -35,6 +35,12 @@ export const RecentDocumentsWidget: React.FC<RecentDocumentsWidgetProps> = ({
     error,
   } = useHttpRequest<DocumentsApiResponse>();
 
+  const auth = localStorage.getItem('auth_user');
+  const userId = JSON.parse(auth!)?.id;
+
+  const filteredDocuments =
+    data?.documents.filter((doc) => doc.uploadedBy === userId) ?? [];
+
   const fetchDocuments = useCallback(() => {
     if (!orgId) return;
     execute({ method: 'GET', url: `/documents/recent/${orgId}` });
@@ -76,13 +82,13 @@ export const RecentDocumentsWidget: React.FC<RecentDocumentsWidgetProps> = ({
 
       {!isLoading && !isError && data && (
         <>
-          {data.documents.length === 0 ? (
+          {filteredDocuments.length === 0 ? (
             <Alert variant="info" className="mb-0">
               No se encontraron documentos. ¡Sube tu primer documento para comenzar!
             </Alert>
           ) : (
             <Row className="g-3">
-              {data.documents.map((doc, idx) => (
+              {filteredDocuments.map((doc, idx) => (
                 <Col key={doc.id ?? idx} xs={12} sm={6} lg={4} xl={3}>
                   <DocumentCard
                     document={doc}

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Sparkles } from 'lucide-react';
 import { AIHelpPanel } from './AIHelpPanel';
 import { AIGlowIcon } from './AIGlowIcon';
 import styles from './AIWelcomeBanner.module.css';
@@ -53,7 +54,9 @@ export const AIWelcomeBanner: React.FC<AIWelcomeBannerProps> = ({ onSuggestionCl
           onClick={() => setShowHelp(true)}
           aria-label="Abrir panel de ayuda sobre la IA"
         >
-          <span aria-hidden="true">❓</span>
+          <span className={styles.helpIcon} aria-hidden="true">
+            <Sparkles size={16} />
+          </span>
           ¿Cómo funciona?
         </button>
 

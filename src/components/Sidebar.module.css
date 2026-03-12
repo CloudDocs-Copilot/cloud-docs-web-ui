@@ -110,3 +110,33 @@
   color: #94a3b8;
   font-size: 0.75rem;
 }
+
+/* ============================================================
+   AI Feature Styles - Colecciones Inteligentes
+   Efecto de brillo sutil para features de IA
+   ============================================================ */
+
+.aiFeatureIcon {
+  color: #a78bfa !important; /* Purple-400 para destacar */
+  filter: drop-shadow(0 0 4px rgba(167, 139, 250, 0.4));
+  animation: aiGlow 3s ease-in-out infinite;
+}
+
+.sidebarItem:hover .aiFeatureIcon {
+  color: #c4b5fd !important; /* Purple-300 en hover */
+  filter: drop-shadow(0 0 6px rgba(196, 181, 253, 0.6));
+}
+
+.sidebarItem.active .aiFeatureIcon {
+  color: #ffffff !important;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+}
+
+@keyframes aiGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px rgba(167, 139, 250, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 6px rgba(167, 139, 250, 0.6));
+  }
+}

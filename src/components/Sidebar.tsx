@@ -42,7 +42,9 @@ const Sidebar: React.FC<SidebarProps> = ({ activeItem}) => {
               }
             }}
           >
-            <span className={styles.sidebarIcon}>{item.icon}</span>
+            <span className={`${styles.sidebarIcon} ${item.isAiFeature ? styles.aiFeatureIcon : ''}`}>
+              {item.icon}
+            </span>
             <span>{item.label}</span>
           </Nav.Link>
         ))}

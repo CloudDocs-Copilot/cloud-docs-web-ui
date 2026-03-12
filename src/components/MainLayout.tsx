@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { Sparkles } from 'lucide-react';
 import { usePageContext } from '../hooks/usePageContext';
 import Sidebar from './Sidebar';
 import Header from './Header';
@@ -71,14 +72,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           onClick={() => navigate('/collections')}
         >
           <span className={styles.helpTooltip}>
-            <span className={styles.helpTooltipTitle}>✨ Colecciones Inteligentes</span>
+            <span className={styles.helpTooltipTitle}>
+              <Sparkles size={14} strokeWidth={2} className={styles.tooltipSparkleIcon} />
+              Colecciones Inteligentes
+            </span>
             <span className={styles.helpTooltipDesc}>Extrae conocimiento de tus documentos con IA</span>
           </span>
-          <svg className={styles.helpButtonIcon} viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2 L13.5 8.5 L20 10 L13.5 11.5 L12 18 L10.5 11.5 L4 10 L10.5 8.5 Z" />
-            <path d="M19 2 L19.8 4.2 L22 5 L19.8 5.8 L19 8 L18.2 5.8 L16 5 L18.2 4.2 Z" />
-            <path d="M5 16 L5.7 17.8 L7.5 18.5 L5.7 19.2 L5 21 L4.3 19.2 L2.5 18.5 L4.3 17.8 Z" />
-          </svg>
+          <Sparkles className={styles.helpButtonIcon} size={28} strokeWidth={2} />
         </button>
       </div>
     </div>

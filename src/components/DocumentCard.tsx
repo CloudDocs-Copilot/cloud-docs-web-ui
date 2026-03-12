@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, Modal, Button } from 'react-bootstrap';
 import { GripVertical } from 'react-bootstrap-icons';
+import { Sparkles } from 'lucide-react';
 import type { Document } from '../types/document.types';
 import { getFileTypeFromMime, formatFileSize } from '../types/document.types';
 
@@ -404,9 +405,9 @@ const DocumentCard: React.FC<DocumentCardProps> = ({ document, onDeleted, onRena
           <div className={styles.badgeWrapper}>
             <span
               className={styles.categoryBadge}
-              style={{ backgroundColor: getCategoryColor(categoryName) }}
+              style={{ '--badge-color': getCategoryColor(categoryName) } as React.CSSProperties}
             >
-              <span className={styles.badgeIcon}>✨</span>
+              <Sparkles size={12} strokeWidth={2} className={styles.badgeIcon} />
               {categoryName}
             </span>
           </div>

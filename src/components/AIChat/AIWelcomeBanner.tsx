@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AIHelpPanel } from './AIHelpPanel';
+import { AIGlowIcon } from './AIGlowIcon';
 import styles from './AIWelcomeBanner.module.css';
 
 const SUGGESTIONS = [
@@ -19,8 +20,8 @@ export const AIWelcomeBanner: React.FC<AIWelcomeBannerProps> = ({ onSuggestionCl
   return (
     <>
       <div className={styles.wrapper} role="region" aria-label="Bienvenida al asistente de IA">
-        {/* Ícono central */}
-        <div className={styles.iconRing} aria-hidden="true">✦</div>
+        {/* Ícono central con efecto de resplandor */}
+        <AIGlowIcon size={110} />
 
         <h2 className={styles.title}>Asistente de IA para tus documentos</h2>
 

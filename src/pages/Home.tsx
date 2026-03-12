@@ -564,10 +564,21 @@ const Home: React.FC = () => {
             <Col md={4} className="mb-4 mb-md-0">
               <h6 className={styles.footerTitle}>Enlaces</h6>
               <ul className={styles.footerLinks}>
-                <li><a href="#">Características</a></li>
-                <li><a href="#">Precios</a></li>
-                <li><a href="#">Blog</a></li>
-                <li><a href="#">Soporte</a></li>
+                {!isAuthenticated ? (
+                  <>
+                    <li><a href="#features" onClick={(e) => { e.preventDefault(); scrollToSection('features'); }}>Características</a></li>
+                    <li><a href="#pricing" onClick={(e) => { e.preventDefault(); scrollToSection('pricing'); }}>Precios</a></li>
+                    <li><a href="#contact" onClick={(e) => { e.preventDefault(); scrollToSection('contact'); }}>Contacto</a></li>
+                    <li><a href="#" onClick={(e) => { e.preventDefault(); scrollToSection('contact'); }}>Soporte</a></li>
+                  </>
+                ) : (
+                  <>
+                    <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('/dashboard'); }}>Dashboard</a></li>
+                    <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('/dashboard'); }}>Mis Documentos</a></li>
+                    <li><a href="#" onClick={(e) => { e.preventDefault(); navigate(activeOrganization ? '/organization/settings' : '/create-organization'); }}>Organizaciones</a></li>
+                    <li><a href="#" onClick={(e) => { e.preventDefault(); navigate('/invitations'); }}>Invitaciones</a></li>
+                  </>
+                )}
               </ul>
             </Col>
             <Col md={4}>

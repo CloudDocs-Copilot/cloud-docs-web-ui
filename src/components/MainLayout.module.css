@@ -67,27 +67,33 @@
   position: fixed;
   bottom: 32px;
   right: 32px;
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  
+  /* Gradiente morado del proyecto (igual que glowCircle) */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
   color: #fff;
   border: none;
-  font-size: 1.5rem;
-  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.45);
+  
+  /* Sombra base */
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  
   transition: all 0.25s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: visible;
+  
+  /* Animación de pulso sutil */
+  animation: floatingBtnPulse 3s ease-in-out infinite;
 }
 
 .helpButton:hover {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  transform: scale(1.08);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.55);
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(102, 126, 234, 0.5);
 }
 
 .helpButton:hover .helpTooltip {
@@ -129,6 +135,15 @@
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tooltipSparkleIcon {
+  flex-shrink: 0;
+  color: #a78bfa; /* Purple-400 para destacar */
+  filter: drop-shadow(0 0 3px rgba(167, 139, 250, 0.5));
 }
 
 .helpTooltipDesc {
@@ -138,16 +153,20 @@
 }
 
 .helpButtonIcon {
-  width: 28px;
-  height: 28px;
   flex-shrink: 0;
-  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9));
-  animation: aiPulse 2.5s ease-in-out infinite;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
 }
 
-@keyframes aiPulse {
-  0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.7)); }
-  50% { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 1)); }
+/* Animación de pulso del botón flotante (sin box-shadow radial) */
+@keyframes floatingBtnPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.45);
+  }
 }
 
 /* Responsive */

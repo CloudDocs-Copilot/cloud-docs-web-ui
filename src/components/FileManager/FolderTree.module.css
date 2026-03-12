@@ -86,9 +86,9 @@
 .folderName {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
 }
 
 .itemCount {
@@ -105,9 +105,11 @@
 /* Estilos para scrollbar personalizado */
 .treeContainer {
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: clip;
   scrollbar-width: thin;
   scrollbar-color: #cbd5e0 transparent;
+  /* Permitir que las sombras de los tooltips no se recorten */
+  padding-right: 4px;
 }
 
 /* Webkit browsers (Chrome, Safari, Edge) */
@@ -135,4 +137,39 @@
 
 .treeContainer::-webkit-scrollbar-thumb:active {
   background: #718096;
+}
+
+/* Estilos personalizados para tooltips */
+:global(.custom-tree-tooltip.tooltip) {
+  opacity: 1 !important;
+}
+
+:global(.custom-tree-tooltip .tooltip-inner) {
+  background-color: rgba(30, 64, 175, 0.85) !important;
+  color: #ffffff !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25) !important;
+  max-width: 400px !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+:global(.custom-tree-tooltip.bs-tooltip-end .tooltip-arrow::before),
+:global(.custom-tree-tooltip.bs-tooltip-right .tooltip-arrow::before) {
+  border-right-color: #1e40af !important;
+}
+
+:global(.custom-tree-tooltip.bs-tooltip-top .tooltip-arrow::before) {
+  border-top-color: #1e40af !important;
+}
+
+:global(.custom-tree-tooltip.bs-tooltip-bottom .tooltip-arrow::before) {
+  border-bottom-color: #1e40af !important;
+}
+
+:global(.custom-tree-tooltip.bs-tooltip-start .tooltip-arrow::before),
+:global(.custom-tree-tooltip.bs-tooltip-left .tooltip-arrow::before) {
+  border-left-color: #1e40af !important;
 }

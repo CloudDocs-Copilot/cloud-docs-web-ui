@@ -1,0 +1,130 @@
+/* ============================================================
+   AIGlowIcon - Ícono con efecto de resplandor animado
+   Usa los colores del proyecto: #667eea → #764ba2
+   ============================================================ */
+
+.glowContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.glowCircle {
+  width: 60%;
+  height: 60%;
+  border-radius: 50%;
+  
+  /* Gradiente morado del proyecto */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  /* Efecto de resplandor con 3 anillos concéntricos */
+  box-shadow:
+    0 0 0 8px rgba(102, 126, 234, 0.12),
+    0 0 0 16px rgba(102, 126, 234, 0.08),
+    0 0 0 24px rgba(102, 126, 234, 0.04);
+  
+  /* Animación de pulso suave */
+  animation: glowPulse 3s ease-in-out infinite;
+  
+  /* Centrar el ícono */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Posición relativa para el anillo rotatorio */
+  position: relative;
+}
+
+/* Anillo rotatorio externo */
+.glowCircle::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid rgba(118, 75, 162, 0.3);
+  animation: rotateSlow 10s linear infinite;
+  pointer-events: none;
+}
+
+/* Anillo interno pulsante */
+.glowCircle::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+  animation: glowInner 2s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+/* Ícono de estrella */
+.sparkleIcon {
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+  animation: sparkleFloat 4s ease-in-out infinite;
+}
+
+/* ==================== Animaciones ==================== */
+
+/* Pulso del resplandor exterior */
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 8px rgba(102, 126, 234, 0.12),
+      0 0 0 16px rgba(102, 126, 234, 0.08),
+      0 0 0 24px rgba(102, 126, 234, 0.04);
+  }
+  50% {
+    box-shadow:
+      0 0 0 10px rgba(102, 126, 234, 0.16),
+      0 0 0 20px rgba(102, 126, 234, 0.12),
+      0 0 0 30px rgba(102, 126, 234, 0.06);
+  }
+}
+
+/* Rotación lenta del anillo externo */
+@keyframes rotateSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Brillo interno pulsante */
+@keyframes glowInner {
+  from {
+    opacity: 0.3;
+  }
+  to {
+    opacity: 0.6;
+  }
+}
+
+/* Flotación suave del ícono */
+@keyframes sparkleFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-3px) rotate(2deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-3px) rotate(-2deg);
+  }
+}
+
+/* ==================== Responsive ==================== */
+
+@media (max-width: 768px) {
+  .glowContainer {
+    margin-bottom: 1rem;
+  }
+}

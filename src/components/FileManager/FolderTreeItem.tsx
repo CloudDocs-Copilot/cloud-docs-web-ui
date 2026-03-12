@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Badge } from 'react-bootstrap';
+import { Badge, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { 
   Folder as FolderIcon, 
   Folder2Open as FolderOpenIcon, 
@@ -186,19 +186,28 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
           )}
         </span>
         
-        <span 
-          className={styles.folderName} 
-          style={{ fontWeight: folder.isRoot ? 600 : 400 }}
-          title={folder.displayName || folder.name}
-          onDoubleClick={(e) => {
-            e.stopPropagation();
-            if (!folder.isRoot && onRenameFolder) {
-              onRenameFolder(folder);
-            }
-          }}
+        <OverlayTrigger
+          placement="right"
+          delay={{ show: 300, hide: 100 }}
+          overlay={
+            <Tooltip id={`folder-tooltip-${folder.id}`} className="custom-tree-tooltip">
+              {folder.displayName || folder.name}
+            </Tooltip>
+          }
         >
-          {folder.displayName || folder.name}
-        </span>
+          <span 
+            className={styles.folderName} 
+            style={{ fontWeight: folder.isRoot ? 600 : 400 }}
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              if (!folder.isRoot && onRenameFolder) {
+                onRenameFolder(folder);
+              }
+            }}
+          >
+            {folder.displayName || folder.name}
+          </span>
+        </OverlayTrigger>
 
         {folder.itemCount !== undefined && (
           <Badge bg="secondary" pill className="ms-2" style={{ fontSize: '0.6rem' }}>
@@ -259,13 +268,22 @@ export const FolderTreeItem: React.FC<FolderTreeItemProps> = ({
                 <FileEarmark className="text-muted" size={14} />
               </span>
               
-              <span 
-                className={styles.folderName} 
-                style={{ fontSize: '0.85rem' }}
-                title={doc.originalname || doc.filename}
+              <OverlayTrigger
+                placement="right"
+                delay={{ show: 300, hide: 100 }}
+                overlay={
+                  <Tooltip id={`doc-tooltip-${doc.id}`} className="custom-tree-tooltip">
+                    {doc.originalname || doc.filename}
+                  </Tooltip>
+                }
               >
-                {doc.originalname || doc.filename}
-              </span>
+                <span 
+                  className={styles.folderName} 
+                  style={{ fontSize: '0.85rem' }}
+                >
+                  {doc.originalname || doc.filename}
+                </span>
+              </OverlayTrigger>
             </div>
           ))}
         </div>

@@ -11,6 +11,7 @@ import {
 import styles from './AICollectionsPage.module.css';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
 import useOrganization from '../hooks/useOrganization';
+import { Logo } from '../brand';
 
 const AICollectionsPage: React.FC = () => {
   const chat = useAiChat();
@@ -43,7 +44,9 @@ const AICollectionsPage: React.FC = () => {
         {/* Cabecera */}
         <header className={styles.header}>
           <div className={styles.headerLeft}>
-            <span className={styles.headerIcon} aria-hidden="true">✦</span>
+            <div className={styles.headerIcon}>
+              <Logo size={32} variant="gradient" animated />
+            </div>
             <h1 className={styles.headerTitle}>Colecciones IA</h1>
           </div>
           <div className={styles.headerActions}>

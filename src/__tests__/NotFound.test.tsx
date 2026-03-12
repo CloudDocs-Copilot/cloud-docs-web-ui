@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import NotFound from '../pages/NotFound';
 
 // Mock del hook usePageTitle para evitar errores de contexto (ya que usa PageProvider internamente)
@@ -26,17 +27,18 @@ describe('Componente NotFound', () => {
     
     // Verificamos elementos de UI requeridos en la historia de usuario
     expect(screen.getByText('404')).toBeInTheDocument();
-    expect(screen.getByText('Página no encontrada')).toBeInTheDocument();
+    expect(screen.getByText('Carpeta vacía')).toBeInTheDocument();
     
-    // Regex (/.../i) para ser flexible con mayúsculas/minúsculas y texto parcial
-    expect(screen.getByText(/no existe o ha sido movida/i)).toBeInTheDocument();
+    // Verificar mensaje descriptivo
+    expect(screen.getByText(/Esta ubicación no contiene documentos/i)).toBeInTheDocument();
+    expect(screen.getByText(/Ni siquiera con IA logramos encontrarla/i)).toBeInTheDocument();
   });
 
   test('debe contener un botón funcional para volver al inicio', () => {
     render(<NotFound />);
     
     // Usamos getByRole para asegurar accesibilidad (es un botón real)
-    const backButton = screen.getByRole('button', { name: /volver al inicio/i });
+    const backButton = screen.getByRole('button', { name: /regresar a mis archivos/i });
     expect(backButton).toBeInTheDocument();
     
     // Simulamos el click

@@ -132,19 +132,34 @@
 
 .categoryBadge {
   font-size: 0.813rem;
-  font-weight: 500;
+  font-weight: 600;
   padding: 6px 12px;
   border-radius: 8px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
   border: none;
-  color: #fff;
+  color: #1f2937; /* Texto oscuro para mejor contraste con background semi-transparente */
+  position: relative;
+  z-index: 1;
+  background-color: transparent; /* Sin background directo */
+}
+
+/* Background semi-transparente usando variable CSS */
+.categoryBadge::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: var(--badge-color, #6b7280); /* Usa el color de la variable CSS */
+  opacity: 0.20; /* 20% de opacidad para un look más sutil */
+  border-radius: 8px;
+  z-index: -1;
 }
 
 .badgeIcon {
-  font-size: 0.875rem;
-  line-height: 1;
+  flex-shrink: 0;
+  color: #667eea; /* Color morado del proyecto */
+  filter: drop-shadow(0 1px 2px rgba(102, 126, 234, 0.3));
 }
 
 .cardFooter {

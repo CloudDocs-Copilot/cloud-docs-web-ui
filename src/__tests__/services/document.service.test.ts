@@ -58,12 +58,12 @@ describe('Document Service', () => {
 
       const result = await uploadDocument({ file: mockFile });
 
+      // ✅ Verificar que se llama con la URL y FormData correcto
+      // NO verificamos Content-Type porque Axios lo establece automáticamente con el boundary
       expect(apiClient.post).toHaveBeenCalledWith(
         '/documents/upload',
         expect.any(FormData),
-        expect.objectContaining({
-          headers: { 'Content-Type': 'multipart/form-data' },
-        })
+        expect.any(Object) // Verifica que se pasa un objeto de configuración
       );
       expect(result.success).toBe(true);
       expect(result.document).toBeDefined();

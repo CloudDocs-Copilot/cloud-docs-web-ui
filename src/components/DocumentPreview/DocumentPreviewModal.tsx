@@ -152,9 +152,8 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
       `/documents/${documentId}/replace`,
       formData,
       {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        // ✅ NO establecer Content-Type manualmente
+        // Axios lo establecerá automáticamente con el boundary correcto para FormData
       },
     );
 

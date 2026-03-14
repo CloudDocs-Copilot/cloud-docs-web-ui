@@ -122,9 +122,8 @@ export async function uploadDocument({
     '/documents/upload',
     formData,
     {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+      // ✅ NO establecer Content-Type manualmente
+      // Axios lo establecerá automáticamente con el boundary correcto para FormData
       signal,
       onUploadProgress: (progressEvent) => {
         if (onProgress && progressEvent.total) {

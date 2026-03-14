@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import RegisterForm from '../RegisterForm';
 import { PageProvider } from '../../context/PageProvider';
+import type { ApiErrorResponse } from '../../api';
 
 // Create mock functions that can be overridden
 const mockExecute = jest.fn().mockResolvedValue({ message: 'ok', user: {} });
@@ -204,5 +205,50 @@ describe('RegisterForm validation branches', () => {
     setTimeout(async () => {
       await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/login'));
     }, 3000);
+  });
+
+  it('shows correct error message for 409 (email already registered)', async () => {
+    const errorWith409 = { 
+      status: 409, 
+      message: 'Email already registered' 
+    };
+    
+    let onErrorCallback: ((error: ApiErrorResponse) => void) | undefined;
+    
+    const exec = jest.fn(async () => {
+      // Simular que se llama el callback onError
+      if (onErrorCallback) {
+        onErrorCallback(errorWith409);
+      }
+      return null;
+    });
+    
+    (useHttpRequest as jest.Mock).mockImplementation((options) => {
+      onErrorCallback = options?.onError;
+      return { execute: exec };
+    });
+    
+    mockValidateAllFields.mockReturnValue(true);
+    mockGetFieldError.mockReturnValue('');
+    
+    render(
+      <PageProvider>
+        <RegisterForm />
+      </PageProvider>
+    );
+    
+    fireEvent.change(screen.getByPlaceholderText(/Juan Pérez/i), { target: { value: 'Name' } });
+    fireEvent.change(screen.getByPlaceholderText(/tu@email.com/i), { target: { value: 'existing@e.com' } });
+    fireEvent.change(screen.getAllByPlaceholderText(/••••••••/i)[0], { target: { value: 'P@ssw0rd!' } });
+    fireEvent.change(screen.getAllByPlaceholderText(/••••••••/i)[1], { target: { value: 'P@ssw0rd!' } });
+    fireEvent.click(screen.getByRole('button', { name: /Crear cuenta/i }));
+    
+    await waitFor(() => expect(exec).toHaveBeenCalled());
+    
+    // Verify the Spanish error message is displayed (checking for at least one match)
+    await waitFor(() => {
+      const errorMessages = screen.queryAllByText(/El correo electrónico ya está registrado/i);
+      expect(errorMessages.length).toBeGreaterThan(0);
+    });
   });
 });

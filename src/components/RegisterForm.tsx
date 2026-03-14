@@ -35,21 +35,6 @@ interface RegisterApiResponse {
   user: IUserDTO;
 }
 
-interface RegisterApiErrorResponse {
-  success: false;
-  error: string;
-}
-
-interface HttpRequestErrorLike {
-  message?: string;
-  status?: number;
-  data?: RegisterApiErrorResponse;
-  response?: {
-    status?: number;
-    data?: RegisterApiErrorResponse;
-  };
-}
-
 interface RegisterFormProps {
   onRegister?: (data: { name: string; email: string; password: string }) => void;
   onSwitchToLogin?: () => void;
@@ -79,8 +64,27 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState<'success' | 'danger'>('danger');
 
-  // Hook genérico para llamadas HTTP
-  const { execute, error: apiError } = useHttpRequest<RegisterApiResponse>();
+  // Hook genérico para llamadas HTTP con callback de error
+  const { execute } = useHttpRequest<RegisterApiResponse>({
+    onError: (apiError) => {
+      // Manejar error cuando ocurra
+      const status = apiError?.status;
+      let msg = 'Error al registrar usuario.';
+      
+      if (status === 409) {
+        // Error de email duplicado
+        msg = 'El correo electrónico ya está registrado. Por favor, usa otro correo o intenta iniciar sesión.';
+      } else if (apiError?.message) {
+        // Usar mensaje del servidor si está disponible
+        msg = apiError.message;
+      }
+
+      setError(msg);
+      setToastMessage(msg);
+      setToastVariant('danger');
+      setShowToast(true);
+    }
+  });
 
   // Validaciones por campo
   const validationRules = {
@@ -148,21 +152,8 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
       setTimeout(() => {
         navigate('/login');
       }, 3000);
-    } else {
-      const requestError = apiError as HttpRequestErrorLike | null;
-
-      const msg =
-        (requestError?.status === 409 || requestError?.response?.status === 409)
-          ? requestError?.data?.error ||
-            requestError?.response?.data?.error ||
-            'Correo electrónico ya registrado.'
-          : requestError?.message || 'Error al registrar usuario.';
-
-      setError(msg);
-      setToastMessage(msg);
-      setToastVariant('danger');
-      setShowToast(true);
     }
+    // Si hay error, el callback onError del hook lo maneja
   };
 
   return (

@@ -22,13 +22,44 @@ export interface ApiResponse<T = unknown> {
 }
 
 /**
- * Estructura de error de la API
+ * Estructura flexible de error que el backend puede retornar
+ * Soporta múltiples formatos: { message }, { error }, { success: false, error }
+ */
+export interface BackendErrorResponse {
+  message?: string;
+  error?: string;
+  success?: boolean;
+  errors?: Record<string, string[]>;
+  code?: string;
+}
+
+/**
+ * Estructura normalizada de error para la aplicación
  */
 export interface ApiErrorResponse {
   message: string;
   errors?: Record<string, string[]>;
   status?: number;
   code?: string;
+}
+
+/**
+ * Normaliza diferentes formatos de error del backend a un formato estándar
+ * @param data - Datos de error del backend (puede venir en diferentes formatos)
+ * @returns ApiErrorResponse normalizado
+ */
+export function normalizeBackendError(data: unknown): Pick<ApiErrorResponse, 'message' | 'errors' | 'code'> {
+  if (!data || typeof data !== 'object') {
+    return { message: 'Error desconocido' };
+  }
+
+  const errorData = data as BackendErrorResponse;
+  
+  return {
+    message: errorData.message || errorData.error || 'Error en la petición',
+    errors: errorData.errors,
+    code: errorData.code,
+  };
 }
 
 /**
@@ -74,8 +105,9 @@ export interface ExecuteParams<TRequest = unknown> {
 
 /**
  * Tipo helper para extraer el tipo de error de Axios
+ * Se define con BackendErrorResponse para soportar múltiples formatos de error del backend
  */
-export type ApiAxiosError = AxiosError<ApiErrorResponse>;
+export type ApiAxiosError = AxiosError<BackendErrorResponse>;
 
 /**
  * Configuración de validación para los datos de entrada

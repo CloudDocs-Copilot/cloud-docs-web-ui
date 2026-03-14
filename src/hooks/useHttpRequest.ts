@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { AxiosResponse } from 'axios';
-import { apiClient, sanitizeData, ApiStatus } from '../api';
+import { apiClient, sanitizeData, ApiStatus, normalizeBackendError } from '../api';
 import type {
   ApiState,
   ExecuteParams,
@@ -116,11 +116,10 @@ export const useHttpRequest = <TResponse = unknown, TRequest = unknown>(
     return null;
   }
   if (error.response) {
+    const normalized = normalizeBackendError(error.response.data);
     return {
-      message: error.response.data?.message || 'Error en la petición',
-      errors: error.response.data?.errors,
+      ...normalized,
       status: error.response.status,
-      code: error.response.data?.code,
     };
   } else if (error.request) {
     return {

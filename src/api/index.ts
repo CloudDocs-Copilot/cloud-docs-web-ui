@@ -7,6 +7,7 @@ export { apiClient, createConfig } from './httpClient.config';
 
 // Utilidades
 export { sanitizeData } from './dataSanitizer';
+export { normalizeBackendError } from '../types/api.types';
 
 // Tipos
 export type {
@@ -18,6 +19,7 @@ export type {
   ApiAxiosError,
   ValidationConfig,
   HttpMethod,
+  BackendErrorResponse,
 } from '../types/api.types';
 
 export { ApiStatus } from '../types/api.types';

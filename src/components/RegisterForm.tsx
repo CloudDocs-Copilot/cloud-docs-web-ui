@@ -3,6 +3,7 @@ import { useFormValidation } from '../hooks/useFormValidation';
 import { useHttpRequest } from '../hooks/useHttpRequest';
 import { User, Mail, Lock } from 'lucide-react';
 import { Logo } from '../brand';
+import { Loader } from './Loader';
 import styles from './RegisterForm.module.css';
 import { NotificationToast } from './NotificationToast';
 import { usePageTitle } from '../hooks/usePageInfoTitle';
@@ -65,7 +66,7 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
   const [toastVariant, setToastVariant] = useState<'success' | 'danger'>('danger');
 
   // Hook genérico para llamadas HTTP con callback de error
-  const { execute } = useHttpRequest<RegisterApiResponse>({
+  const { execute, isLoading } = useHttpRequest<RegisterApiResponse>({
     onError: (apiError) => {
       // Manejar error cuando ocurra
       const status = apiError?.status;
@@ -177,6 +178,7 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
                 onChange={handleChange}
                 placeholder="Juan Pérez"
                 required
+                disabled={isLoading}
               />
               {getFieldError('name') && <div style={{ color: 'red' }}>{getFieldError('name')}</div>}
             </div>
@@ -192,6 +194,7 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
                 onChange={handleChange}
                 placeholder="tu@email.com"
                 required
+                disabled={isLoading}
               />
               {getFieldError('email') && <div style={{ color: 'red' }}>{getFieldError('email')}</div>}
             </div>
@@ -207,6 +210,7 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
                 onChange={handleChange}
                 placeholder="••••••••"
                 required
+                disabled={isLoading}
               />
               {getFieldError('password') && <div style={{ color: 'red' }}>{getFieldError('password')}</div>}
             </div>
@@ -222,14 +226,26 @@ const RegisterForm: React.FC<RegisterFormProps> = () => {
                 onChange={handleChange}
                 placeholder="••••••••"
                 required
+                disabled={isLoading}
               />
               {getFieldError('confirm') && <div style={{ color: 'red' }}>{getFieldError('confirm')}</div>}
             </div>
             {error && <div style={{ color: 'red', marginBottom: 8 }}>{error}</div>}
             {success && <div style={{ color: 'green', marginBottom: 8 }}>{success}</div>}
-            <button type="submit" className={styles.submitButton}>
-              <User className={styles.labelIcon} /> Crear cuenta
+            <button 
+              type="submit" 
+              className={styles.submitButton}
+              disabled={isLoading}
+              style={{ opacity: isLoading ? 0.6 : 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}
+            >
+              <User className={styles.labelIcon} /> 
+              {isLoading ? 'Creando cuenta...' : 'Crear cuenta'}
             </button>
+            {isLoading && (
+              <div style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}>
+                <Loader message="Procesando registro..." />
+              </div>
+            )}
           </form>
           <div className={styles.registerPrompt}>
             ¿Ya tienes una cuenta?{' '}

@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import RegisterForm from '../RegisterForm';
 import { PageProvider } from '../../context/PageProvider';
+import type { ApiErrorResponse } from '../../api';
 
 // Create mock functions that can be overridden
 const mockExecute = jest.fn().mockResolvedValue({ message: 'ok', user: {} });
@@ -11,7 +12,7 @@ const mockClearAllErrors = jest.fn();
 const mockNavigate = jest.fn();
 
 jest.mock('../../hooks/useHttpRequest', () => ({ 
-  useHttpRequest: jest.fn((options) => ({ 
+  useHttpRequest: jest.fn(() => ({ 
     execute: mockExecute, 
     error: null 
   })) 
@@ -212,7 +213,7 @@ describe('RegisterForm validation branches', () => {
       message: 'Email already registered' 
     };
     
-    let onErrorCallback: ((error: any) => void) | undefined;
+    let onErrorCallback: ((error: ApiErrorResponse) => void) | undefined;
     
     const exec = jest.fn(async () => {
       // Simular que se llama el callback onError

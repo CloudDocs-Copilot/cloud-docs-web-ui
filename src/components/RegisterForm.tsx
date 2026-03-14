@@ -35,21 +35,6 @@ interface RegisterApiResponse {
   user: IUserDTO;
 }
 
-interface RegisterApiErrorResponse {
-  success: false;
-  error: string;
-}
-
-interface HttpRequestErrorLike {
-  message?: string;
-  status?: number;
-  data?: RegisterApiErrorResponse;
-  response?: {
-    status?: number;
-    data?: RegisterApiErrorResponse;
-  };
-}
-
 interface RegisterFormProps {
   onRegister?: (data: { name: string; email: string; password: string }) => void;
   onSwitchToLogin?: () => void;

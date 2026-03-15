@@ -47,18 +47,18 @@ const REQUEST_TIMEOUT_MS = 30000; // 30 segundos
 
 /**
  * Variable para almacenar el token CSRF en memoria
- * IMPORTANTE: No regenerar múltiples veces porque el backend regenera un token nuevo
- * cada vez que se llama a GET /csrf-token. El token debe obtenerse UNA SOLA VEZ
- * y reutilizarse en todos los POSTs.
+ * IMPORTANTE: El backend implementa Double Submit Cookie estático (no regenera tokens)
+ * El token se obtiene UNA SOLA VEZ al inicializar sesión y se reutiliza toda la sesión
  */
 let csrfToken: string = '';
 let csrfTokenPromise: Promise<string> | null = null;
 let csrfTokenFetchAttempts: number = 0;
-const MAX_CSRF_FETCH_ATTEMPTS = 2; // No intentar más de 2 veces
+const MAX_CSRF_FETCH_ATTEMPTS = 1; // Solo intentar fetch si token está vacío
 
 /**
- * Obtiene el token CSRF del servidor UNA SOLA VEZ
- * El backend regenera un nuevo token en cada llamada, así que reutilizar es crítico
+ * Obtiene el token CSRF del servidor
+ * Backend: Double Submit Cookie pattern - token estático por sesión
+ * Frontend: Obtener UNA VEZ y reutilizar. NO se regenera en las operaciones.
  */
 const fetchCsrfToken = async (): Promise<string> => {
   // Si ya hay un fetch en progreso, espera a ese
@@ -191,6 +191,9 @@ const createAxiosInstance = (): AxiosInstance => {
   // Interceptor de respuesta - maneja errores globalmente
   axiosInstance.interceptors.response.use(
     (response) => {
+      // Backend NO regenera CSRF tokens (patrón Double Submit Cookie estático)
+      // Se obtiene UNA VEZ en getSession/login y se reutiliza toda la sesión
+      // No es necesario invalidar token después de respuestas exitosas
       return response;
     },
     async (error: AxiosError) => {
@@ -215,21 +218,18 @@ const createAxiosInstance = (): AxiosInstance => {
             // Acceso prohibido o token CSRF inválido/faltante
             const errorData = error.response.data as ApiErrorResponse;
             if (errorData?.code === 'EBADCSRFTOKEN' || errorData?.message?.includes('CSRF')) {
-              // Token CSRF inválido o faltante
-              // NO REGENERAR - el backend regenera tokens constantemente
-              // Si el token falla, debe obtenerse nuevamente en la próxima sesión
-              console.error('[CSRF] Token validation failed - NOT retrying', {
+              // Token CSRF inválido o cookie no coincide
+              // Backend implementa Double Submit Cookie - token y cookie deben coincidir
+              // Si hay mismatch: cookie expiró o fue del navegador diferente
+              console.error('[CSRF] Token validation failed', {
                 message: errorData?.message,
                 code: errorData?.code,
                 currentTokenLength: csrfToken.length,
-                note: 'Backend regenerates tokens on each fetch. Do not retry immediately.'
+                note: 'Cookie or token mismatch. User should logout and login again.'
               });
               
-              // Resetear token para forzar nuevo fetch en próxima petición
-              csrfToken = '';
-              csrfTokenFetchAttempts = 0; // Reset attempts counter
-              
-              // NO llamar a fetchCsrfToken() aquí - dejar que al user recargue
+              // NO resetear token - si está en memoria pero falla, es problema de cookie
+              // Solo rechazar el error para que el usuario lo maneje (logout/login)
               return Promise.reject(error);
             } else {
               // Para errores 403 que NO sean CSRF, solo registrar y rechazar
@@ -274,16 +274,17 @@ const createAxiosInstance = (): AxiosInstance => {
 };
 
 /**
- * Función para establecer manualmente el token CSRF (usada por CsrfProvider)
- * Esto sincroniza el token obtenido en React con el httpClient global
+ * Función para establecer el token CSRF obtenido de GET /csrf-token
+ * Sincroniza el token entre CsrfProvider (React) y httpClient global (Axios)
+ * Este es el ÚNICO token usado durante toda la sesión
  */
 export const setCsrfToken = (token: string): void => {
-  console.debug('[CSRF] Token set manually from CsrfProvider:', {
+  console.debug('[CSRF] Token set from CsrfProvider (sessionToken)', {
     tokenLength: token.length,
     previousTokenLength: csrfToken.length,
   });
   csrfToken = token;
-  csrfTokenFetchAttempts = 0; // Reset attempts cuando se establece un nuevo token
+  csrfTokenFetchAttempts = 0; // Reset - tenemos el token válido
 };
 
 /**
@@ -299,19 +300,19 @@ export const getCsrfToken = (): string => {
 export const apiClient = createAxiosInstance();
 
 /**
- * Función para inicializar el token CSRF (debe llamarse después del login)
- * Asegura que el token esté disponible antes del primer POST
+ * Función para inicializar el token CSRF después de autenticación
+ * Backend: Double Submit Cookie pattern - obtener token UNA VEZ y reutilizar
  */
 export const initializeCsrfToken = async (): Promise<string> => {
-  console.info('[CSRF] Initializing CSRF token after login...');
+  console.info('[CSRF] Initializing CSRF token...');
   try {
     const token = await fetchCsrfToken();
-    console.info('[CSRF] CSRF token initialized successfully');
+    console.info('[CSRF] CSRF token initialized successfully (will be reused all session)');
     return token;
   } catch (error) {
     console.error('[CSRF] Failed to initialize CSRF token:', error);
     // No lanzar error, permitir que el app continúe
-    // El token se obtendrá en la primera petición POST si falla aquí
+    // El token se obtendrá en CsrfProvider normalmente
     return '';
   }
 };

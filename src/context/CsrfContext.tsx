@@ -1,20 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-
-/**
- * CSRF Token Context
- * Proporciona acceso global al token CSRF obtenido del servidor
- * Maneja la inicialización, actualización y estado del token
- */
-
-export interface CsrfContextValue {
-  token: string | null;
-  isInitialized: boolean;
-  isLoading: boolean;
-  error: Error | null;
-  refreshToken: () => Promise<string>;
-}
-
-const CsrfContext = createContext<CsrfContextValue | undefined>(undefined);
+import React, { useState, useEffect, useCallback } from 'react';
+import { CsrfContext, CsrfContextValue } from './CsrfContext';
 
 /**
  * Provider para el contexto CSRF
@@ -106,16 +91,4 @@ export const CsrfProvider: React.FC<{ children: React.ReactNode }> = ({ children
       {children}
     </CsrfContext.Provider>
   );
-};
-
-/**
- * Hook personalizado para usar el contexto CSRF
- * Debe ser usado dentro de un CsrfProvider
- */
-export const useCsrfToken = (): CsrfContextValue => {
-  const context = useContext(CsrfContext);
-  if (!context) {
-    throw new Error('useCsrfToken debe ser usado dentro de CsrfProvider');
-  }
-  return context;
 };

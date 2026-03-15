@@ -16,14 +16,14 @@ describe('useAutocomplete', () => {
   });
 
   it('initializes with empty suggestions and no loading', () => {
-    const { result } = renderHook(() => useAutocomplete('test'));
-    expect(result.current.suggestions).toEqual([]);
-    expect(result.current.loading).toBe(false);
+    const { result: initResult } = renderHook(() => useAutocomplete('test'));
+    expect(initResult.current.suggestions).toEqual([]);
+    expect(initResult.current.loading).toBe(false);
   });
 
   it('returns clearSuggestions function', () => {
-    const { result } = renderHook(() => useAutocomplete('test'));
-    expect(typeof result.current.clearSuggestions).toBe('function');
+    const { result: funcResult } = renderHook(() => useAutocomplete('test'));
+    expect(typeof funcResult.current.clearSuggestions).toBe('function');
   });
 
   it('does not fetch suggestions for queries shorter than 2 characters', async () => {
@@ -35,22 +35,22 @@ describe('useAutocomplete', () => {
   });
 
   it('clears suggestions when query is empty', async () => {
-    const { result } = renderHook(
+    const { result: emptyResult } = renderHook(
       ({ query }) => useAutocomplete(query),
       { initialProps: { query: '' } }
     );
 
-    expect(result.current.suggestions).toEqual([]);
+    expect(emptyResult.current.suggestions).toEqual([]);
   });
 
   it('disables fetching when enabled is false', async () => {
-    const { result } = renderHook(() => useAutocomplete('test', undefined, false));
+    const { result: disabledResult } = renderHook(() => useAutocomplete('test', undefined, false));
     
     await waitFor(() => {
       expect(searchService.autocomplete).not.toHaveBeenCalled();
     });
     
-    expect(result.current.suggestions).toEqual([]);
+    expect(disabledResult.current.suggestions).toEqual([]);
   });
 
   it('clears suggestions on clearSuggestions call', () => {

@@ -80,8 +80,8 @@ describe('useToast', () => {
   });
 
   it('exports useToast as default', () => {
-    const useToastExport = require('../../context/useToast').default;
-    expect(useToastExport).toBeDefined();
+    // useToast is already imported above
+    expect(useToast).toBeDefined();
   });
 
   it('has correct function signatures', () => {

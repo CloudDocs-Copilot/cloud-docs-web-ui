@@ -58,7 +58,7 @@ describe('useAutocomplete', () => {
   it('includes organizationId in request when provided', async () => {
     (searchService.autocomplete as jest.Mock).mockResolvedValue(['suggestion']);
 
-    const { result } = renderHook(() =>
+    renderHook(() =>
       useAutocomplete('test', 'org-123')
     );
 
@@ -161,7 +161,7 @@ describe('useAutocomplete', () => {
     );
     (searchService.autocomplete as jest.Mock).mockReturnValue(slowPromise);
 
-    const { result } = renderHook(() => useAutocomplete('test'));
+    renderHook(() => useAutocomplete('test'));
 
     // Should eventually complete
     await waitFor(
@@ -175,7 +175,7 @@ describe('useAutocomplete', () => {
   it('handles whitespace trimming', async () => {
     (searchService.autocomplete as jest.Mock).mockResolvedValue(['test']);
 
-    const { result } = renderHook(() => useAutocomplete('  test  '));
+    renderHook(() => useAutocomplete('  test  '));
 
     await waitFor(() => {
       expect(searchService.autocomplete).toHaveBeenCalledWith('test', undefined);

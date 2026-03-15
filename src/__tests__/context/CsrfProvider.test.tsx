@@ -4,8 +4,8 @@ import { CsrfProvider } from '../../context/CsrfProvider';
 import { useCsrfToken } from '../../context/CsrfContext';
 
 // Simple mock of fetch
-const mockFetch = jest.fn();
-global.fetch = mockFetch as any;
+const mockFetch = jest.fn() as jest.Mock<Promise<Response>>;
+global.fetch = mockFetch;
 
 const TestComponent = () => {
   const { token, isInitialized, isLoading, error } = useCsrfToken();

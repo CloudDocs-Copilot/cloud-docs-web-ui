@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { NotificationsWidget } from '../../../../components/Dashboard/widgets/NotificationsWidget';
 import * as notificationsHook from '../../../../hooks/useNotifications';

@@ -1,6 +1,5 @@
 import { renderHook } from '@testing-library/react';
 import { CsrfContext, useCsrfContext } from '../../context/CsrfContext';
-import React from 'react';
 
 describe('CsrfContext', () => {
   it('creates context with default undefined value', () => {

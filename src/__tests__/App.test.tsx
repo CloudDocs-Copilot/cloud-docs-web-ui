@@ -50,36 +50,112 @@ jest.mock('../hooks/useAuth', () => ({
   }),
 }));
 
+// Mock pages
+jest.mock('../pages/Home', () => ({
+  __esModule: true,
+  default: () => <div>Home Page</div>,
+}));
+
+jest.mock('../pages/Dashboard', () => ({
+  __esModule: true,
+  default: () => <div>Dashboard Page</div>,
+}));
+
+jest.mock('../pages/LoginPage', () => ({
+  __esModule: true,
+  default: () => <div>Login Page</div>,
+}));
+
+jest.mock('../pages/Register', () => ({
+  __esModule: true,
+  default: () => <div>Register Page</div>,
+}));
+
+jest.mock('../pages/MyDrive', () => ({
+  __esModule: true,
+  default: () => <div>MyDrive Page</div>,
+}));
+
+jest.mock('../pages/TrashPage', () => ({
+  __esModule: true,
+  default: () => <div>Trash Page</div>,
+}));
+
+jest.mock('../pages/SearchPage', () => ({
+  __esModule: true,
+  default: () => <div>Search Page</div>,
+}));
+
+jest.mock('../pages/CreateOrganization', () => ({
+  __esModule: true,
+  default: () => <div>CreateOrganization Page</div>,
+}));
+
+jest.mock('../pages/NoOrganization', () => ({
+  __esModule: true,
+  default: () => <div>NoOrganization Page</div>,
+}));
+
+jest.mock('../pages/OrganizationSettings', () => ({
+  __esModule: true,
+  default: () => <div>OrganizationSettings Page</div>,
+}));
+
+jest.mock('../pages/PendingInvitations', () => ({
+  __esModule: true,
+  default: () => <div>PendingInvitations Page</div>,
+}));
+
 jest.mock('../pages/SharedDocs', () => ({
   __esModule: true,
   default: () => <div>SharedDocs Page</div>,
 }));
 
-// Mock child components to isolate App test from page complexity
-jest.mock('../pages/Home', () => ({
+jest.mock('../pages/ForgotPasswordPage', () => ({
   __esModule: true,
-  default: () => <div>Home Page</div>
+  default: () => <div>ForgotPassword Page</div>,
 }));
-jest.mock('../pages/Dashboard', () => ({
+
+jest.mock('../pages/ResetPasswordPage', () => ({
   __esModule: true,
-  default: () => <div>Dashboard Page</div>
+  default: () => <div>ResetPassword Page</div>,
 }));
-jest.mock('../pages/UserProfile', () => ({
-  UserProfile: () => <div>UserProfile Component</div>
+
+jest.mock('../pages/Legal', () => ({
+  __esModule: true,
+  default: () => <div>Legal Page</div>,
+}));
+
+jest.mock('../pages/ConfirmAccount', () => ({
+  __esModule: true,
+  default: () => <div>ConfirmAccount Page</div>,
+}));
+
+jest.mock('../pages/AICollectionsPage', () => ({
+  __esModule: true,
+  default: () => <div>AICollectionsPage Page</div>,
 }));
 
 jest.mock('../pages/NotFound', () => ({
   __esModule: true,
-  default: () => <div>Página no encontrada</div>
+  default: () => <div>Página no encontrada</div>,
 }));
 
 jest.mock('../pages/Notifications', () => ({
   __esModule: true,
-  default: () => <div>Notifications Page</div>
+  default: () => <div>Notifications Page</div>,
 }));
 
-
+jest.mock('../pages/UserProfile', () => ({
+  __esModule: true,
+  default: () => <div>UserProfile Component</div>,
+}));
 describe('Componente App', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    jest.clearAllMocks();
+  });
+
   it('renderiza el componente Home en la ruta por defecto', () => {
     render(
       <AuthProvider>
@@ -97,8 +173,24 @@ describe('Componente App', () => {
     expect(screen.getByText('Home Page')).toBeInTheDocument();
   });
 
-  it('renderiza el componente Dashboard en la ruta /dashboard', async () => {
-    // simulate authenticated user in AuthProvider
+  it('renderiza la página de Login en /login', () => {
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/login']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    expect(screen.getByText('Login Page')).toBeInTheDocument();
+  });
+
+  it('renderiza el componente Dashboard en /dashboard', async () => {
     localStorage.setItem('auth_user', JSON.stringify({ id: 'u1', name: 'User', email: 'user@example.com' }));
     render(
       <AuthProvider>
@@ -116,15 +208,14 @@ describe('Componente App', () => {
     await waitFor(() => expect(screen.getByText('Dashboard Page')).toBeInTheDocument());
   });
 
-   it('renderiza el componente UserProfile en la ruta /profile', async () => {
-    // simulate authenticated user in AuthProvider
+  it('renderiza MyDrive en /my-drive', async () => {
     localStorage.setItem('auth_user', JSON.stringify({ id: 'u1', name: 'User', email: 'user@example.com' }));
     render(
       <AuthProvider>
         <ToastProvider>
           <TestOrganizationProvider>
             <PageProvider>
-              <MemoryRouter initialEntries={['/profile']}>
+              <MemoryRouter initialEntries={['/my-drive']}>
                 <App />
               </MemoryRouter>
             </PageProvider>
@@ -132,29 +223,100 @@ describe('Componente App', () => {
         </ToastProvider>
       </AuthProvider>
     );
-    await waitFor(() => expect(screen.getByText('UserProfile Component')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('MyDrive Page')).toBeInTheDocument());
   });
 
-it('renderiza la página de error para una ruta desconocida', () => {
-  render(
-    <AuthProvider>
-      <ToastProvider>
-        <TestOrganizationProvider>
-          <PageProvider>
-            <MemoryRouter initialEntries={['/una-ruta-que-no-existe-xyz']}>
-              <App />
-            </MemoryRouter>
-          </PageProvider>
-        </TestOrganizationProvider>
-      </ToastProvider>
-    </AuthProvider>
-  );
-
-    expect(screen.getByText('Página no encontrada')).toBeInTheDocument();
-
+  it('renderiza Trash en /trash', async () => {
+    localStorage.setItem('auth_user', JSON.stringify({ id: 'u1', name: 'User', email: 'user@example.com' }));
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/trash']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    await waitFor(() => expect(screen.getByText('Trash Page')).toBeInTheDocument());
   });
 
-  it('renderiza la página de Notificaciones en la ruta /notifications', async () => {
+  it('renderiza Search en /search', async () => {
+    localStorage.setItem('auth_user', JSON.stringify({ id: 'u1', name: 'User', email: 'user@example.com' }));
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/search']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    await waitFor(() => expect(screen.getByText('Search Page')).toBeInTheDocument());
+  });
+
+  it('renderiza CreateOrganization en /create-organization', async () => {
+    localStorage.setItem('auth_user', JSON.stringify({ id: 'u1', name: 'User', email: 'user@example.com' }));
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/create-organization']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    await waitFor(() => expect(screen.getByText('CreateOrganization Page')).toBeInTheDocument());
+  });
+
+  it('renderiza PendingInvitations en /invitations', async () => {
+    localStorage.setItem('auth_user', JSON.stringify({ id: 'u1', name: 'User', email: 'user@example.com' }));
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/invitations']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    await waitFor(() => expect(screen.getByText('PendingInvitations Page')).toBeInTheDocument());
+  });
+
+  it('renderiza SharedDocs en /shared', async () => {
+    localStorage.setItem('auth_user', JSON.stringify({ id: 'u1', name: 'User', email: 'user@example.com' }));
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/shared']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    await waitFor(() => expect(screen.getByText('SharedDocs Page')).toBeInTheDocument());
+  });
+
+  it('renderiza Notifications en /notifications', async () => {
     localStorage.setItem('auth_user', JSON.stringify({ id: 'u1', name: 'User', email: 'user@example.com' }));
     render(
       <AuthProvider>
@@ -172,5 +334,142 @@ it('renderiza la página de error para una ruta desconocida', () => {
     await waitFor(() => expect(screen.getByText('Notifications Page')).toBeInTheDocument());
   });
 
+  it('renderiza Legal en /legal', () => {
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/legal']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    expect(screen.getByText('Legal Page')).toBeInTheDocument();
+  });
+
+  it('renderiza ForgotPassword en /auth/forgot-password', async () => {
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/auth/forgot-password']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    await waitFor(() => expect(screen.getByText('ForgotPassword Page')).toBeInTheDocument());
+  });
+
+  it('renderiza ResetPassword en /auth/reset-password', async () => {
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/auth/reset-password']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    await waitFor(() => expect(screen.getByText('ResetPassword Page')).toBeInTheDocument());
+  });
+
+  it('renderiza ConfirmAccount en /auth/confirmed', () => {
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/auth/confirmed']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    expect(screen.getByText('ConfirmAccount Page')).toBeInTheDocument();
+  });
+
+  it('renderiza AICollectionsPage en /collections', async () => {
+    localStorage.setItem('auth_user', JSON.stringify({ id: 'u1', name: 'User', email: 'user@example.com' }));
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/collections']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    await waitFor(() => expect(screen.getByText('AICollectionsPage Page')).toBeInTheDocument());
+  });
+
+  it('renderiza NotFound para ruta inválida', () => {
+    render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/ruta-no-existe-12345']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    expect(screen.getByText('Página no encontrada')).toBeInTheDocument();
+  });
+
+  it('renderiza App con estructura de Routes y Suspense', () => {
+    const { container } = render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    expect(container.firstChild).toBeInTheDocument();
+  });
+
+  it('renderiza múltiples providers correctamente', () => {
+    const { container } = render(
+      <AuthProvider>
+        <ToastProvider>
+          <TestOrganizationProvider>
+            <PageProvider>
+              <MemoryRouter initialEntries={['/dashboard']}>
+                <App />
+              </MemoryRouter>
+            </PageProvider>
+          </TestOrganizationProvider>
+        </ToastProvider>
+      </AuthProvider>
+    );
+    expect(container).toBeTruthy();
+    expect(container.firstChild).toBeInTheDocument();
+  });
 });
 

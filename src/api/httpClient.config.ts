@@ -274,6 +274,26 @@ const createAxiosInstance = (): AxiosInstance => {
 };
 
 /**
+ * Función para establecer manualmente el token CSRF (usada por CsrfProvider)
+ * Esto sincroniza el token obtenido en React con el httpClient global
+ */
+export const setCsrfToken = (token: string): void => {
+  console.debug('[CSRF] Token set manually from CsrfProvider:', {
+    tokenLength: token.length,
+    previousTokenLength: csrfToken.length,
+  });
+  csrfToken = token;
+  csrfTokenFetchAttempts = 0; // Reset attempts cuando se establece un nuevo token
+};
+
+/**
+ * Obtiene el token CSRF actual (para debugging)
+ */
+export const getCsrfToken = (): string => {
+  return csrfToken;
+};
+
+/**
  * Instancia configurada de axios para uso global
  */
 export const apiClient = createAxiosInstance();

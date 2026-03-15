@@ -4,7 +4,7 @@ import { CsrfProvider } from '../../context/CsrfProvider';
 import { useCsrfToken } from '../../context/CsrfContext';
 
 // Simple mock of fetch
-const mockFetch = jest.fn() as jest.Mock<Promise<Response>>;
+const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
 const TestComponent = () => {
@@ -105,7 +105,8 @@ describe('CsrfProvider', () => {
     );
 
     await waitFor(() => {
-      const callArgs = (mockFetch as jest.Mock).mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = (mockFetch as any).mock.calls[0];
       expect(callArgs[1]).toHaveProperty('credentials', 'include');
     });
   });
@@ -123,7 +124,8 @@ describe('CsrfProvider', () => {
     );
 
     await waitFor(() => {
-      const callArgs = (mockFetch as jest.Mock).mock.calls[0];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const callArgs = (mockFetch as any).mock.calls[0];
       expect(callArgs[1].headers).toHaveProperty(
         'Content-Type',
         'application/json'

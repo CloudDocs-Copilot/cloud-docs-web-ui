@@ -55,7 +55,7 @@ let csrfToken: string | null = null;
  */
 const fetchCsrfToken = async (): Promise<string> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/csrf-token`, {
+    const response = await axios.get(`${API_BASE_URL}/csrf-token`, {
       withCredentials: true,
     });
     csrfToken = response.data.token || response.data.csrfToken;
@@ -86,7 +86,7 @@ const createAxiosInstance = (): AxiosInstance => {
       // gracias a withCredentials: true
       
       // Rutas que NO requieren token CSRF en el header
-      const CSRF_EXCLUDED_ROUTES = ['/auth/login', '/auth/register', '/api/csrf-token'];
+      const CSRF_EXCLUDED_ROUTES = ['/auth/login', '/auth/register', '/csrf-token'];
       const requiresCsrf = !CSRF_EXCLUDED_ROUTES.some(route => requestConfig.url?.includes(route));
       
       // Métodos que requieren token CSRF

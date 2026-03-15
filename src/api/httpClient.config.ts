@@ -46,19 +46,25 @@ const API_BASE_URL = resolveApiBaseUrl();
 const REQUEST_TIMEOUT_MS = 30000; // 30 segundos
 
 /**
- * Variable para almacenar el token CSRF en memoria
- * IMPORTANTE: El backend implementa Double Submit Cookie estático (no regenera tokens)
- * El token se obtiene UNA SOLA VEZ al inicializar sesión y se reutiliza toda la sesión
+ * Almacenamiento de token CSRF en memoria
+ * ✅ El token se obtiene UNA VEZ y se reutiliza toda la sesión
+ * ✅ NO se regenera en operaciones POST/PUT/DELETE
+ * ❌ El backend SOLO valida (no regenera tokens)
  */
 let csrfToken: string = '';
 let csrfTokenPromise: Promise<string> | null = null;
 let csrfTokenFetchAttempts: number = 0;
-const MAX_CSRF_FETCH_ATTEMPTS = 1; // Solo intentar fetch si token está vacío
+const MAX_CSRF_FETCH_ATTEMPTS = 1; // Intentar obtener token solo si no existe
 
 /**
- * Obtiene el token CSRF del servidor
- * Backend: Double Submit Cookie pattern - token estático por sesión
- * Frontend: Obtener UNA VEZ y reutilizar. NO se regenera en las operaciones.
+ * Obtiene el token CSRF del servidor (se obtiene UNA SOLA VEZ)
+ * Patrón: Double Submit Cookie estático (backend NO regenera)
+ * 
+ * Flujo:
+ * 1. GET /csrf-token → obtiene token + se establece en cookie
+ * 2. Token se almacena en variable csrfToken (en memoria)
+ * 3. Se reutiliza en todos los POST/PUT/DELETE
+ * 4. Backend valida: token header = token cookie (sin regeneración)
  */
 const fetchCsrfToken = async (): Promise<string> => {
   // Si ya hay un fetch en progreso, espera a ese
@@ -130,11 +136,12 @@ const createAxiosInstance = (): AxiosInstance => {
     withCredentials: true, // Permite enviar cookies en peticiones cross-origin
   });
 
-  // Interceptor de solicitud - añade token CSRF a peticiones que lo requieren
+  // Interceptor de solicitud - añade token CSRF a operaciones que lo requieren
   axiosInstance.interceptors.request.use(
     async (requestConfig: InternalAxiosRequestConfig) => {
-      // Las cookies (incluyendo __Host-psifi.x-csrf-token) se envían automáticamente
+      // La cookie (con la flag __Host-) se envía automáticamente
       // gracias a withCredentials: true
+      // Client solo necesita añadir token al header x-csrf-token
       
       // IMPORTANTE: Si se envía FormData, remover el Content-Type para que Axios
       // lo configure automáticamente con el boundary correcto
@@ -145,15 +152,16 @@ const createAxiosInstance = (): AxiosInstance => {
         }
       }
       
-      // Rutas que NO requieren token CSRF en el header
+      // Rutas que NO requieren token CSRF en header
       const CSRF_EXCLUDED_ROUTES = ['/auth/login', '/auth/register', '/csrf-token'];
       const requiresCsrf = !CSRF_EXCLUDED_ROUTES.some(route => requestConfig.url?.includes(route));
       
-      // Métodos que requieren token CSRF
+      // Solo POST/PUT/PATCH/DELETE requieren validación CSRF
       const METHODS_REQUIRING_CSRF = ['POST', 'PUT', 'PATCH', 'DELETE'];
       const methodRequiresCsrf = METHODS_REQUIRING_CSRF.includes(requestConfig.method?.toUpperCase() || '');
 
-      // Obtener y añadir token CSRF si es necesario
+      // Obtener token una sola vez y reutilizar en toda la sesión
+      // No se regenera en operaciones posteriores
       if (requiresCsrf && methodRequiresCsrf) {
         try {
           if (!csrfToken) {
@@ -191,9 +199,10 @@ const createAxiosInstance = (): AxiosInstance => {
   // Interceptor de respuesta - maneja errores globalmente
   axiosInstance.interceptors.response.use(
     (response) => {
-      // Backend NO regenera CSRF tokens (patrón Double Submit Cookie estático)
-      // Se obtiene UNA VEZ en getSession/login y se reutiliza toda la sesión
-      // No es necesario invalidar token después de respuestas exitosas
+      // ✅ Validación pasiva: No hay regeneración de tokens
+      // Backend: Double Submit Cookie estático (no regenera)
+      // Frontend: No invalida ni restablece token tras éxito
+      // Token se mantiene igual durante toda la sesión
       return response;
     },
     async (error: AxiosError) => {
@@ -215,24 +224,21 @@ const createAxiosInstance = (): AxiosInstance => {
             return Promise.reject(error);
 
           case 403: {
-            // Acceso prohibido o token CSRF inválido/faltante
+            // Acceso prohibido o validación CSRF fallida
             const errorData = error.response.data as ApiErrorResponse;
             if (errorData?.code === 'EBADCSRFTOKEN' || errorData?.message?.includes('CSRF')) {
-              // Token CSRF inválido o cookie no coincide
-              // Backend implementa Double Submit Cookie - token y cookie deben coincidir
-              // Si hay mismatch: cookie expiró o fue del navegador diferente
-              console.error('[CSRF] Token validation failed', {
+              // ❌ Validación CSRF fallida: token en header ≠ token en cookie
+              // NO se regenera: cookie expiró o usuario cambió de navegador
+              // Acción requerida: usuario debe logout/login para obtener nuevo token
+              console.error('[CSRF] Validación pasiva falló - token/cookie mismatch', {
                 message: errorData?.message,
                 code: errorData?.code,
-                currentTokenLength: csrfToken.length,
-                note: 'Cookie or token mismatch. User should logout and login again.'
+                action: 'User must logout and login again for new session'
               });
               
-              // NO resetear token - si está en memoria pero falla, es problema de cookie
-              // Solo rechazar el error para que el usuario lo maneje (logout/login)
               return Promise.reject(error);
             } else {
-              // Para errores 403 que NO sean CSRF, solo registrar y rechazar
+              // Otros errores 403 (permisos, acceso denegado)
               console.error('[403] Acceso prohibido a este recurso', {
                 url: error.config?.url,
                 message: errorData?.message,

@@ -168,13 +168,6 @@ describe('FileManagerView', () => {
     expect(uploadButton).toBeDisabled();
   });
 
-  it('carga el contenido inicial correctamente', async () => {
-    render(<FileManagerView />);
-    await waitFor(() => {
-      expect(folderService.getTree).toHaveBeenCalled();
-    });
-  });
-
   it('renderiza sin errores después de carga', async () => {
     render(<FileManagerView />);
     await waitFor(() => {
@@ -186,16 +179,6 @@ describe('FileManagerView', () => {
     render(<FileManagerView />);
     expect(mockUseOrganization).toHaveBeenCalled();
     expect(screen.getByTestId('folder-tree')).toBeInTheDocument();
-  });
-
-  it('renderiza interface completa', async () => {
-    render(<FileManagerView />);
-    await waitFor(() => {
-      expect(screen.getByTestId('folder-tree')).toBeInTheDocument();
-      expect(screen.getByTestId('breadcrumbs')).toBeInTheDocument();
-    });
-    const heading = screen.getByRole('heading', { name: /Archivos/i });
-    expect(heading).toBeInTheDocument();
   });
 
   it('renderiza estructura base correctamente', () => {

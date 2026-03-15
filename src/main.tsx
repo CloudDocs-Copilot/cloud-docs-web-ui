@@ -13,6 +13,9 @@ import NotificationsProvider from './context/NotificationsProvider';
 import { CsrfProvider } from './context/CsrfProvider';
 import ErrorBoundary from "./components/ErrorBoundary.tsx";
 
+// Import CSRF debug utilities for troubleshooting
+import './utils/csrfDebug';
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ErrorBoundary>

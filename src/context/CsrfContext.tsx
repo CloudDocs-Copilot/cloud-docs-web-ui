@@ -21,7 +21,7 @@ export const CsrfProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // El endpoint ya está configurado en apiClient con baseURL
       // Así que usamos una ruta relativa
-      const response = await fetch('/csrf-token', {
+      const response = await fetch('/api/csrf-token', {
         method: 'GET',
         credentials: 'include', // Incluir cookies automáticamente
         headers: {

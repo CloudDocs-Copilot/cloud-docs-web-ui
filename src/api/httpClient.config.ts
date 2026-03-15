@@ -94,20 +94,23 @@ const fetchCsrfToken = async (): Promise<string> => {
         withCredentials: true,
       });
       
-      console.debug('[CSRF] CSRF token response:', { 
+      // Extraer token del response (backend devuelve { token: "..." })
+      const token = response.data?.token || response.data?.csrfToken || '';
+      
+      // Verificación: el servidor debería haber seteado la cookie automáticamente
+      // Double Submit Cookie: cookie === header cuando se valida
+      console.debug('[CSRF] GET /csrf-token response:', { 
         status: response.status,
-        hasToken: !!response.data?.token,
-        hasCsrfToken: !!response.data?.csrfToken,
+        token: token ? `${token.substring(0, 20)}...` : 'MISSING',
+        tokenLength: token.length,
         responseKeys: Object.keys(response.data || {})
       });
 
-      const token = response.data?.token || response.data?.csrfToken || '';
-      
       if (!token) {
-        console.warn('[CSRF] No token found in response. Response data:', response.data);
+        console.warn('[CSRF] ❌ No token found in response body. Response:', response.data);
       } else {
         csrfToken = token;
-        console.info(`[CSRF] Token fetched successfully (length: ${token.length})`);
+        console.info(`[CSRF] ✅ Token fetched (length: ${token.length}). Will be reused for entire session.`);
       }
       
       return token;
@@ -165,18 +168,19 @@ const createAxiosInstance = (): AxiosInstance => {
       if (requiresCsrf && methodRequiresCsrf) {
         try {
           if (!csrfToken) {
-            console.debug(`[CSRF] Token missing for ${requestConfig.method?.toUpperCase()} ${requestConfig.url}, fetching...`);
+            console.debug(`[CSRF] 🔄 Token missing for ${requestConfig.method?.toUpperCase()} ${requestConfig.url}, fetching from GET /csrf-token...`);
             await fetchCsrfToken();
           }
           
           if (csrfToken && requestConfig.headers) {
             requestConfig.headers['x-csrf-token'] = csrfToken;
-            console.debug(`[CSRF] Added CSRF token to ${requestConfig.method?.toUpperCase()} ${requestConfig.url}`);
+            console.debug(`[CSRF] ✅ Added x-csrf-token header: ${csrfToken.substring(0, 20)}... (length: ${csrfToken.length})`);
+            console.debug(`[CSRF] 📋 Method: ${requestConfig.method?.toUpperCase()}, URL: ${requestConfig.url}`);
           } else if (!csrfToken) {
-            console.warn(`[CSRF] Failed to obtain CSRF token for ${requestConfig.method?.toUpperCase()} ${requestConfig.url}`);
+            console.warn(`[CSRF] ⚠️ MISMATCH: Could not obtain CSRF token for ${requestConfig.method?.toUpperCase()} ${requestConfig.url}. Will try server validation.`);
           }
         } catch (csrfErr) {
-          console.error(`[CSRF] Error during CSRF token fetch for ${requestConfig.method?.toUpperCase()} ${requestConfig.url}:`, csrfErr);
+          console.error(`[CSRF] ❌ Error during token fetch for ${requestConfig.method?.toUpperCase()} ${requestConfig.url}:`, csrfErr);
           // Continuar sin token, dejar que el servidor rechace si es necesario
         }
       }

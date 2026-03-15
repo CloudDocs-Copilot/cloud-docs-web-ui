@@ -40,6 +40,8 @@ const config: Config = {
     '!src/**/index.tsx',
     // exclude brand archive folder (historical versions)
     '!src/brand/archive/**',
+    // exclude CSRF debug utilities (runtime debugging tools, not production code)
+    '!src/utils/csrfDebug.ts',
   ],
   coverageReporters: ['text', 'lcov', 'json-summary'],
   testTimeout: 30000,

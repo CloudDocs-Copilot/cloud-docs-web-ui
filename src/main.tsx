@@ -10,6 +10,7 @@ import { AuthProvider } from "./context/AuthProvider.tsx";
 import OrganizationProvider from "./context/OrganizationProvider";
 import { ToastProvider } from './context/ToastProvider';
 import NotificationsProvider from './context/NotificationsProvider';
+import { CsrfProvider } from './context/CsrfProvider';
 import ErrorBoundary from "./components/ErrorBoundary.tsx";
 
 createRoot(document.getElementById("root")!).render(
@@ -17,15 +18,17 @@ createRoot(document.getElementById("root")!).render(
     <ErrorBoundary>
       <BrowserRouter>
         <AuthProvider>
-          <ToastProvider>
-            <OrganizationProvider>
-              <NotificationsProvider>
-                <PageProvider>
-                  <App />
-                </PageProvider>
-              </NotificationsProvider>
-            </OrganizationProvider>
-          </ToastProvider>
+          <CsrfProvider>
+            <ToastProvider>
+              <OrganizationProvider>
+                <NotificationsProvider>
+                  <PageProvider>
+                    <App />
+                  </PageProvider>
+                </NotificationsProvider>
+              </OrganizationProvider>
+            </ToastProvider>
+          </CsrfProvider>
         </AuthProvider>
       </BrowserRouter>
     </ErrorBoundary>

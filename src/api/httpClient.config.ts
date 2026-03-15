@@ -123,7 +123,7 @@ const createAxiosInstance = (): AxiosInstance => {
     (response) => {
       return response;
     },
-    (error: AxiosError) => {
+    async (error: AxiosError) => {
       if (error.response) {
         // El servidor respondió con un código de estado fuera del rango 2xx
         switch (error.response.status) {
@@ -139,41 +139,62 @@ const createAxiosInstance = (): AxiosInstance => {
             } catch (e) {
               console.warn('Could not dispatch unauthenticated event', e);
             }
-            break;
+            return Promise.reject(error);
+
           case 403: {
             // Acceso prohibido o token CSRF inválido/faltante
-            console.error('Access forbidden to this resource');
-            // Si es error CSRF, intentar obtener un nuevo token
             const errorData = error.response.data as ApiErrorResponse;
             if (errorData?.code === 'EBADCSRFTOKEN' || errorData?.message?.includes('CSRF')) {
-              console.warn('Invalid CSRF token, fetching new one...');
+              // Token CSRF inválido o faltante - refrescar e intentar de nuevo
+              console.warn('[CSRF] Token inválido, refrescando y reintentando petición...');
               csrfToken = null; // Resetear token
-              fetchCsrfToken().catch(err => console.error('Failed to refresh CSRF token:', err));
+              
+              try {
+                // Obtener nuevo token
+                await fetchCsrfToken();
+                console.log('[CSRF] Token refrescado exitosamente, reintentando petición...');
+                
+                // Reintentar la petición original con el nuevo token
+                if (error.config) {
+                  return axiosInstance.request(error.config);
+                }
+              } catch (retryErr) {
+                console.error('[CSRF] Error al refrescar token y reintentar:', retryErr);
+                return Promise.reject(retryErr);
+              }
+            } else {
+              // Para errores 403 que NO sean CSRF, solo registrar y rechazar
+              console.error('[CSRF] Acceso prohibido a este recurso');
+              return Promise.reject(error);
             }
             break;
           }
+
           case 404:
             // Recurso no encontrado
             console.error('Resource not found');
-            break;
+            return Promise.reject(error);
+
           case 500:
           case 502:
           case 503:
             // Error del servidor
             console.error('Server error. Please try again later');
-            break;
+            return Promise.reject(error);
+
           default:
             console.error('Request error:', error.response.data);
+            return Promise.reject(error);
         }
       } else if (error.request) {
         // La solicitud fue hecha pero no se recibió respuesta
         console.error('No response received from server');
+        return Promise.reject(error);
       } else {
         // Algo sucedió al configurar la solicitud
         console.error('Error setting up the request:', error.message);
+        return Promise.reject(error);
       }
-      
-      return Promise.reject(error);
     }
   );
 

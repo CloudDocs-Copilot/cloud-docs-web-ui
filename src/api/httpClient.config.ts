@@ -85,6 +85,15 @@ const createAxiosInstance = (): AxiosInstance => {
       // Las cookies (incluyendo __Host-psifi.x-csrf-token) se envían automáticamente
       // gracias a withCredentials: true
       
+      // IMPORTANTE: Si se envía FormData, remover el Content-Type para que Axios
+      // lo configure automáticamente con el boundary correcto
+      if (requestConfig.data instanceof FormData) {
+        // Eliminar Content-Type - Axios lo establecerá automáticamente
+        if (requestConfig.headers) {
+          delete requestConfig.headers['Content-Type'];
+        }
+      }
+      
       // Rutas que NO requieren token CSRF en el header
       const CSRF_EXCLUDED_ROUTES = ['/auth/login', '/auth/register', '/csrf-token'];
       const requiresCsrf = !CSRF_EXCLUDED_ROUTES.some(route => requestConfig.url?.includes(route));

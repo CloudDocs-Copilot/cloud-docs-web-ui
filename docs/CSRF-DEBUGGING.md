@@ -1,226 +1,248 @@
 # 🔍 CSRF Token Debugging Guide
 
-## Problema Detectado en PRD
-Se observó error 403 CSRF con 2 tokens diferentes:
-- **Cookie**: `tokenskey=bDGGCUIR...`
-- **Header X-Csrf-Token**: `352567114cccfe02c6b9925909b1c0068...`
+## 🚨 Problema Detectado en PRD
 
-**Esto indica que el token del response body que guarda el cliente NO coincide con la cookie que el servidor setea.**
+Se observó error 403 CSRF con cookies **DIFERENTES** al esperado:
+- **Esperado en PRD**: `__Host-psifi.x-csrf-token=<token>`
+- **Visto en PRD**: `tokenskey=bDGGCUIR...` ❌
+- **Header X-Csrf-Token**: `352567114cccfe02...` (diferente al token en cookie)
+
+### Root Cause
+El navegador tiene una **cookie vieja o de otro origen** llamada `tokenskey` que NO es la cookie CSRF esperada. Esto causa mismatch entre:
+- Header: `x-csrf-token: 352567114...` (token correcto del servidor)
+- Cookie: `tokenskey: bDGGCUIR...` (cookie incorrecta/vieja)
 
 ---
 
-## 🛠️ Paso 1: Debugging en el Navegador (PRD)
+## 🛠️ Paso 1: Debugging Rápido (PRD)
 
-### Opción A: Usar la utilidad incorporada
 Abre la consola (F12) y ejecuta:
 
 ```javascript
 await window.__CSRF_DEBUG.checkTokens()
 ```
 
-Esto mostrará:
-1. ✅ Token obtenido del servidor (`GET /api/csrf-token`)
-2. 🍪 Cookies presentes en el navegador  
-3. 🎯 Token almacenado en memoria (Axios)
-4. 📋 Result de un POST test
+**Qué mostrará:**
+- ✅ Token obtenido del servidor (`GET /api/csrf-token`)
+- 🍪 Cookies esperadas por entorno:
+  - **PRD**: `__Host-psifi.x-csrf-token`
+  - **DEV**: `psifi.x-csrf-token`
+- 🔴 Cookies DIFERENTES encontradas (como `tokenskey`)
+- 📊 Comparación: ¿Response token === Cookie?
+- 🎯 Resultado del test POST
 
-### Opción B: Debugging manual
+---
+
+## 📋 Verificar Cookie Específica
+
+Si solo quieres revisar la cookie CSRF:
+
 ```javascript
-// 1. Obtener token CSRF
-const response = await fetch('https://[PRD-URL]/api/csrf-token', {
-  method: 'GET',
-  credentials: 'include'
-});
-const data = await response.json();
-console.log('Token from response:', data.token);
-console.log('Token length:', data.token?.length);
+// Checar la cookie esperada
+window.__CSRF_DEBUG.checkCSRFCookie()
 
-// 2. Ver todas las cookies
-console.log('document.cookie:', document.cookie);
+// Ver TODAS las cookies
+window.__CSRF_DEBUG.getAllCookies()
 
-// 3. Obtener token de Axios (si está disponible)
-const { getCsrfToken } = await import('./src/api/httpClient.config');
-console.log('Axios stored token:', getCsrfToken());
+// Ver ambiente
+window.__CSRF_DEBUG.getEnvironmentInfo()
 ```
 
 ---
 
-## 🛠️ Paso 2: Debugging en el Servidor (Backend)
+## 🔍 Nombres de Cookie por Entorno
 
-Agrega logs temporales en el backend para ver qué recibe:
+Tu backend usa:
 
 ```typescript
-// csrf.middleware.ts - línea ~120
-export const csrfProtectionMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-  if (CSRF_EXCLUDED_ROUTES.includes(req.path)) {
-    return next();
-  }
-
-  // 🔍 TEMPORARY DEBUG
-  if (process.env.NODE_ENV !== 'test') {
-    console.log('[CSRF-VALIDATION]', {
-      path: req.path,
-      method: req.method,
-      headerToken: req.headers['x-csrf-token'] ? 
-        `${String(req.headers['x-csrf-token']).substring(0, 30)}... (length: ${String(req.headers['x-csrf-token']).length})` : 
-        'MISSING',
-      cookieToken: req.cookies['psifi.x-csrf-token'] ? 
-        `${req.cookies['psifi.x-csrf-token'].substring(0, 30)}... (length: ${req.cookies['psifi.x-csrf-token'].length})` : 
-        'MISSING',
-      match: req.cookies['psifi.x-csrf-token'] === req.headers['x-csrf-token'],
-      // Debug: mostrar TODAS las cookies
-      allCookies: Object.keys(req.cookies)
-    });
-  }
-
-  return csrfProtection.doubleCsrfProtection(req, res, next);
-};
+// csrf.middleware.ts línea 32
+cookieName: isProduction 
+  ? '__Host-psifi.x-csrf-token'   // En producción (HTTPS)
+  : 'psifi.x-csrf-token'           // En desarrollo (HTTP)
 ```
 
-Luego observa los logs cuando falla la validación.
+| Entorno | Nombre Esperado | Seguridad |
+|---------|-----------------|-----------|
+| **Producción** | `__Host-psifi.x-csrf-token` | ✅ HttpOnly + Secure + HTTPS only |
+| **Desarrollo** | `psifi.x-csrf-token` | ✅ HttpOnly + Lax |
+
+### Prefijo `__Host-`
+- Solo se envía por HTTPS
+- No puede ser leído por JavaScript (HttpOnly)
+- No puede ser enviado a subdominios
+- Aumenta seguridad en producción
 
 ---
 
-## ❓ Preguntas para identificar la causa
+## ✅ Flujo Correcto del Backend
 
-### 1. ¿El token del response === token de la cookie?
-```javascript
-// En navegador:
-const resp = await fetch('/api/csrf-token', { credentials: 'include' });
-const token = (await resp.json()).token;
-console.log('Response token:', token);
-console.log('Cookie has:', document.cookie);
-// ¿Son iguales o diferentes?
-```
+Tu backend hace exactamente lo correcto:
 
-**Si son DIFERENTES**: El backend está generando 2 tokens en el endpoint `/csrf-token`
-
-### 2. ¿El cliente está enviando el token CORRECTO?
-```javascript
-// Verificar qué se envía en el header
-const tokenToSend = token;  // Del response body
-console.log('Sending in header x-csrf-token:', tokenToSend);
-
-// Hace POST
-const postResp = await fetch('/api/documents', {
-  method: 'POST',
-  credentials: 'include',  // ✅ CRÍTICO: debe estar
-  headers: { 'x-csrf-token': tokenToSend },
-  body: new FormData()
+```typescript
+// app.ts línea 107-115
+app.get('/api/csrf-token', (req: Request, res: Response) => {
+  const token = generateCsrfToken(req, res);  // Genera Y setea cookie
+  res.json({
+    token,  // ← DEVUELVE el MISMO token
+    message: '...'
+  });
 });
+
+// Resultado:
+// Cookie: __Host-psifi.x-csrf-token = "a2D2121a4d0c646..."
+// JSON: { "token": "a2D2121a4d0c646..." }  ✅ IDÉNTICOS
 ```
-
-### 3. ¿El cliente llamó a `GET /csrf-token` antes del primer POST?
-```javascript
-// En CsrfProvider o al inicializar:
-// ¿Se llama a initializeCsrfToken()?
-
-// Si NO, el csrfToken está vacío
-const { getCsrfToken } = await import('./api/httpClient.config');
-console.log('Token in memory:', getCsrfToken() || 'EMPTY - never fetched');
-```
-
-### 4. ¿La cookie se está enviando automáticamente?
-En DevTools Network:
-- Request a `POST /api/documents`
-- Ir a tab "Cookies"
-- ¿Está presente `psifi.x-csrf-token`?
-- ¿Su valor coincide con el que está en el header `x-csrf-token`?
 
 ---
 
-## 🎯 Checklist de Verificación
+## ❓ Qué Podría Estar Mal
 
-**En el navegador (consola):**
+### 1. **Cookie vieja no se limpió** ❌
+```
+Sesión anterior: tokenskey = "bDGGCUIR..." (de otra app o vieja)
+Nueva sesión: psifi.x-csrf-token = "352567114..." (correcta)
 
-- [ ] `await window.__CSRF_DEBUG.checkTokens()` muestra 4 pasos sin errores
-- [ ] Token del response `GET /csrf-token` es NO-VACÍO
-- [ ] Al menos una cookie relacionada con csrf/token existe
+Problema: El navegador envía AMBAS cookies
+El servidor valida contra psifi.x-csrf-token pero ve tokenskey
+```
+
+**Solución**: Limpiar cookies o usar Incognito mode
+
+### 2. **CORS bloqueando cookies en PRD**
+```
+Si CORS no tiene credentials: 'include' ❌
+O el servidor no tiene Access-Control-Allow-Credentials: true ❌
+
+Resultado: Cookie NO se envía, solo header
+```
+
+Tu código tiene `withCredentials: true` ✅
+
+### 3. **Token se obtiene pero se sobrescribe**
+```
+GET /csrf-token → token="ABC"
+GET /csrf-token (2da vez) → token="XYZ"
+Cookie cambia a "XYZ" pero header sigue siendo "ABC"
+```
+
+Tu código previene con `MAX_CSRF_FETCH_ATTEMPTS = 1` ✅
+
+### 4. **Dominio/Puerto diferente en PRD**
+```
+Frontend: https://app.clouddocs.com
+Backend: https://api.clouddocs.com
+
+Si no es same-site, la cookie podría no enviarse
+```
+
+Verifica que frontend y backend usen mismo dominio o CORS correcto
+
+---
+
+## 🎯 Diagnóstico Paso a Paso
+
+### Paso 1: Ejecutar debug
+```javascript
+await window.__CSRF_DEBUG.checkTokens()
+```
+
+### Paso 2: Identificar el problema
+
+**Si muestra MISMATCH:**
+```
+• Response token: a2D2121a4d0c646...
+• Cookie token:   bDGGCUIR... (¡diferentes!)
+❌ MISMATCH! Response !== Cookie
+```
+→ **Backend está devolviendo token diferente al que setea en cookie**
+
+**Si muestra cookie MISSING:**
+```
+❌ Exact cookie NOT found
+   Available cookies: (vacío o solo "tokenskey")
+```
+→ **Cookie no se está seteando o no se está enviando**
+
+**Si muestra cookie INCORRECTA:**
+```
+⚠️ Found DIFFERENT CSRF cookie: "tokenskey"
+   Value: bDGGCUIR...
+```
+→ **Hay una cookie vieja que debe ser limpiada**
+
+### Paso 3: Compartir información
+
+Si hay problema, comparte:
+```javascript
+// Esto te dará toda la información
+const info = window.__CSRF_DEBUG.getEnvironmentInfo();
+console.log(JSON.stringify(info, null, 2));
+```
+
+---
+
+## 🧹 Limpiar Cookie Vieja (Temporalmente)
+
+Si hay `tokenskey` u otras cookies viejas:
+
+```javascript
+// En consola del navegador
+// Borrar cookies viejas
+document.cookie = "tokenskey=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+// Luego recargar página
+location.reload();
+
+// Checar si la nueva cookie se setea
+window.__CSRF_DEBUG.checkCSRFCookie();
+```
+
+---
+
+## 🔐 Verificación Completa
+
+**En el navegador:**
+
+- [ ] `await window.__CSRF_DEBUG.checkTokens()` completa sin errores
+- [ ] Expected cookie name es `__Host-psifi.x-csrf-token` (PRD) o `psifi.x-csrf-token` (DEV)
+- [ ] ✅ MATCH! Response === Cookie
+- [ ] NO hay cookies viejas como `tokenskey`
 - [ ] POST test devuelve 200, no 403
 
 **En el servidor (logs):**
 
-- [ ] El endpoint `GET /csrf-token` devuelve un token
-- [ ] `Set-Cookie` incluye `psifi.x-csrf-token` con valor
-- [ ] Cuando `POST /api/documents` llega:
-  - [ ] header `x-csrf-token` está presente
-  - [ ] cookie `psifi.x-csrf-token` está presente
-  - [ ] AMBOS tienen el MISMO valor
-  - [ ] "match": true en los logs
+```bash
+# Verificar localmente
+curl -v http://localhost:3000/api/csrf-token 2>&1 | grep -E "(Set-Cookie|\"token\")"
+```
+
+Debería mostrar:
+```
+Set-Cookie: psifi.x-csrf-token=a2D2121a4d...; Path=/; HttpOnly; SameSite=Lax
+{"token":"a2D2121a4d..."}
+```
+
+**Ambos valores después de `=` son IDÉNTICOS** ✅
 
 ---
 
-## 🚨 Escenarios Problemáticos Comunes
+## 📞 Si el Problema Persiste
 
-### Escenario A: Token en response ≠ Cookie
-```
-GET /api/csrf-token
-Response body: { token: "ABC123..." }
-Set-Cookie: psifi.x-csrf-token=XYZ999...
-↓
-MISMATCH en el servidor: ABC123 ≠ XYZ999
-```
-
-**Solución**: Backend debe devolver el MISMO token que setea en la cookie.
-
-### Escenario B: Cliente obtiene token pero lo guarda mal
-```javascript
-// ❌ INCORRECTO:
-const token = response.data.someOtherField;  // No es el CSRF token
-
-// ✅ CORRECTO:
-const token = response.data.token;  // Del campo "token"
-```
-
-Tu código lo hace correcto (línea 91 en httpClient.config.ts).
-
-### Escenario C: Múltiple llamadas a GET /csrf-token
-```
-Llamada 1: GET /csrf-token → token="ABC123" → cookie="ABC123"
-Llamada 2: GET /csrf-token → token="XYZ999" → cookie="XYZ999" (REEMPLAZA)
-
-POST con token="ABC123" pero cookie="XYZ999"
-↓
-MISMATCH
-```
-
-Tu código evita esto con `MAX_CSRF_FETCH_ATTEMPTS = 1` ✅
-
-### Escenario D: CORS bloqueando cookies
-```javascript
-// ❌ SI ESTO FALTA:
-credentials: 'include'
-
-// ✅ DEBE SER:
-fetch(url, {
-  credentials: 'include,  // ← CRÍTICO
-  ...
-})
-```
-
-Tu código lo tiene (`withCredentials: true`) ✅
+1. **Ejecuta el debug**: `await window.__CSRF_DEBUG.checkTokens()`
+2. **Toma screenshot** de la salida
+3. **Verifica el nombre exacto** de la cookie esperada según entorno
+4. **Limpia cookies viejas** (Incognito mode)
+5. **Comparte output** con backend team con esta información:
+   - Entorno (PRD/DEV)
+   - Nombre de cookie esperado vs recibido
+   - Respuesta vs Cookie comparison
+   - Logs del servidor para esa request
 
 ---
 
-## 📋 Pasos para Resolver
+## 🚀 Resumen
 
-1. **Ejecutar `await window.__CSRF_DEBUG.checkTokens()`** en PRD
-2. **Identificar cuál de los 4 escenarios anteriores es tu caso**
-3. **Si es Escenario A**: Revisar backend `GET /csrf-token`
-   - ¿Devuelve en body el MISMO token que setea en cookie?
-4. **Si es Escenario C**: Verificar si se llama múltiples veces
-   - Network tab → filtrar por `/csrf-token`
-   - ¿Cuántas llamadas hay?
-5. **Si es Escenario D**: Verificar `credentials: 'include'`
-   - Tu código ya lo tiene ✅
-
----
-
-## 📞 Próximos Pasos
-
-1. Corre el debug en PRD
-2. Compartir el output de `window.__CSRF_DEBUG.checkTokens()`
-3. Compartir los logs del servidor para esa request
-4. Podremos identificar exactamente dónde está el desajuste
-
-**Documento de logging agregado a**: `src/utils/csrfDebug.ts`
+- ✅ Backend **CORRECTO**: devuelve mismo token en JSON que setea en cookie
+- ✅ Frontend **CORRECTO**: envía el token en header y usa `withCredentials: true`
+- ❌ **PROBLEMA**: Cookie vieja/incorrecta o validación incorrecta
+- 🔧 **SOLUCIÓN**: Usar debug util para identificar exactamente qué está mal

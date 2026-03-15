@@ -48,22 +48,59 @@ const REQUEST_TIMEOUT_MS = 30000; // 30 segundos
 /**
  * Variable para almacenar el token CSRF en memoria
  */
-let csrfToken: string | null = null;
+let csrfToken: string = '';
+let csrfTokenPromise: Promise<string> | null = null;
 
 /**
  * Obtiene el token CSRF del servidor
+ * Usa una promise compartida para evitar multi-fetch durante race conditions
  */
 const fetchCsrfToken = async (): Promise<string> => {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/csrf-token`, {
-      withCredentials: true,
-    });
-    csrfToken = response.data.token || response.data.csrfToken;
-    return csrfToken || '';
-  } catch (error) {
-    console.error('Error fetching CSRF token:', error);
-    throw error;
+  // Si ya hay un fetch en progreso, espera a ese
+  if (csrfTokenPromise) {
+    return csrfTokenPromise;
   }
+
+  // Si ya tenemos token, devolverlo
+  if (csrfToken) {
+    return csrfToken;
+  }
+
+  // Crear la promise y compartirla
+  csrfTokenPromise = (async (): Promise<string> => {
+    try {
+      console.debug('[CSRF] Fetching CSRF token from server...');
+      const response = await axios.get(`${API_BASE_URL}/csrf-token`, {
+        withCredentials: true,
+      });
+      
+      console.debug('[CSRF] CSRF token response:', { 
+        status: response.status,
+        hasToken: !!response.data?.token,
+        hasCsrfToken: !!response.data?.csrfToken,
+        responseKeys: Object.keys(response.data || {})
+      });
+
+      const token = response.data?.token || response.data?.csrfToken || '';
+      
+      if (!token) {
+        console.warn('[CSRF] No token found in response. Response data:', response.data);
+      } else {
+        csrfToken = token;
+        console.info(`[CSRF] Token fetched successfully (length: ${token.length})`);
+      }
+      
+      return token;
+    } catch (error) {
+      console.error('[CSRF] Error fetching CSRF token:', error);
+      csrfToken = '';
+      throw error;
+    } finally {
+      csrfTokenPromise = null; // Limpiar promise
+    }
+  })();
+
+  return csrfTokenPromise;
 };
 
 /**
@@ -104,11 +141,21 @@ const createAxiosInstance = (): AxiosInstance => {
 
       // Obtener y añadir token CSRF si es necesario
       if (requiresCsrf && methodRequiresCsrf) {
-        if (!csrfToken) {
-          await fetchCsrfToken();
-        }
-        if (csrfToken && requestConfig.headers) {
-          requestConfig.headers['x-csrf-token'] = csrfToken;
+        try {
+          if (!csrfToken) {
+            console.debug(`[CSRF] Token missing for ${requestConfig.method?.toUpperCase()} ${requestConfig.url}, fetching...`);
+            await fetchCsrfToken();
+          }
+          
+          if (csrfToken && requestConfig.headers) {
+            requestConfig.headers['x-csrf-token'] = csrfToken;
+            console.debug(`[CSRF] Added CSRF token to ${requestConfig.method?.toUpperCase()} ${requestConfig.url}`);
+          } else if (!csrfToken) {
+            console.warn(`[CSRF] Failed to obtain CSRF token for ${requestConfig.method?.toUpperCase()} ${requestConfig.url}`);
+          }
+        } catch (csrfErr) {
+          console.error(`[CSRF] Error during CSRF token fetch for ${requestConfig.method?.toUpperCase()} ${requestConfig.url}:`, csrfErr);
+          // Continuar sin token, dejar que el servidor rechace si es necesario
         }
       }
 
@@ -155,8 +202,12 @@ const createAxiosInstance = (): AxiosInstance => {
             const errorData = error.response.data as ApiErrorResponse;
             if (errorData?.code === 'EBADCSRFTOKEN' || errorData?.message?.includes('CSRF')) {
               // Token CSRF inválido o faltante - refrescar e intentar de nuevo
-              console.warn('[CSRF] Token inválido, refrescando y reintentando petición...');
-              csrfToken = null; // Resetear token
+              console.warn('[CSRF] Token inválido o faltante, refrescando e intentando de nuevo...', {
+                message: errorData?.message,
+                code: errorData?.code,
+                currentTokenLength: csrfToken.length,
+              });
+              csrfToken = ''; // Resetear token
               
               try {
                 // Obtener nuevo token
@@ -173,7 +224,11 @@ const createAxiosInstance = (): AxiosInstance => {
               }
             } else {
               // Para errores 403 que NO sean CSRF, solo registrar y rechazar
-              console.error('[CSRF] Acceso prohibido a este recurso');
+              console.error('[403] Acceso prohibido a este recurso', {
+                url: error.config?.url,
+                message: errorData?.message,
+                code: errorData?.code,
+              });
               return Promise.reject(error);
             }
             break;
@@ -216,10 +271,22 @@ const createAxiosInstance = (): AxiosInstance => {
 export const apiClient = createAxiosInstance();
 
 /**
- * Función para obtener el token CSRF (útil para inicialización)
- * Se llama automáticamente en la primera petición que lo requiera
+ * Función para inicializar el token CSRF (debe llamarse después del login)
+ * Asegura que el token esté disponible antes del primer POST
  */
-export const initializeCsrfToken = fetchCsrfToken;
+export const initializeCsrfToken = async (): Promise<string> => {
+  console.info('[CSRF] Initializing CSRF token after login...');
+  try {
+    const token = await fetchCsrfToken();
+    console.info('[CSRF] CSRF token initialized successfully');
+    return token;
+  } catch (error) {
+    console.error('[CSRF] Failed to initialize CSRF token:', error);
+    // No lanzar error, permitir que el app continúe
+    // El token se obtendrá en la primera petición POST si falla aquí
+    return '';
+  }
+};
 
 /**
  * Función helper para crear configuración personalizada de axios

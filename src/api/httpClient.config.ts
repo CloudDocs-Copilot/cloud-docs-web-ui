@@ -47,13 +47,18 @@ const REQUEST_TIMEOUT_MS = 30000; // 30 segundos
 
 /**
  * Variable para almacenar el token CSRF en memoria
+ * IMPORTANTE: No regenerar múltiples veces porque el backend regenera un token nuevo
+ * cada vez que se llama a GET /csrf-token. El token debe obtenerse UNA SOLA VEZ
+ * y reutilizarse en todos los POSTs.
  */
 let csrfToken: string = '';
 let csrfTokenPromise: Promise<string> | null = null;
+let csrfTokenFetchAttempts: number = 0;
+const MAX_CSRF_FETCH_ATTEMPTS = 2; // No intentar más de 2 veces
 
 /**
- * Obtiene el token CSRF del servidor
- * Usa una promise compartida para evitar multi-fetch durante race conditions
+ * Obtiene el token CSRF del servidor UNA SOLA VEZ
+ * El backend regenera un nuevo token en cada llamada, así que reutilizar es crítico
  */
 const fetchCsrfToken = async (): Promise<string> => {
   // Si ya hay un fetch en progreso, espera a ese
@@ -61,15 +66,24 @@ const fetchCsrfToken = async (): Promise<string> => {
     return csrfTokenPromise;
   }
 
-  // Si ya tenemos token, devolverlo
+  // Si ya tenemos token, SIEMPRE devolverlo (no regenerar)
   if (csrfToken) {
+    console.debug('[CSRF] Usando token almacenado (no regenerar)');
     return csrfToken;
+  }
+
+  // Verificar si ya intentamos demasiadas veces
+  if (csrfTokenFetchAttempts >= MAX_CSRF_FETCH_ATTEMPTS) {
+    console.warn('[CSRF] Max fetch attempts reached, continuando sin token');
+    return '';
   }
 
   // Crear la promise y compartirla
   csrfTokenPromise = (async (): Promise<string> => {
     try {
-      console.debug('[CSRF] Fetching CSRF token from server...');
+      csrfTokenFetchAttempts++;
+      console.debug(`[CSRF] Fetching CSRF token from server (attempt ${csrfTokenFetchAttempts}/${MAX_CSRF_FETCH_ATTEMPTS})...`);
+      
       const response = await axios.get(`${API_BASE_URL}/csrf-token`, {
         withCredentials: true,
       });
@@ -201,27 +215,22 @@ const createAxiosInstance = (): AxiosInstance => {
             // Acceso prohibido o token CSRF inválido/faltante
             const errorData = error.response.data as ApiErrorResponse;
             if (errorData?.code === 'EBADCSRFTOKEN' || errorData?.message?.includes('CSRF')) {
-              // Token CSRF inválido o faltante - refrescar e intentar de nuevo
-              console.warn('[CSRF] Token inválido o faltante, refrescando e intentando de nuevo...', {
+              // Token CSRF inválido o faltante
+              // NO REGENERAR - el backend regenera tokens constantemente
+              // Si el token falla, debe obtenerse nuevamente en la próxima sesión
+              console.error('[CSRF] Token validation failed - NOT retrying', {
                 message: errorData?.message,
                 code: errorData?.code,
                 currentTokenLength: csrfToken.length,
+                note: 'Backend regenerates tokens on each fetch. Do not retry immediately.'
               });
-              csrfToken = ''; // Resetear token
               
-              try {
-                // Obtener nuevo token
-                await fetchCsrfToken();
-                console.log('[CSRF] Token refrescado exitosamente, reintentando petición...');
-                
-                // Reintentar la petición original con el nuevo token
-                if (error.config) {
-                  return axiosInstance.request(error.config);
-                }
-              } catch (retryErr) {
-                console.error('[CSRF] Error al refrescar token y reintentar:', retryErr);
-                return Promise.reject(retryErr);
-              }
+              // Resetear token para forzar nuevo fetch en próxima petición
+              csrfToken = '';
+              csrfTokenFetchAttempts = 0; // Reset attempts counter
+              
+              // NO llamar a fetchCsrfToken() aquí - dejar que al user recargue
+              return Promise.reject(error);
             } else {
               // Para errores 403 que NO sean CSRF, solo registrar y rechazar
               console.error('[403] Acceso prohibido a este recurso', {
@@ -231,7 +240,6 @@ const createAxiosInstance = (): AxiosInstance => {
               });
               return Promise.reject(error);
             }
-            break;
           }
 
           case 404:

@@ -272,9 +272,10 @@ describe('httpClient.config', () => {
       dispatchSpy.mockRestore();
     });
 
-    it('handles 403 EBADCSRFTOKEN by attempting to fetch new token', async () => {
+    it('handles 403 EBADCSRFTOKEN by rejecting (no auto-retry)', async () => {
+      // Backend regenerates tokens on each fetch, so auto-retry would get a different token
+      // The correct behavior is to reject and let the app request a new token
       const axios = require('axios');
-      axios.get.mockResolvedValueOnce({ data: { token: 'new-token' } });
 
       require('../httpClient.config');
 
@@ -282,12 +283,17 @@ describe('httpClient.config', () => {
         response: { 
           status: 403, 
           data: { code: 'EBADCSRFTOKEN', message: 'CSRF invalid' } 
-        } 
+        },
+        config: {}
       };
 
-      await (requestHandlers.response!(fakeError) as Promise<unknown>).catch(() => {});
-
-      expect(axios.get).toHaveBeenCalled();
+      const result = (requestHandlers.response!(fakeError) as Promise<unknown>);
+      
+      // Should reject the error (NOT retry automatically)
+      await expect(result).rejects.toEqual(fakeError);
+      
+      // axios.get should NOT be called (no auto-retry)
+      expect(axios.get).not.toHaveBeenCalled();
     });
   });
 });

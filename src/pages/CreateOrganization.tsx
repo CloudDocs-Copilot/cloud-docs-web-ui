@@ -4,6 +4,7 @@ import styles from './CreateOrganization.module.css';
 import { useOrganization } from '../hooks/useOrganization';
 import { NotificationToast } from '../components/NotificationToast';
 import type { Organization } from '../types/organization.types';
+import { usePageTitle } from '../hooks/usePageInfoTitle';
 
 export default function CreateOrganization() {
   const [name, setName] = useState('');
@@ -11,10 +12,17 @@ export default function CreateOrganization() {
   const { createOrganization } = useOrganization();
   const navigate = useNavigate();
 
-    const [toastShow, setToastShow] = useState(false);
-    const [toastMessage, setToastMessage] = useState('');
-    const [toastVariant, setToastVariant] = useState<'success' | 'danger'>('success');
-    const [toastTitle, setToastTitle] = useState('');
+  const [toastShow, setToastShow] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVariant, setToastVariant] = useState<'success' | 'danger'>('success');
+  const [toastTitle, setToastTitle] = useState('');
+
+  usePageTitle({
+      title: 'Crear organización - CloudDocs Copilot',
+      subtitle: 'Crea tu espacio de trabajo en CloudDocs Copilot',
+      documentTitle: 'Crear organización | CloudDocs Copilot',
+      metaDescription: 'Crea tu organización en CloudDocs Copilot y comienza a gestionar tus documentos de manera inteligente con IA.',
+    });  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

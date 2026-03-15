@@ -69,7 +69,7 @@ const MyComponent: React.FC = () => {
   useEffect(() => {
     execute({
       method: 'GET',
-      url: '/api/users'
+      url: '/users'
     });
   }, []);
 
@@ -102,7 +102,7 @@ const { execute, data, isLoading, isError, error } = useHttpRequest<User>({
 const handleSubmit = async (formData: CreateUserDto) => {
   await execute({
     method: 'POST',
-    url: '/api/users',
+    url: '/users',
     data: formData
   });
 };
@@ -118,7 +118,7 @@ useEffect(() => {
   
     execute({
       method: 'GET',
-      url: '/api/documents/recent',
+      url: '/documents/recent',
       config: {
         params: { userId }
       }
@@ -137,7 +137,7 @@ const handleUpload = async (file: File) => {
   
   await execute({
     method: 'POST',
-    url: '/api/documents/upload',
+    url: '/documents/upload',
     data: formData,
     config: {
       headers: {
@@ -157,7 +157,7 @@ const handleDelete = async (documentId: string) => {
   if (confirm('¿Eliminar documento?')) {
     await execute({
       method: 'DELETE',
-      url: `/api/documents/${documentId}`
+      url: `/documents/${documentId}`
     });
   }
 };
@@ -195,7 +195,7 @@ import type { Document } from '../types/document.types';
  */
 export const exportDocumentsToCSV = async (userId: string): Promise<Blob> => {
   try {
-    const response = await apiClient.get<Blob>('/api/documents/export', {
+    const response = await apiClient.get<Blob>('/documents/export', {
       params: { userId },
       responseType: 'blob'
     });
@@ -221,7 +221,7 @@ export const createDocumentInBackground = async (
     const sanitizedData = sanitizeData(data);
     
     const response = await apiClient.post<Document>(
-      '/api/documents',
+      '/documents',
       sanitizedData
     );
     
@@ -248,7 +248,7 @@ export const importDocumentsBatch = async (
 
   for (const doc of documents) {
     try {
-      await apiClient.post('/api/documents', sanitizeData(doc));
+      await apiClient.post('/documents', sanitizeData(doc));
       success++;
     } catch (error) {
       console.error('Failed to import:', doc, error);
@@ -308,7 +308,7 @@ const Dashboard: React.FC = () => {
     
     execute({
       method: 'GET',
-      url: '/api/documents/recent',
+      url: '/documents/recent',
       config: {
         params: { userId }
       }
@@ -342,7 +342,7 @@ export const exportDocumentsToPDF = async (
 ): Promise<Blob> => {
   try {
     const response = await apiClient.post<Blob>(
-      '/api/documents/export/pdf',
+      '/documents/export/pdf',
       { documentIds },
       { responseType: 'blob' }
     );
@@ -393,7 +393,7 @@ const CreateUserForm: React.FC = () => {
     
     await execute({
       method: 'POST',
-      url: '/api/users',
+      url: '/users',
       data: formData
     });
   };

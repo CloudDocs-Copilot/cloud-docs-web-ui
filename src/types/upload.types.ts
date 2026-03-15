@@ -128,6 +128,7 @@ export type UploadStatus =
  * Códigos de error para clasificar fallos de subida
  */
 export type UploadErrorCode =
+  | 'EMPTY_FILE'          // El archivo está vacío (0 bytes)
   | 'INVALID_TYPE'        // Tipo de archivo no permitido
   | 'FILE_TOO_LARGE'      // Excede el límite de 50MB
   | 'DUPLICATE_FILE'      // Archivo duplicado (detectado por backend)

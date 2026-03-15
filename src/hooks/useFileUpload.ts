@@ -153,6 +153,17 @@ export function useFileUpload(options: UseFileUploadOptions = {}): UseFileUpload
    * Valida un archivo individual
    */
   const validateFile = useCallback((file: File): UploadError | null => {
+    // Validar que el archivo no esté vacío
+    if (file.size === 0) {
+      return {
+        code: 'EMPTY_FILE',
+        message: 'El archivo está vacío. Por favor, selecciona un archivo con contenido.',
+        details: {
+          fileSize: 0,
+        },
+      };
+    }
+
     // Validar tipo MIME
     if (!isAllowedMimeType(file.type)) {
       return {

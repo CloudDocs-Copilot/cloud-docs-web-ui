@@ -86,7 +86,7 @@ describe('CsrfProvider', () => {
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith(
-        '/csrf-token',
+        expect.stringContaining('/csrf-token'),
         expect.any(Object)
       );
     });

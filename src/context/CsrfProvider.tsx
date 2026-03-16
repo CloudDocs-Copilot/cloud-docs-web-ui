@@ -4,6 +4,25 @@ import { API_BASE_URL } from '../config/env';
 import { setCsrfToken } from '../api/httpClient.config';
 
 /**
+ * Declare global Window interface for CSRF debug state
+ * Allows exposing __CSRF_STATE__ without using 'any' type
+ */
+declare global {
+  interface Window {
+    __CSRF_STATE__?: {
+      token: string | null;
+      tokenLength?: number;
+      isInitialized: boolean;
+      isLoading: boolean;
+      error: string | null;
+      hasWindowCsrfToken: boolean;
+      windowCsrfToken: string | null;
+    };
+    csrfToken?: string;
+  }
+}
+
+/**
  * Provider para el Contexto CSRF
  * Obtiene el token CSRF del servidor al montar y lo proporciona a toda la aplicación
  * Debe envolver toda la aplicación para que el token esté accesible
@@ -120,7 +139,7 @@ export const CsrfProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [fetchToken]);
 
   /**
    * Refresca el token CSRF (útil si expira o es inválido)
@@ -140,14 +159,15 @@ export const CsrfProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Debug: Exponer globalmente para verificar en consola del navegador
   if (typeof window !== 'undefined') {
-    (window as any).__CSRF_STATE__ = {
+    const csrfToken = window.csrfToken;
+    window.__CSRF_STATE__ = {
       token: token ? `${token.substring(0, 30)}...` : null,
       tokenLength: token?.length,
       isInitialized,
       isLoading,
       error: error?.message || null,
-      hasWindowCsrfToken: typeof (window as any).csrfToken !== 'undefined',
-      windowCsrfToken: (window as any).csrfToken ? `${(window as any).csrfToken.substring(0, 30)}...` : null,
+      hasWindowCsrfToken: typeof csrfToken !== 'undefined',
+      windowCsrfToken: csrfToken ? `${csrfToken.substring(0, 30)}...` : null,
     };
   }
 

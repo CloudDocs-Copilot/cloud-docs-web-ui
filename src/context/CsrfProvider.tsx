@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { CsrfContext, type CsrfContextValue } from './CsrfContext';
 import { API_BASE_URL } from '../config/env';
-import { setCsrfToken } from '../api/httpClient.config';
+import { setCsrfToken, getCsrfToken } from '../api/httpClient.config';
 
 /**
  * Declare global Window interface for CSRF debug state
@@ -82,10 +82,13 @@ export const CsrfProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(fetchedToken);
       // Sincronizar el token con httpClient global para que se use en peticiones
       setCsrfToken(fetchedToken);
+      
+      // Verificar que el token es accesible desde httpClient
+      const storedToken = getCsrfToken();
       console.info('[CSRF-Provider] ✅ Token obtenido y sincronizado exitosamente:', {
         tokenLength: fetchedToken.length,
         tokenPreview: `${fetchedToken.substring(0, 20)}...`,
-        storedInWindow: typeof window.csrfToken !== 'undefined',
+        storedInHttpClient: storedToken === fetchedToken,
       });
       return fetchedToken;
     } catch (err) {

@@ -16,6 +16,7 @@ const Dashboard: React.FC = () => {
     membersLoading,
     statsError,
     membersError,
+    refreshStats,
   } = useDashboardData();
 
   const { activeOrganization } = useOrganization();
@@ -33,7 +34,9 @@ const Dashboard: React.FC = () => {
 
   const handleDocumentDeleted = useCallback(() => {
     setDocsRefreshKey((k) => k + 1);
-  }, []);
+    // Actualizar estadísticas de almacenamiento
+    refreshStats();
+  }, [refreshStats]);
 
   const handleOpenUploadModal = useCallback(() => {
     setShowUploadModal(true);
@@ -46,7 +49,9 @@ const Dashboard: React.FC = () => {
   const handleUploadSuccess = useCallback(() => {
     setShowUploadModal(false);
     setDocsRefreshKey((k) => k + 1);
-  }, []);
+    // Actualizar estadísticas de almacenamiento
+    refreshStats();
+  }, [refreshStats]);
 
   return (
     <MainLayout>

@@ -12,6 +12,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { PageProvider } from '../context/PageProvider';
 import { AuthProvider } from '../context/AuthProvider';
+import { CsrfProvider } from '../context/CsrfProvider';
 import { ToastProvider } from '../context/ToastProvider';
 import { OrganizationContext } from '../context/OrganizationContext';
 import { UserProfile } from '../pages/UserProfile';
@@ -53,15 +54,17 @@ const renderWithProviders = (ui: React.ReactElement) => {
 
   return render(
     <MemoryRouter>
-      <AuthProvider>
-        <ToastProvider>
-          <OrganizationContext.Provider value={value}>
-            <PageProvider>
-              {ui}
-            </PageProvider>
-          </OrganizationContext.Provider>
-        </ToastProvider>
-      </AuthProvider>
+      <CsrfProvider>
+        <AuthProvider>
+          <ToastProvider>
+            <OrganizationContext.Provider value={value}>
+              <PageProvider>
+                {ui}
+              </PageProvider>
+            </OrganizationContext.Provider>
+          </ToastProvider>
+        </AuthProvider>
+      </CsrfProvider>
     </MemoryRouter>
   );
 };

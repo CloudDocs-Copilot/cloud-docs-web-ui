@@ -20,8 +20,8 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ErrorBoundary>
       <BrowserRouter>
-        <AuthProvider>
-          <CsrfProvider>
+        <CsrfProvider>
+          <AuthProvider>
             <ToastProvider>
               <OrganizationProvider>
                 <NotificationsProvider>
@@ -31,8 +31,8 @@ createRoot(document.getElementById("root")!).render(
                 </NotificationsProvider>
               </OrganizationProvider>
             </ToastProvider>
-          </CsrfProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </CsrfProvider>
       </BrowserRouter>
     </ErrorBoundary>
   </StrictMode>

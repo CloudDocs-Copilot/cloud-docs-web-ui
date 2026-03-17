@@ -157,28 +157,9 @@ declare global {
 
 ---
 
-### 4. `csrf-diagnostic-console.js`
+### 💡 Nota: Funciones de Debug Disponibles
 
-**Responsabilidad:** Script de diagnóstico automático que se pega en consola
-
-**Qué verifica:**
-1. Axios instalado y accesible
-2. `withCredentials: true` configurado
-3. Token en `window.csrfToken`
-4. Cookies `psifi_csrf_token` presentes
-5. Interceptors configurados
-6. Network history (performance API)
-7. React DevTools disponible
-8. URL del backend correcta
-
-**Salida:**
-- Tabla de ✅ PASSED vs ❌ FAILED
-- Funciones de debug en `window.__CSRF_DEBUG__`
-- Resultados guardados en `window.__CSRF_DIAGNOSTIC_RESULTS__`
-
----
-
-## 🔄 Ciclo de Validación CSRF
+El archivo `src/utils/csrfDebug.ts` expone herramientas en la consola del navegador:
 
 ### Primera Petición POST (por ejemplo, crear organización):
 
@@ -352,29 +333,122 @@ POST https://cloud-docs-api-service.onrender.com/api/organizations   403 Forbidd
 
 ---
 
-## 📚 Ficheros de Diagnóstico Disponibles
+## � Historial: Bug CSRF Identificado y Resuelto
 
-| Archivo | Propósito | Cuándo usar |
-|---------|----------|-----------|
-| [FRONTEND-CSRF-DIAGNOSTIC.md](FRONTEND-CSRF-DIAGNOSTIC.md) | Guía completa de 300+ líneas | Análisis profundo |
-| [QUICK-START-CSRF-DIAGNOSIS.md](QUICK-START-CSRF-DIAGNOSIS.md) | Guía rápida de 5 min | Diagnóstico rápido |
-| [csrf-diagnostic-console.js](csrf-diagnostic-console.js) | Script automático | Verificación instantánea |
-| [src/utils/csrfDebug.ts](src/utils/csrfDebug.ts) | Funciones debug React | Deep debug en consola |
+### 🚨 El Problema (16 Marzo 2026)
+
+**Síntoma observado:**
+```
+GET /api/csrf-token → 200 OK ✅
+POST /api/organizations → 403 Forbidden ❌
+```
+
+**Causa Raíz:** En `src/context/CsrfProvider.tsx` línea 88, el `useEffect` tenía `fetchToken` en las dependencias:
+
+```typescript
+// ❌ INCORRECTO (causaba infinite loop)
+useEffect(() => {
+  fetchToken();
+}, [fetchToken])  // ← fetchToken es creada cada render, causa loop
+```
+
+**Por qué:**
+1. `fetchToken` es una función creada por `useCallback`
+2. Cada render crea una nueva referencia de `fetchToken`
+3. El `useEffect` se ejecuta cada vez que las **dependencias cambian**
+4. Esto causaba **re-renders infinitos** → el token se sobrescribía constantemente
+5. Resultado: `window.csrfToken` quedaba `undefined` justo cuando axios lo necesitaba
+
+### ✅ La Solución Aplicada
+
+**Cambio principal:** Vaciar el array de dependencias
+
+```typescript
+// ✅ CORRECTO (se ejecuta solo una vez al montar)
+useEffect(() => {
+  fetchToken();
+}, [])  // Empty array = ejecutar UNA VEZ al montar el provider
+```
+
+**Mejoras adicionales implementadas:**
+1. **isMounted flag** - Previene state updates después de desmontar el componente
+2. **Logs mejorados** - Console logs con contexto de debugging
+3. **Window debug state** - `window.__CSRF_STATE__` para inspeccionar estado
+4. **Mejor error handling** - Stacktrace completo en caso de error
+
+**Verificación del fix:**
+```javascript
+// En DevTools Console:
+window.csrfToken  // ✅ Debe tener valor (no undefined)
+
+// Deep check:
+await window.__CSRF_DEBUG.checkTokens()  // Debe mostrar ✅ PASSED
+```
+
+### Commits realizados:
+- `7761685` - Fix CSRF token initialization infinite loop
+- `6865d30` - Add CSRF fix verification guide
+
+---
+
+## 🛠️ Debugging en Consola Developer
+
+Para verificar el estado actual de CSRF, abre DevTools (F12) y ejecuta:
+
+```javascript
+// Ver token en memoria
+console.log('Token:', window.csrfToken);
+
+// Ver cookies CSRF
+console.log('Cookies:', document.cookie);
+
+// Verificación completa
+await window.__CSRF_DEBUG.checkTokens();
+
+// Ver todas las cookies
+window.__CSRF_DEBUG.getAllCookies();
+
+// Ambiente (DEV vs PRD)
+window.__CSRF_DEBUG.getEnvironmentInfo();
+
+// Ver estado completamente inicializado
+console.log('Estado CSRF:', window.__CSRF_STATE__);
+```
+
+**Estado esperado después del fix:**
+
+```javascript
+window.__CSRF_STATE__ = {
+  token: "4759c8d90a1a4013c6e2...",
+  tokenLength: 128,
+  isInitialized: true,
+  isLoading: false,
+  error: null,
+  hasWindowCsrfToken: true,
+  windowCsrfToken: "4759c8d90a1a4013c6e2..."
+}
+```
+
+**Qué significa cada propiedad:**
+- `isInitialized: true` - Inicialización completada
+- `hasWindowCsrfToken: true` - Token disponible para axios
+- `error: null` - Sin errores de obtención
+- `windowCsrfToken` - Copia del token para verificación
 
 ---
 
 ## 🚀 Próximos Pasos (si continúa el problema)
 
-1. **Ejecutar script automático:** `csrf-diagnostic-console.js`
+1. **Usar funciones debug:** Ejecuta en consola `await window.__CSRF_DEBUG.checkTokens()`
 2. **Revisar Network tab:** GET /csrf-token y POST /organizations
 3. **Consultar logs del backend:** ¿Qué token recibe vs qué valida?
 4. **Verificar dominio:** ¿Frontend y backend en HTTPS? ¿Mismo dominio?
-5. **Refrescar token:** `__CSRF_DEBUG__.refreshToken()`
+5. **Refrescar token:** `await window.__CSRF_DEBUG.refreshToken()`
 6. **Backend check:** ¿Endpoint /csrf-token devuelve token correcto?
 
 ---
 
 **Documento:** Arquitectura CSRF Frontend  
-**Versión:** 1.2  
-**Actualizado:** 16 Marzo 2026  
+**Versión:** 2.0 (Consolidado)  
+**Actualizado:** 17 Marzo 2026  
 **Mantenedor:** Frontend Team

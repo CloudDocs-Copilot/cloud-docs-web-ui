@@ -53,93 +53,67 @@ jobs:
       
       # Run tests with coverage
       - name: Run tests with coverage
-        run: |
-          # Clean any existing coverage
-          rm -rf coverage
-          # Run tests with coverage using npm script to ensure proper behavior
-          npm run test:coverage -- --passWithNoTests --testTimeout=30000
-        env:
-          CI: true
+        run: npm run test -- --coverage --passWithNoTests --testTimeout=30000
 
       # Report coverage summary and fail with clear message if below threshold
       - name: Report coverage summary
         if: always()
         run: |
           echo "## Coverage Report" >> $GITHUB_STEP_SUMMARY
-          echo "Checking for coverage directory and files..."
+          if [ -f coverage/coverage-summary.json ]; then
+            node -e "
+              const fs = require('fs');
 
-          # Debug: List project root
-          echo "Project root contents:"
-          ls -la
+              try {
+                const coverageData = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+                console.log('Coverage file loaded successfully');
 
-          # Check if coverage directory exists
-          if [ ! -d "coverage" ]; then
-            echo "❌ Coverage directory not found"
-            echo "Creating empty coverage summary..."
-            echo "⚠️ Coverage directory was not generated. Tests may have failed." >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
+                if (!coverageData.total) {
+                  throw new Error('No total coverage data found in coverage-summary.json');
+                }
 
-          echo "Coverage directory found. Contents:"
-          ls -la coverage/
+                const summary = coverageData.total;
+                const thresholds = { statements: 70, branches: 60, functions: 70, lines: 70 };
+                const results = {};
+                let hasFailed = false;
 
-          # Check if coverage-summary.json exists
-          if [ ! -f "coverage/coverage-summary.json" ]; then
-            echo "❌ coverage-summary.json not found"
-            echo "⚠️ coverage/coverage-summary.json not found" >> $GITHUB_STEP_SUMMARY
-            echo "Available files in coverage directory:" >> $GITHUB_STEP_SUMMARY
-            ls -la coverage/ >> $GITHUB_STEP_SUMMARY
-            exit 1
-          fi
+                Object.keys(thresholds).forEach(key => {
+                  const actual = summary[key] && summary[key].pct !== undefined ? summary[key].pct : 0;
+                  const required = thresholds[key];
+                  const status = actual >= required ? '✅' : '❌';
+                  results[key] = { actual, required, status };
+                  console.log(key + ': ' + actual.toFixed(2) + '% (required: ' + required + '%) ' + status);
+                  if (actual < required) hasFailed = true;
+                });
 
-          # Process coverage report
-          node -e "
-            const fs = require('fs');
+                // Write to GitHub step summary
+                let output = '| Metric | Actual | Required | Status |\n';
+                output += '|--------|--------|----------|--------|\n';
+                Object.keys(results).forEach(key => {
+                  const r = results[key];
+                  output += '| ' + key.charAt(0).toUpperCase() + key.slice(1) + ' | ' + r.actual.toFixed(2) + '% | ' + r.required + '% | ' + r.status + ' |\n';
+                });
+                fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, output);
 
-            try {
-              const coverageData = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
-              console.log('✅ Coverage file loaded successfully');
-
-              if (!coverageData.total) {
-                throw new Error('No total coverage data found in coverage-summary.json');
-              }
-
-              const summary = coverageData.total;
-              const thresholds = { statements: 70, branches: 60, functions: 70, lines: 70 };
-              const results = {};
-              let hasFailed = false;
-
-              Object.keys(thresholds).forEach(key => {
-                const actual = summary[key] && summary[key].pct !== undefined ? summary[key].pct : 0;
-                const required = thresholds[key];
-                const status = actual >= required ? '✅' : '❌';
-                results[key] = { actual, required, status };
-                console.log(key + ': ' + actual.toFixed(2) + '% (required: ' + required + '%) ' + status);
-                if (actual < required) hasFailed = true;
-              });
-
-              // Write to GitHub step summary
-              let output = '| Metric | Actual | Required | Status |\n';
-              output += '|--------|--------|----------|--------|\n';
-              Object.keys(results).forEach(key => {
-                const r = results[key];
-                output += '| ' + key.charAt(0).toUpperCase() + key.slice(1) + ' | ' + r.actual.toFixed(2) + '% | ' + r.required + '% | ' + r.status + ' |\n';
-              });
-              fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, output);
-
-              // Exit with error if any threshold not met
-              if (hasFailed) {
-                console.error('❌ Coverage thresholds not met');
+                // Exit with error if any threshold not met
+                if (hasFailed) {
+                  console.error('❌ Coverage thresholds not met');
+                  process.exit(1);
+                } else {
+                  console.log('✅ All coverage thresholds met');
+                }
+              } catch (error) {
+                console.error('Error processing coverage report:', error.message);
+                fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, '\n⚠️ Error: ' + error.message + '\n');
                 process.exit(1);
-              } else {
-                console.log('✅ All coverage thresholds met');
               }
-            } catch (error) {
-              console.error('❌ Error processing coverage report:', error.message);
-              fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, '\n⚠️ Error: ' + error.message + '\n');
-              process.exit(1);
-            }
-          "
+            "
+          else
+            echo "⚠️ coverage/coverage-summary.json not found" >> $GITHUB_STEP_SUMMARY
+            echo "Available files in coverage directory:"
+            ls -la coverage/ || echo "Coverage directory does not exist"
+            exit 1
+          fi
 
       # Upload coverage reports
       - name: Upload coverage reports

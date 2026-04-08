@@ -27,17 +27,17 @@ describe('ExcelPreview', () => {
   const createMockBlob = (): Blob => {
     const blob = new Blob(['test data'], { type: 'application/vnd.ms-excel' });
     // Mock arrayBuffer method
-    (blob as any).arrayBuffer = jest.fn().mockResolvedValue(new ArrayBuffer(8));
+    (blob as Blob & { arrayBuffer: () => Promise<ArrayBuffer> }).arrayBuffer = jest.fn().mockResolvedValue(new ArrayBuffer(8));
     return blob;
   };
 
   const setupMockWorkbook = (sheets: Array<{ name: string; data: string[][] }>) => {
     const mockWorksheets = sheets.map(sheet => ({
       name: sheet.name,
-      eachRow: (callback: Function) => {
+      eachRow: (callback: (row: unknown, rowIndex: number) => void) => {
         sheet.data.forEach((rowData, rowIndex) => {
           const mockRow = {
-            eachCell: (cellCallback: Function) => {
+            eachCell: (cellCallback: (cell: unknown, cellIndex: number) => void) => {
               rowData.forEach((cellValue, cellIndex) => {
                 const mockCell = {
                   text: cellValue,

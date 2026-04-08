@@ -21,149 +21,144 @@ Modern React application for cloud document management with real-time collaborat
 - **Multi-Organization** - Switch between organizations seamlessly
 - **Responsive Design** - Works on desktop and mobile devices
 - **Search** - Find documents quickly with full-text search
+- **AI Features (Planned)** - RAG, classification, summarization via backend API
 
-### AI Features (Planned)
-
-The backend API supports AI-powered features (RAG, classification, summarization). The frontend integration is in design phase with the following RFE proposals:
-
-| RFE | Feature | Status |
-|-----|---------|--------|
-| [RFE-UI-001](docs/RFE/RFE-UI-001-AI-TYPES-SERVICE.md) | AI types, service layer, and hooks | Proposed |
-| [RFE-UI-002](docs/RFE/RFE-UI-002-DOCUMENT-CARD-AI.md) | AI badges on document cards | Proposed |
-| [RFE-UI-003](docs/RFE/RFE-UI-003-SEARCH-BAR-QA.md) | Search bar with AI Q&A mode | Proposed |
-| [RFE-UI-004](docs/RFE/RFE-UI-004-AI-DASHBOARD.md) | AI dashboard (stats, categories, tags) | Proposed |
-
-> The backend AI API is fully functional. See the [backend AI documentation](../cloud-docs-api-service/docs/AI-MODULE.md) for available endpoints.
+See [RFE proposals](./docs/RFE/) for AI feature details.
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-
 - Node.js 20+
 - Backend API running (see [backend setup](../cloud-docs-api-service/README.md))
 
 ### Local Development (2 minutes)
 
 ```bash
-# 1. Clone and install
-git clone <repository-url>
+# 1. Install
+git clone <repo>
 cd cloud-docs-web-ui
 npm install
 
-# 2. Start development server
+# 2. Run
 npm run dev
+# → http://localhost:5173
 
-# 3. Open http://localhost:5173
+# Backend must be on port 4000
+# (or set VITE_API_BASE_URL in .env.local)
 ```
 
-**That's it!** No `.env` setup required - the app automatically loads `.env.example` as defaults.
-
-> **Note:** To override any variable locally, create a `.env.local` file (git-ignored):
-> ```bash
-> cp .env.example .env.local
-> ```
-> The backend API must be running on port 4000. See [backend quickstart](../cloud-docs-api-service/README.md).
-
-### Test Accounts
-
-If you've run `npm run seed:dev` in the backend:
-
+### Test Accounts (if backend seeded)
 | Email | Password |
 |-------|----------|
 | admin@clouddocs.local | Test@1234 |
 | john@clouddocs.local | Test@1234 |
-| jane@clouddocs.local | Test@1234 |
 
-### Using Docker Compose (Full Stack)
-
+### Docker (Full Stack)
 ```bash
-# From the workspace root (parent directory)
 docker-compose up -d
-
-# Frontend available at http://localhost:3000
-# Backend API at http://localhost:4000
+# Frontend: http://localhost:3000
+# Backend: http://localhost:4000
 ```
-
-## 🌐 Environment Variables
-
-The app loads environment files in this priority order (later overrides earlier):
-
-1. `.env.example` - Defaults (committed to repo)
-2. `.env` - Base configuration
-3. `.env.local` - Local overrides (not committed)
-4. `.env.[mode]` - Environment-specific
-5. `.env.[mode].local` - Environment-specific local
-
-Key variables (see `.env.example` for full list):
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `VITE_API_BASE_URL` | Backend API URL | `http://localhost:4000/api` |
-| `VITE_APP_ENV` | Environment name | `development` |
 
 ## 📚 Documentation
 
-| Document | Description |
-|----------|-------------|
-| [Architecture](docs/ARCHITECTURE.md) | Component structure and patterns |
-| [Contributing](CONTRIBUTING.md) | Development setup and guidelines |
-| [API Integration](src/api/README.md) | HTTP client configuration |
+### For Developers
 
-### RFEs (AI Feature Enhancement Proposals)
+**Getting started?** Read these in order:
+1. [03-DEVELOPMENT-WORKFLOW](./docs/skills/03-DEVELOPMENT-WORKFLOW.md) - Setup & tools
+2. [01-COMPONENT-ARCHITECTURE](./docs/skills/01-COMPONENT-ARCHITECTURE.md) - How to build
+3. [Contributing](./CONTRIBUTING.md) - Contribution guidelines
 
-| Document | Description |
-|----------|-------------|
-| [RFE-UI-001](docs/RFE/RFE-UI-001-AI-TYPES-SERVICE.md) | AI types, hooks, and service layer |
-| [RFE-UI-002](docs/RFE/RFE-UI-002-DOCUMENT-CARD-AI.md) | AI badges on DocumentCard component |
-| [RFE-UI-003](docs/RFE/RFE-UI-003-SEARCH-BAR-QA.md) | Search bar with AI Q&A integration |
-| [RFE-UI-004](docs/RFE/RFE-UI-004-AI-DASHBOARD.md) | AI dashboard section with stats |
+**All resources:** [12 Focused Skills Guide](./docs/skills/README.md) covers:
+- Component architecture & patterns
+- Naming conventions
+- Testing strategies
+- State management
+- Styling (Bootstrap + CSS Modules)
+- API integration
+- TypeScript conventions
+- Error handling
+- Performance optimization
+- Accessibility guidelines
+- Code review process
 
-## 🛠️ Scripts
+See [docs/skills/USAGE-GUIDE.md](./docs/skills/USAGE-GUIDE.md) for practical scenarios.
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start Vite dev server with HMR |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
-| `npm run lint` | Run ESLint |
-| `npm test` | Run Jest tests |
-| `npm run test:coverage` | Tests with coverage report |
+### Architecture & Decisions
+
+| Document | Purpose |
+|----------|---------|
+| [ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Directory structure & patterns |
+| [CLAUDE.md](./CLAUDE.md) | AI assistant instructions |
+| [API Integration](./src/api/README.md) | HTTP client configuration |
+| [CSRF Architecture](./CSRF-ARCHITECTURE-REFERENCE.md) | Token handling |
+
+### Features in Development
+
+| RFE | Feature | Status |
+|-----|---------|--------|
+| [RFE-UI-001](./docs/RFE/RFE-UI-001-AI-TYPES-SERVICE.md) | AI types & service layer | Proposed |
+| [RFE-UI-002](./docs/RFE/RFE-UI-002-DOCUMENT-CARD-AI.md) | AI badges on cards | Proposed |
+| [RFE-UI-003](./docs/RFE/RFE-UI-003-SEARCH-BAR-QA.md) | Search with AI Q&A | Proposed |
+| [RFE-UI-004](./docs/RFE/RFE-UI-004-AI-DASHBOARD.md) | AI dashboard | Proposed |
+
+## 🛠️ Development
+
+```bash
+npm run dev           # Start dev server (http://localhost:5173)
+npm run build         # Build for production
+npm run preview       # Preview production build
+npm run lint          # Run ESLint
+npm test              # Run tests
+npm run test:watch    # Watch mode tests
+npm run test:coverage # Coverage report
+```
+
+### Pre-Commit Checklist
+```bash
+npm run lint          # Fix lint errors
+npm test              # All tests must pass
+npm run build         # Build succeeds
+```
 
 ## 📁 Project Structure
 
 ```
 src/
-├── api/           # HTTP client and API config
+├── api/           # HTTP client & interceptors
 ├── components/    # Reusable UI components
 ├── pages/         # Route-level components
 ├── hooks/         # Custom React hooks
 ├── services/      # API service functions
-├── context/       # React Context providers
+├── context/       # React Context
 ├── types/         # TypeScript definitions
 └── constants/     # Application constants
 ```
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed documentation.
+See [ARCHITECTURE.md](./docs/ARCHITECTURE.md) for details.
 
 ## 🌐 Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `VITE_API_BASE_URL` | Backend API URL | `http://localhost:4000/api` |
-| `VITE_APP_ENV` | Environment name | `development` |
+| Variable | Default |
+|----------|---------|
+| `VITE_API_BASE_URL` | `http://localhost:4000/api` |
+| `VITE_APP_ENV` | `development` |
+
+Set custom values in `.env.local` (git-ignored).
 
 ## 🧪 Testing
 
 ```bash
-npm test                    # Run all tests
-npm run test:watch          # Watch mode
-npm run test:coverage       # With coverage report
+npm test                 # Run all tests
+npm run test:watch       # Watch mode
+npm run test:coverage    # Coverage report (target: >70%)
 ```
+
+See [04-TESTING-PATTERNS](./docs/skills/04-TESTING-PATTERNS.md) for patterns & examples.
 
 ## 🐳 Docker
 
-Build and run with Nginx:
-
+**Build image:**
 ```bash
 docker build -t clouddocs-frontend .
 docker run -p 3000:80 clouddocs-frontend
@@ -175,8 +170,17 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
+**New developer?** Start with [CONTRIBUTING.md](./CONTRIBUTING.md)
+
+**Documentation:**
+- [12 Focused Skills](./docs/skills/README.md)
+- [Practical Scenarios](./docs/skills/USAGE-GUIDE.md)
+- [Code Patterns](./CLAUDE.md)
+
+**Need help?** Check [docs/skills/](./docs/skills/) for answers.
+
 <div align="center">
 
-**[Documentation](docs/)** · **[Report Bug](../../issues)** · **[Request Feature](../../issues)**
+**[Documentation](./docs/skills/) · [Report Bug](../../issues) · [Request Feature](../../issues)**
 
 </div>

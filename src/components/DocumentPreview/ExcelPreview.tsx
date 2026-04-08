@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Tab, Tabs, Alert, Badge } from "react-bootstrap";
-import * as XLSX from "xlsx";
+import Excel from "exceljs";
 
 interface ExcelPreviewProps {
   file: File | Blob;
@@ -18,19 +18,33 @@ export const ExcelPreview: React.FC<ExcelPreviewProps> = ({ file }) => {
 
   useEffect(() => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
+
+    const loadExcelFile = async () => {
       try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: "array" });
+        const workbook = new Excel.Workbook();
+        const arrayBuffer = await file.arrayBuffer();
+        await workbook.xlsx.load(arrayBuffer);
+
         const sheetArr: SheetData[] = [];
-        
-        workbook.SheetNames.forEach((sheetName: string) => {
-          const sheet = workbook.Sheets[sheetName];
-          const sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1 }) as string[][];
-          sheetArr.push({ name: sheetName, data: sheetData });
+
+        workbook.worksheets.forEach((worksheet) => {
+          const sheetData: string[][] = [];
+
+          worksheet.eachRow((row, rowNumber) => {
+            const rowData: string[] = [];
+            row.eachCell((cell, cellNumber) => {
+              // Expandir el array si es necesario para que coincida con el índice de celda
+              while (rowData.length < cellNumber) {
+                rowData.push('');
+              }
+              rowData[cellNumber - 1] = cell.text || cell.value?.toString() || '';
+            });
+            sheetData.push(rowData);
+          });
+
+          sheetArr.push({ name: worksheet.name, data: sheetData });
         });
-        
+
         setSheets(sheetArr);
         // Establecer la primera hoja como activa por defecto
         if (sheetArr.length > 0) {
@@ -41,8 +55,8 @@ export const ExcelPreview: React.FC<ExcelPreviewProps> = ({ file }) => {
         setError(`Error al leer el archivo Excel: ${(err as Error).message}`);
       }
     };
-    reader.onerror = () => setError("Error al cargar el archivo Excel");
-    reader.readAsArrayBuffer(file);
+
+    loadExcelFile();
   }, [file]);
 
   if (error) {

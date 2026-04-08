@@ -2,50 +2,58 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ExcelPreview } from '../ExcelPreview';
 
-// Mock xlsx library
-jest.mock('xlsx', () => ({
-  read: jest.fn(),
-  utils: {
-    sheet_to_json: jest.fn(),
+// Mock exceljs library
+const mockWorkbook = {
+  xlsx: {
+    load: jest.fn(),
+  },
+  worksheets: [],
+};
+
+jest.mock('exceljs', () => ({
+  __esModule: true,
+  default: {
+    Workbook: jest.fn(() => mockWorkbook),
   },
 }));
 
-import * as XLSX from 'xlsx';
-
 describe('ExcelPreview', () => {
-  const mockFileReader = {
-    readAsArrayBuffer: jest.fn(),
-    onload: null as ((event: ProgressEvent<FileReader>) => void) | null,
-    onerror: null as ((event: ProgressEvent<FileReader>) => void) | null,
-    result: null as ArrayBuffer | null,
-  };
-
   beforeEach(() => {
     jest.clearAllMocks();
-    
-    // Mock FileReader
-    global.FileReader = jest.fn(() => mockFileReader) as unknown as typeof FileReader;
+    // Reset mock workbook
+    mockWorkbook.worksheets = [];
   });
 
   const createMockBlob = (): Blob => {
-    return new Blob(['test data'], { type: 'application/vnd.ms-excel' });
+    const blob = new Blob(['test data'], { type: 'application/vnd.ms-excel' });
+    // Mock arrayBuffer method
+    (blob as Blob & { arrayBuffer: () => Promise<ArrayBuffer> }).arrayBuffer = jest.fn().mockResolvedValue(new ArrayBuffer(8));
+    return blob;
   };
 
   const setupMockWorkbook = (sheets: Array<{ name: string; data: string[][] }>) => {
-    const mockWorkbook = {
-      SheetNames: sheets.map(s => s.name),
-      Sheets: {} as Record<string, unknown>,
-    };
+    const mockWorksheets = sheets.map(sheet => ({
+      name: sheet.name,
+      eachRow: (callback: (row: unknown, rowIndex: number) => void) => {
+        sheet.data.forEach((rowData, rowIndex) => {
+          const mockRow = {
+            eachCell: (cellCallback: (cell: unknown, cellIndex: number) => void) => {
+              rowData.forEach((cellValue, cellIndex) => {
+                const mockCell = {
+                  text: cellValue,
+                  value: cellValue,
+                };
+                cellCallback(mockCell, cellIndex + 1);
+              });
+            },
+          };
+          callback(mockRow, rowIndex + 1);
+        });
+      },
+    }));
 
-    sheets.forEach(sheet => {
-      mockWorkbook.Sheets[sheet.name] = {};
-    });
-
-    (XLSX.read as jest.Mock).mockReturnValue(mockWorkbook);
-    
-    sheets.forEach(sheet => {
-      (XLSX.utils.sheet_to_json as jest.Mock).mockReturnValueOnce(sheet.data);
-    });
+    mockWorkbook.worksheets = mockWorksheets;
+    mockWorkbook.xlsx.load.mockResolvedValue(undefined);
   };
 
   it('debe mostrar mensaje de carga inicialmente', () => {
@@ -68,14 +76,6 @@ describe('ExcelPreview', () => {
     ]);
 
     render(<ExcelPreview file={mockBlob} />);
-
-    // Simular carga del archivo
-    if (mockFileReader.onload) {
-      mockFileReader.result = new ArrayBuffer(8);
-      mockFileReader.onload({
-        target: mockFileReader,
-      } as ProgressEvent<FileReader>);
-    }
 
     await waitFor(() => {
       expect(screen.getByText('Hoja1')).toBeInTheDocument();
@@ -119,14 +119,6 @@ describe('ExcelPreview', () => {
 
     render(<ExcelPreview file={mockBlob} />);
 
-    // Simular carga del archivo
-    if (mockFileReader.onload) {
-      mockFileReader.result = new ArrayBuffer(8);
-      mockFileReader.onload({
-        target: mockFileReader,
-      } as ProgressEvent<FileReader>);
-    }
-
     await waitFor(() => {
       expect(screen.getByText('Ventas')).toBeInTheDocument();
       expect(screen.getByText('Inventario')).toBeInTheDocument();
@@ -154,14 +146,6 @@ describe('ExcelPreview', () => {
     ]);
 
     render(<ExcelPreview file={mockBlob} />);
-
-    // Simular carga
-    if (mockFileReader.onload) {
-      mockFileReader.result = new ArrayBuffer(8);
-      mockFileReader.onload({
-        target: mockFileReader,
-      } as ProgressEvent<FileReader>);
-    }
 
     await waitFor(() => {
       expect(screen.getByText('Hoja1')).toBeInTheDocument();
@@ -193,14 +177,6 @@ describe('ExcelPreview', () => {
 
     render(<ExcelPreview file={mockBlob} />);
 
-    // Simular carga
-    if (mockFileReader.onload) {
-      mockFileReader.result = new ArrayBuffer(8);
-      mockFileReader.onload({
-        target: mockFileReader,
-      } as ProgressEvent<FileReader>);
-    }
-
     await waitFor(() => {
       expect(screen.getByText(/esta hoja está vacía/i)).toBeInTheDocument();
     });
@@ -208,37 +184,13 @@ describe('ExcelPreview', () => {
 
   it('debe mostrar error cuando falla la carga del archivo', async () => {
     const mockBlob = createMockBlob();
-    (XLSX.read as jest.Mock).mockImplementation(() => {
-      throw new Error('Archivo corrupto');
-    });
+    mockWorkbook.xlsx.load.mockRejectedValue(new Error('Archivo corrupto'));
 
     render(<ExcelPreview file={mockBlob} />);
-
-    // Simular carga con error
-    if (mockFileReader.onload) {
-      mockFileReader.result = new ArrayBuffer(8);
-      mockFileReader.onload({
-        target: mockFileReader,
-      } as ProgressEvent<FileReader>);
-    }
 
     await waitFor(() => {
       expect(screen.getByText(/error al cargar excel/i)).toBeInTheDocument();
       expect(screen.getByText(/archivo corrupto/i)).toBeInTheDocument();
-    });
-  });
-
-  it('debe mostrar error cuando FileReader falla', async () => {
-    const mockBlob = createMockBlob();
-    render(<ExcelPreview file={mockBlob} />);
-
-    // Simular error en FileReader
-    if (mockFileReader.onerror) {
-      mockFileReader.onerror({} as ProgressEvent<FileReader>);
-    }
-
-    await waitFor(() => {
-      expect(screen.getByText(/error al cargar el archivo excel/i)).toBeInTheDocument();
     });
   });
 
@@ -256,14 +208,6 @@ describe('ExcelPreview', () => {
     ]);
 
     render(<ExcelPreview file={mockBlob} />);
-
-    // Simular carga
-    if (mockFileReader.onload) {
-      mockFileReader.result = new ArrayBuffer(8);
-      mockFileReader.onload({
-        target: mockFileReader,
-      } as ProgressEvent<FileReader>);
-    }
 
     await waitFor(() => {
       // Debe mostrar el contador de hojas en los badges

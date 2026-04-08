@@ -53,7 +53,7 @@ jobs:
       
       # Run tests with coverage
       - name: Run tests with coverage
-        run: npm run test -- --coverage --passWithNoTests --testTimeout=30000 --forceExit
+        run: npm run test -- --coverage --passWithNoTests --testTimeout=30000
 
       # Report coverage summary and fail with clear message if below threshold
       - name: Report coverage summary
@@ -63,20 +63,20 @@ jobs:
           if [ -f coverage/coverage-summary.json ]; then
             node -e "
               const fs = require('fs');
-              
+
               try {
                 const coverageData = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
                 console.log('Coverage file loaded successfully');
-                
+
                 if (!coverageData.total) {
                   throw new Error('No total coverage data found in coverage-summary.json');
                 }
-                
+
                 const summary = coverageData.total;
                 const thresholds = { statements: 70, branches: 60, functions: 70, lines: 70 };
                 const results = {};
                 let hasFailed = false;
-                
+
                 Object.keys(thresholds).forEach(key => {
                   const actual = summary[key] && summary[key].pct !== undefined ? summary[key].pct : 0;
                   const required = thresholds[key];
@@ -85,7 +85,7 @@ jobs:
                   console.log(key + ': ' + actual.toFixed(2) + '% (required: ' + required + '%) ' + status);
                   if (actual < required) hasFailed = true;
                 });
-                
+
                 // Write to GitHub step summary
                 let output = '| Metric | Actual | Required | Status |\n';
                 output += '|--------|--------|----------|--------|\n';
@@ -94,7 +94,7 @@ jobs:
                   output += '| ' + key.charAt(0).toUpperCase() + key.slice(1) + ' | ' + r.actual.toFixed(2) + '% | ' + r.required + '% | ' + r.status + ' |\n';
                 });
                 fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, output);
-                
+
                 // Exit with error if any threshold not met
                 if (hasFailed) {
                   console.error('❌ Coverage thresholds not met');

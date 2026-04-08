@@ -30,7 +30,7 @@ export const ExcelPreview: React.FC<ExcelPreviewProps> = ({ file }) => {
         workbook.worksheets.forEach((worksheet) => {
           const sheetData: string[][] = [];
 
-          worksheet.eachRow((row, rowNumber) => {
+          worksheet.eachRow((row, _rowNumber) => {
             const rowData: string[] = [];
             row.eachCell((cell, cellNumber) => {
               // Expandir el array si es necesario para que coincida con el índice de celda
